@@ -1,4 +1,5 @@
 import * as path from 'path'
+import dotenv from 'dotenv'
 import { Pool } from 'pg'
 import { promises as fs } from 'fs'
 import {
@@ -9,12 +10,13 @@ import {
 } from 'kysely'
 import type { Database } from './index'
 
+dotenv.config()
+
 async function migrateToLatest() {
     const db = new Kysely<Database>({
         dialect: new PostgresDialect({
             pool: new Pool({
-                connectionString:
-                    'postgresql://postgres:lol@localhost:5432/todo?schema=public',
+                connectionString: process.env.DATABASE_URL,
             }),
         }),
     })
