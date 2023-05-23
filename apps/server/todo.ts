@@ -12,10 +12,10 @@ export const deleteTodo = async (id: number) => {
     await prisma.todo.update({ data: { completed: true }, where: { id } })
 }
 
-export const getTodos = async ({ filter }: { filter?: boolean }) => {
-    return prisma.todo.findMany({
-        where: {
-            completed: filter,
-        },
-    })
-}
+// export const getTodos = async ({ filter }: { filter?: boolean }) => {
+//     return prisma.todo.findMany({
+//         where: {
+//             completed: filter,
+//         },
+//     })
+// }

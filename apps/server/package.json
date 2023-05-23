@@ -4,9 +4,10 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "ts-node index.ts",
+        "dev": "nodemon index.ts",
         "migrate": "ts-node --files ./database/migrate.ts",
-        "create-migration": "ts-node ./database/create-migration.ts $NAME"
+        "create-migration": "ts-node ./database/create-migration.ts $NAME",
+        "create-todo": "ts-node ./services/todo/index.ts"
     },
     "keywords": [],
     "author": "",
@@ -17,11 +18,10 @@
         "@types/node": "^20.2.3",
         "@types/pg": "^8.10.0",
         "dotenv": "^16.0.3",
-        "prisma": "^4.14.1",
+        "nodemon": "^2.0.22",
         "ts-node": "^10.9.1"
     },
     "dependencies": {
-        "@prisma/client": "^4.14.1",
         "@trpc/server": "^10.27.1",
         "cors": "^2.8.5",
         "express": "^4.18.2",
