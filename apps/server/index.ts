@@ -3,20 +3,20 @@ import z from 'zod'
 import { createExpressMiddleware } from '@trpc/server/adapters/express'
 import express from 'express'
 import cors from 'cors'
-import { createTodo, getTodos, deleteTodo } from './todo'
+import { getTodos, createTodo, deleteTodo } from './services/todo'
 
 const t = initTRPC.create()
 
 console.log('==>', 'WOW')
 
 const createTodoPayload = z.object({
-    title: z.string(),
+    task: z.string(),
     completed: z.boolean(),
 })
 
-const getTodoPayload = z.object({
-    filter: z.boolean().optional(),
-})
+// const getTodoPayload = z.object({
+//     filter: z.boolean().optional(),
+// })
 
 const appRouter = t.router({
     createTodo: t.procedure.input(createTodoPayload).query(({ input }) => {
@@ -25,8 +25,10 @@ const appRouter = t.router({
     deleteTodo: t.procedure.input(z.number()).query(({ input }) => {
         deleteTodo(input)
     }),
-    getTodos: t.procedure.input(getTodoPayload).query(({ input }) => {
-        return getTodos(input)
+    getTodos: t.procedure.query(() => {
+        const todos = getTodos()
+        console.log('wai wai 3223 ==>', todos)
+        return todos
     }),
 })
 
