@@ -1,12 +1,12 @@
 import { createTRPCProxyClient } from '@trpc/client'
 import { httpBatchLink } from '@trpc/client/links/httpBatchLink'
-import type { AppRouter } from 'server/index'
+import type { AppRouter } from 'server/routers'
 
 export const client = createTRPCProxyClient<AppRouter>({
     links: [httpBatchLink({ url: 'http://localhost:3001/trpc' })],
 })
 
-console.log('client AAAAAAAAAAAAA ==>', client)
+console.log('client ==>', client)
 
 // export const useTodos = (filter: Ref<boolean | undefined>) => {
 //     const { data, refetch } = useQuery(['todos', filter], async () =>
