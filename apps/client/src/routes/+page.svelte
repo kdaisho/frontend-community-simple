@@ -1,36 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { debounce } from '$lib/utils';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
-	console.log('data UI ==>', data);
+	type UpdateRequest = { id: number; value: string | boolean };
 
-	function debounce(
-		fn: (req: { id: number; task: string; completed: boolean }) => void,
-		interval: number
-	) {
-		let timeoutId: ReturnType<typeof setTimeout>;
+	const makeRequestDebounce = debounce(makeRequest, 350);
 
-		return (request) => {
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-			}
-
-			timeoutId = setTimeout(() => {
-				fn(request);
-			}, interval);
-		};
-	}
-
-	// const d = debounce(handleUpdate, 500);
-
-	async function handleOnChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const type = target.type;
-		const id = Number(target.dataset.id);
-		const value = type === 'text' ? target.value : target.checked;
-
+	async function makeRequest({ id, value }: UpdateRequest) {
 		const response = await fetch('/api/updateTodo', {
 			method: 'POST',
 			body: JSON.stringify({ id, value })
@@ -39,6 +18,15 @@
 		if (response.status === 200) {
 			await response.json();
 		}
+	}
+
+	async function handleOnChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const type = target.type;
+		const id = Number(target.dataset.id);
+		const value = type === 'text' ? target.value : target.checked;
+
+		makeRequestDebounce({ id, value });
 	}
 </script>
 
