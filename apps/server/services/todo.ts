@@ -1,4 +1,4 @@
-import { db } from 'server/database'
+import { db } from '../database'
 
 export async function getTodos() {
     return await db.selectFrom('todo').selectAll().orderBy('id').execute()
@@ -28,8 +28,6 @@ export async function updateTodo(todo: {
         .where('id', '=', todo.id)
         .returning('id')
         .executeTakeFirstOrThrow()
-
-    console.log('DB DONE ==>', id)
 
     return id
 }
