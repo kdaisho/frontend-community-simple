@@ -1,6 +1,6 @@
 import type { Actions } from '@sveltejs/kit'
-import type { PageServerLoad } from './$types'
 import { client } from '$lib/trpc'
+import type { PageServerLoad } from './$types'
 
 export const load = (async () => {
     const todos = await client.getTodos.query()

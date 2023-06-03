@@ -7,7 +7,6 @@ async function server() {
     const app = express()
     app.use(cors())
     app.use((req, _res, next) => {
-        console.log('==>', req.method, req.url)
         next()
     })
 
