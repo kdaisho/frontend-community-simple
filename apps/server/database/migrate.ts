@@ -1,14 +1,14 @@
 import * as path from 'path'
-import dotenv from 'dotenv'
-import { Pool } from 'pg'
-import { promises as fs } from 'fs'
 import {
+    FileMigrationProvider,
     Kysely,
     Migrator,
     PostgresDialect,
-    FileMigrationProvider,
 } from 'kysely'
 import type { Database } from './index'
+import { Pool } from 'pg'
+import dotenv from 'dotenv'
+import { promises as fs } from 'fs'
 
 dotenv.config()
 

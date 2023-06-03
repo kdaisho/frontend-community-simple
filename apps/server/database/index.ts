@@ -1,5 +1,10 @@
+import {
+    type ColumnType,
+    type Generated,
+    Kysely,
+    PostgresDialect,
+} from 'kysely'
 import { Pool } from 'pg'
-import { Kysely, PostgresDialect, Generated, ColumnType } from 'kysely'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -25,8 +30,6 @@ export interface Database {
     todo: Todo
 }
 
-console.log('==>', process.env.DATABASE_URL)
-
 export const db = new Kysely<Database>({
     dialect: new PostgresDialect({
         pool: new Pool({
@@ -34,15 +37,3 @@ export const db = new Kysely<Database>({
         }),
     }),
 })
-
-// async function demo() {
-//     const { id } = await db
-//         .insertInto('person')
-//         .values({ first_name: 'Jennifer', gender: 'female' })
-//         .returning('id')
-//         .executeTakeFirstOrThrow()
-
-//     console.log('DONE! ==>', id)
-// }
-
-// demo()

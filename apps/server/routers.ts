@@ -1,6 +1,6 @@
+import { createTodo, deleteTodo, getTodos, updateTodo } from './services/todo'
 import { initTRPC } from '@trpc/server'
 import z from 'zod'
-import { getTodos, createTodo, updateTodo, deleteTodo } from './services/todo'
 
 const t = initTRPC.create()
 
