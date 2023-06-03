@@ -3,6 +3,8 @@ import express from 'express'
 import cors from 'cors'
 import { appRouter } from './routers'
 
+console.log('==>', 'Husky checks this?')
+
 async function server() {
     const app = express()
     app.use(cors())
