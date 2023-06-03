@@ -1,0 +1,20 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": ["@typescript-eslint"],
+    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+    "parserOptions": { "ecmaVersion": 2020, "sourceType": "module" },
+    "rules": {
+        "sort-imports": [
+            2,
+            {
+                "ignoreCase": false,
+                "ignoreDeclarationSort": false,
+                "ignoreMemberSort": false,
+                "memberSyntaxSortOrder": ["all", "multiple", "single", "none"],
+                "allowSeparatedGroups": false
+            }
+        ],
+        "no-console": 1
+    }
+}
