@@ -20,13 +20,13 @@
 		dialog.showModal();
 	}
 
-	function clickOutside(e: MouseEvent) {
+	function clickOutside(event: MouseEvent) {
 		const rect = dialog.getBoundingClientRect();
 		if (
-			e.clientX < rect.left ||
-			e.clientX > rect.right ||
-			e.clientY < rect.top ||
-			e.clientY > rect.bottom
+			event.clientX < rect.left ||
+			event.clientX > rect.right ||
+			event.clientY < rect.top ||
+			event.clientY > rect.bottom
 		) {
 			dialog.close();
 		}
@@ -45,6 +45,7 @@
 		}
 	}
 
+	let taskUpdateInputs: HTMLInputElement[] = [];
 	const makeRequestDebounce = debounce(makeRequest, 350);
 
 	async function handleOnChange(event: Event) {
@@ -52,8 +53,15 @@
 		const type = target.type;
 		const id = Number(target.dataset.id);
 		const value = type === 'text' ? target.value : target.checked;
-
 		makeRequestDebounce({ id, value });
+	}
+
+	function unfocus(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			const target = event.target as HTMLInputElement;
+			const { index } = target.dataset;
+			taskUpdateInputs[Number(index)].blur();
+		}
 	}
 </script>
 
@@ -76,7 +84,7 @@
 	</dialog>
 
 	{#if data.todos.length}
-		{#each data.todos as { id, task, completed }}
+		{#each data.todos as { id, task, completed }, i}
 			<fieldset class="todo">
 				<input
 					class="completed"
@@ -90,9 +98,12 @@
 					class="task"
 					type="text"
 					data-id={id}
+					data-index={i}
 					name="task"
 					value={task}
 					on:input={handleOnChange}
+					on:keydown={unfocus}
+					bind:this={taskUpdateInputs[i]}
 				/>
 			</fieldset>
 		{/each}
