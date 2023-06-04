@@ -44,13 +44,7 @@ export const appRouter = t.router({
         return todos
     }),
     upload: t.procedure.input(uploadPayload).query(async ({ input }) => {
-        console.log('==>', 'uploading', { uploadPayload, input })
-
-        console.log('==>', 'FILE DATA ?', input.file)
-
         const buffer = Buffer.from(input.file.data)
-        console.log('==> STR', input.name, input.mimetype)
-
         const command = new PutObjectCommand({
             Bucket: 'file-upload-test-2',
             Key: input.name,
@@ -58,14 +52,13 @@ export const appRouter = t.router({
             ContentType: input.mimetype,
         })
 
-        console.log('==>', 'command', command)
-        // return
-
         try {
-            const response = await s3Client.send(command)
-            console.log('==>', 'response', response)
+            await s3Client.send(command)
+            return { success: true }
         } catch (err) {
-            console.log('==>', 'err', err)
+            const message =
+                err instanceof Error ? err.message : 'something went wrong.'
+            console.error(message)
         }
     }),
 })

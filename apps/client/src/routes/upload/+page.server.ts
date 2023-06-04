@@ -11,9 +11,6 @@ export const actions = {
     uploadFile: async event => {
         const formData = await event.request.formData()
         const file = formData.getAll('files')?.[0] as File
-
-        console.log('==>', 'file raw', file.name)
-
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
 
@@ -23,6 +20,7 @@ export const actions = {
                 name: file.name,
                 mimetype: file.type,
             })
+
             return { success: true, message: 'file uploaded successfully' }
         } catch (err) {
             return { success: false, message: 'file upload failed' }
