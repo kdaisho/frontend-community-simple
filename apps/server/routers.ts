@@ -1,8 +1,17 @@
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { createTodo, deleteTodo, getTodos, updateTodo } from './services/todo'
 import { initTRPC } from '@trpc/server'
 import z from 'zod'
 
 const t = initTRPC.create()
+
+const s3Client = new S3Client({
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+    },
+    region: process.env.BUCKET_REGION as string,
+})
 
 const createTodoPayload = z.object({
     task: z.string(),
@@ -12,6 +21,12 @@ const updateTodoPayload = z.object({
     id: z.number(),
     task: z.string().optional(),
     completed: z.boolean().optional(),
+})
+
+const uploadPayload = z.object({
+    file: z.any(),
+    name: z.string(),
+    mimetype: z.string(),
 })
 
 export const appRouter = t.router({
@@ -27,6 +42,31 @@ export const appRouter = t.router({
     getTodos: t.procedure.query(async () => {
         const todos = await getTodos()
         return todos
+    }),
+    upload: t.procedure.input(uploadPayload).query(async ({ input }) => {
+        console.log('==>', 'uploading', { uploadPayload, input })
+
+        console.log('==>', 'FILE DATA ?', input.file)
+
+        const buffer = Buffer.from(input.file.data)
+        console.log('==> STR', input.name, input.mimetype)
+
+        const command = new PutObjectCommand({
+            Bucket: 'file-upload-test-2',
+            Key: input.name,
+            Body: buffer,
+            ContentType: input.mimetype,
+        })
+
+        console.log('==>', 'command', command)
+        // return
+
+        try {
+            const response = await s3Client.send(command)
+            console.log('==>', 'response', response)
+        } catch (err) {
+            console.log('==>', 'err', err)
+        }
     }),
 })
 

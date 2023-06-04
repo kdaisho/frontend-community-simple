@@ -1,7 +1,10 @@
 import { appRouter } from './routers'
 import cors from 'cors'
 import { createExpressMiddleware } from '@trpc/server/adapters/express'
+import dotenv from 'dotenv'
 import express from 'express'
+
+dotenv.config()
 
 async function server() {
     const app = express()
