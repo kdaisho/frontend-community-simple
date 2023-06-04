@@ -1,4 +1,8 @@
-<button on:click>
+<script lang="ts">
+	export let type: 'button' | 'submit' | 'reset' = 'button';
+</script>
+
+<button {type} on:click>
 	<slot>Empty</slot>
 </button>
 
@@ -9,7 +13,7 @@
 		border-radius: 4px;
 		color: #333;
 		font-size: 1rem;
-		padding: 0.5rem 1rem;
+		padding: 0.25rem 1rem;
 		white-space: nowrap;
 	}
 

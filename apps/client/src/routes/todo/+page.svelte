@@ -65,13 +65,13 @@
 
 	<dialog bind:this={dialog} on:click={clickOutside} on:keydown>
 		<form method="POST" action="todo?/createTodo" use:enhance>
-			<fieldset>
+			<fieldset class="create-task">
 				<label for="task">Task</label>
 				<input id="task" type="text" name="task" />
 			</fieldset>
 
-			<button type="button" on:click={() => dialog.close()}>Cancel</button>
-			<button type="submit">Add</button>
+			<Button type="button" on:click={() => dialog.close()}>Cancel</Button>
+			<Button type="submit">Add</Button>
 		</form>
 	</dialog>
 
@@ -129,5 +129,23 @@
 		border-radius: 6px;
 		box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
 		padding: 1rem;
+	}
+
+	form {
+		display: flex;
+		flex-flow: column nowrap;
+		gap: 0.5rem;
+	}
+
+	fieldset {
+		padding: 0;
+	}
+
+	.create-task label {
+		display: block;
+	}
+
+	.create-task input {
+		padding: 0.25rem 0.5rem;
 	}
 </style>
