@@ -13,5 +13,7 @@ export const actions = {
         const task = formData.get('task') as string
 
         client.createTodo.query({ task })
+
+        return { success: true }
     },
 } satisfies Actions
