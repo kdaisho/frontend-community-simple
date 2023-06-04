@@ -9,7 +9,7 @@
 <style>
 	.app-layout {
 		margin: 0 auto;
-		max-width: 1200px;
+		max-width: 600px;
 		padding: 1rem;
 		width: 100%;
 	}

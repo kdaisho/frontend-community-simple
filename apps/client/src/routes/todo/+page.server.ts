@@ -10,7 +10,11 @@ export const load = (async () => {
 export const actions = {
     createTodo: async event => {
         const formData = await event.request.formData()
-        const task = formData.get('task') as string
+        const task = (formData.get('task') as string).trim()
+
+        if (!task.length) {
+            return { success: false, message: 'Task cannot be empty' }
+        }
 
         client.createTodo.query({ task })
 
