@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import Button from '$lib/components/Button.svelte';
 	import { debounce } from '$lib/utils';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
@@ -59,7 +60,7 @@
 <div class="todo-page">
 	<h1>TODO</h1>
 	<p>
-		<button on:click={showDialog}>Add a todo</button>
+		<Button on:click={showDialog}>Add a todo</Button>
 	</p>
 
 	<dialog bind:this={dialog} on:click={clickOutside} on:keydown>
