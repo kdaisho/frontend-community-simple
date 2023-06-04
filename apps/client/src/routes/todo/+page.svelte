@@ -13,9 +13,25 @@
 		}
 	}
 
-	type UpdateRequest = { id: number; value: string | boolean };
+	let dialog: HTMLDialogElement;
 
-	const makeRequestDebounce = debounce(makeRequest, 350);
+	function showDialog() {
+		dialog.showModal();
+	}
+
+	function clickOutside(e: MouseEvent) {
+		const rect = dialog.getBoundingClientRect();
+		if (
+			e.clientX < rect.left ||
+			e.clientX > rect.right ||
+			e.clientY < rect.top ||
+			e.clientY > rect.bottom
+		) {
+			dialog.close();
+		}
+	}
+
+	type UpdateRequest = { id: number; value: string | boolean };
 
 	async function makeRequest({ id, value }: UpdateRequest) {
 		const response = await fetch('/api/updateTodo', {
@@ -28,6 +44,8 @@
 		}
 	}
 
+	const makeRequestDebounce = debounce(makeRequest, 350);
+
 	async function handleOnChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const type = target.type;
@@ -36,24 +54,6 @@
 
 		makeRequestDebounce({ id, value });
 	}
-
-	let dialog: HTMLDialogElement;
-
-	const showDialog = () => {
-		dialog.showModal();
-	};
-
-	const clickOutside = (e: MouseEvent) => {
-		const rect = dialog.getBoundingClientRect();
-		if (
-			e.clientX < rect.left ||
-			e.clientX > rect.right ||
-			e.clientY < rect.top ||
-			e.clientY > rect.bottom
-		) {
-			dialog.close();
-		}
-	};
 </script>
 
 <div class="todo-page">
