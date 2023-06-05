@@ -1,4 +1,4 @@
-import type { Actions } from '@sveltejs/kit'
+import { type Actions, redirect } from '@sveltejs/kit'
 import { client } from '$lib/trpc'
 
 interface File {
@@ -24,6 +24,27 @@ export const actions = {
             return { success: true, message: 'file uploaded successfully' }
         } catch (err) {
             return { success: false, message: 'file upload failed' }
+        }
+    },
+    downloadFile: async event => {
+        const formData = await event.request.formData()
+        const filename = formData.get('filename') as string
+
+        try {
+            const response = await client.download.query({
+                filename,
+            })
+
+            if (response?.success) {
+                try {
+                    console.log('250 ==>', 'redirecting')
+                    throw redirect(302, '/')
+                } catch (err) {
+                    console.log('Redirect failed ==>', err)
+                }
+            }
+        } catch (err) {
+            return { success: false, message: 'file download failed' }
         }
     },
 } satisfies Actions

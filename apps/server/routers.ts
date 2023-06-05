@@ -1,5 +1,10 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import {
+    GetObjectCommand,
+    PutObjectCommand,
+    S3Client,
+} from '@aws-sdk/client-s3'
 import { createTodo, deleteTodo, getTodos, updateTodo } from './services/todo'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { initTRPC } from '@trpc/server'
 import z from 'zod'
 
@@ -27,6 +32,10 @@ const uploadPayload = z.object({
     file: z.any(),
     name: z.string(),
     mimetype: z.string(),
+})
+
+const downloadPayload = z.object({
+    filename: z.string(),
 })
 
 export const appRouter = t.router({
@@ -58,6 +67,27 @@ export const appRouter = t.router({
         } catch (err) {
             const message =
                 err instanceof Error ? err.message : 'something went wrong.'
+            console.error(message)
+        }
+    }),
+    download: t.procedure.input(downloadPayload).query(async ({ input }) => {
+        console.log('Input ==>', input)
+
+        const command = new GetObjectCommand({
+            Bucket: 'file-upload-test-2',
+            Key: input.filename,
+            ResponseContentDisposition: 'attachment',
+        })
+
+        try {
+            const signedUrl = await getSignedUrl(s3Client, command, {
+                expiresIn: 3600,
+            })
+            console.log('response 1 ==>', signedUrl)
+            return { success: true, url: signedUrl }
+        } catch (err) {
+            const message =
+                err instanceof Error ? err.message : 'download failed.'
             console.error(message)
         }
     }),
