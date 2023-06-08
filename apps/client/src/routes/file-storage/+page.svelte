@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ActionData } from './$types';
+	import type { ActionData } from '../file-storage/$types';
 	import Button from '$lib/components/Button.svelte';
 	import { enhance } from '$app/forms';
 
@@ -8,9 +8,9 @@
 	let filename: string;
 </script>
 
-<h1>File upload</h1>
+<h1>File storage</h1>
 
-<form method="POSt" action="upload?/uploadFile" use:enhance>
+<form method="POST" action="file-storage?/uploadFile" use:enhance>
 	<fieldset>
 		<label for="file">Choose a file:</label>
 		<input type="file" id="file" name="files" accept="text/plain, image/jpeg" />
@@ -23,7 +23,7 @@
 	{/if}
 </form>
 
-<form method="POSt" action="upload?/downloadFile" use:enhance>
+<form method="POSt" action="file-storage?/downloadFile" use:enhance>
 	<fieldset>
 		<label for="filename">File name</label>
 		<input type="text" id="filename" name="filename" bind:value={filename} />

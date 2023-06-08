@@ -30,21 +30,12 @@ export const actions = {
         const formData = await event.request.formData()
         const filename = formData.get('filename') as string
 
-        try {
-            const response = await client.download.query({
-                filename,
-            })
+        const response = await client.download.query({
+            filename,
+        })
 
-            if (response?.success) {
-                try {
-                    console.log('250 ==>', 'redirecting')
-                    throw redirect(302, '/')
-                } catch (err) {
-                    console.log('Redirect failed ==>', err)
-                }
-            }
-        } catch (err) {
-            return { success: false, message: 'file download failed' }
+        if (response?.success) {
+            throw redirect(307, response.url)
         }
     },
 } satisfies Actions
