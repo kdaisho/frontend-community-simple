@@ -2,7 +2,7 @@
 	<h1>Frontend Community</h1>
 
 	<div class="links">
-		<a href="/upload">Upload files</a>
+		<a href="/file-storage">File storage</a>
 		<a href="/todo">TODO</a>
 	</div>
 </div>

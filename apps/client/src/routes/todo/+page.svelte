@@ -132,7 +132,9 @@
 
 	.task {
 		border: none;
+		cursor: pointer;
 		padding: 0.25rem 0.5rem;
+		width: 100%;
 	}
 
 	dialog {
