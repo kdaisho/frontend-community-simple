@@ -17,5 +17,7 @@ docker exec -u postgres -it postgres psql
 ### Create migration template
 
 ```bash
-NAME=<migration_file_name> npm run create-migration -w server
+NAME=<migration_file_name> pnpm -F server create-migration
 ```
+
+_-F_ - short for `--filter`

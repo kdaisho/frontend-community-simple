@@ -25,9 +25,17 @@ interface Todo {
     created_at: ColumnType<Date, string | undefined, never>
 }
 
+interface User {
+    id: Generated<number>
+    name: string
+    email: string
+    created_at: ColumnType<Date, string | undefined, never>
+}
+
 export interface Database {
     person: PersonTable
     todo: Todo
+    user: User
 }
 
 export const db = new Kysely<Database>({
