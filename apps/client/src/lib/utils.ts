@@ -11,3 +11,21 @@ export function debounce<T>(fn: (req: T) => void, interval: number) {
         }, interval)
     }
 }
+
+export function handleTrpcClientError(err: any) {
+    type ErrorProps = {
+        path: string[]
+        message: string
+    }
+    type ClientCustomError = {
+        [k: string]: string
+    }
+
+    const errors = JSON.parse(err.message).reduce(
+        (acc: ClientCustomError, cur: ErrorProps) => {
+            return { ...acc, [cur.path[0]]: cur.message }
+        },
+        {}
+    )
+    return { success: false, errors }
+}

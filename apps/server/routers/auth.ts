@@ -3,9 +3,7 @@ import { publicProcedure, router } from '../trpc'
 import { z } from 'zod'
 
 const registerPayload = z.object({
-    name: z
-        .string()
-        .min(2, { message: 'Name must be 2 or more characters long' }),
+    name: z.string().min(1, { message: 'Name is required' }),
     email: z.string().email({ message: 'Email is not valid' }),
 })
 

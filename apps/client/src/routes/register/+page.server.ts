@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from './$types'
 import { TRPCClientError } from '@trpc/client'
 import { client } from '$lib/trpc'
+import { handleTrpcClientError } from '$lib/utils'
 
 export const load = (async () => {
     return {
@@ -19,23 +20,24 @@ export const actions = {
         const email = (formData.get('email') as string).trim()
 
         if (!name.length) {
-            return { success: false, message: 'Name cannot be empty' }
+            return { success: false, errors: { name: 'Name cannot be empty' } }
         }
 
         if (!email.length) {
-            return { success: false, message: 'Email cannot be empty' }
+            return {
+                success: false,
+                errors: { email: 'Email cannot be empty' },
+            }
         }
 
         try {
             await client.register.query({ name, email })
             return { success: true }
         } catch (err) {
-            const message =
-                err instanceof TRPCClientError
-                    ? err.message
-                    : 'Something went wrong.'
-
-            return { success: false, message }
+            if (err instanceof TRPCClientError) {
+                return handleTrpcClientError(err)
+            }
+            return { success: false, message: 'Failed to register' }
         }
     },
 } satisfies Actions

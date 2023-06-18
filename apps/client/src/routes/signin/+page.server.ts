@@ -1,5 +1,7 @@
 import type { Actions, PageServerLoad } from './$types'
+import { TRPCClientError } from '@trpc/client'
 import { client } from '$lib/trpc'
+import { handleTrpcClientError } from '$lib/utils'
 
 export const load = (async ({ params }) => {
     console.log('LOAD SignIn ==>', params)
@@ -7,8 +9,6 @@ export const load = (async ({ params }) => {
 
 export const actions = {
     signIn: async ({ request }) => {
-        console.log('==> Boom', request)
-
         const formData = await request.formData()
         const email = (formData.get('email') as string).trim()
 
@@ -16,13 +16,14 @@ export const actions = {
             return { success: false, message: 'Username cannot be empty' }
         }
 
-        console.log('==> Boom 2', email)
-
         try {
             await client.signIn.query({ email })
             return { success: true }
         } catch (err) {
-            console.error('==> Boom Error', err)
+            if (err instanceof TRPCClientError) {
+                return handleTrpcClientError(err)
+            }
+            return { success: false, message: 'Failed to sign in' }
         }
     },
 } satisfies Actions
