@@ -4,6 +4,7 @@ import {
     S3Client,
 } from '@aws-sdk/client-s3'
 import { createTodo, deleteTodo, getTodos, updateTodo } from './services/todo'
+import { handleRegister, handleSignIn } from './services/auth'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { initTRPC } from '@trpc/server'
 import z from 'zod'
@@ -38,7 +39,28 @@ const downloadPayload = z.object({
     filename: z.string(),
 })
 
+const registerPayload = z.object({
+    name: z
+        .string()
+        .min(2, { message: 'Name must be 2 or more characters long' }),
+    email: z.string().email({ message: 'Email is not valid' }),
+})
+
+const signInPayload = z.object({
+    email: z.string().email({ message: 'Email is not valid' }),
+})
+
 export const appRouter = t.router({
+    register: t.procedure.input(registerPayload).query(async ({ input }) => {
+        console.log('==> Route Regi', input.name, input.email)
+        // check if the user exists in the database
+        await handleRegister(input.name, input.email)
+        // if yes, proceed to login
+        // if not, send email to user to create an account
+    }),
+    signIn: t.procedure.input(signInPayload).query(async ({ input }) => {
+        await handleSignIn(input.email)
+    }),
     createTodo: t.procedure.input(createTodoPayload).query(({ input }) => {
         createTodo(input)
     }),
