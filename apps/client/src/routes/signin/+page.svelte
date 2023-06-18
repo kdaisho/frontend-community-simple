@@ -15,7 +15,7 @@
 <form method="POST" action="?/signIn" use:enhance>
 	<fieldset>
 		<label for="email">Email</label>
-		<input id="email" type="text" name="email" autocomplete="username" />
+		<input id="email" type="email" name="email" autocomplete="username" />
 	</fieldset>
 
 	<button>Submit</button>

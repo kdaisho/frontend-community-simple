@@ -1,7 +1,12 @@
 import { db } from '../database'
 import { sendEmail } from './utils'
 
-export async function handleRegister(name: string, email: string) {
+type HandleRegisterProps = {
+    name: string
+    email: string
+}
+
+export async function handleRegister({ name, email }: HandleRegisterProps) {
     // find a user using email
     const foundUser = await db
         .selectFrom('user')
@@ -17,7 +22,7 @@ export async function handleRegister(name: string, email: string) {
     sendEmail({ email, subject: 'Create your account' })
 }
 
-export async function handleSignIn(email: string) {
+export async function handleSignIn({ email }: { email: string }) {
     // find a user using email
     const user = await db
         .selectFrom('user')

@@ -1,4 +1,5 @@
 import type { Actions, PageServerLoad } from './$types'
+import { TRPCClientError } from '@trpc/client'
 import { client } from '$lib/trpc'
 
 export const load = (async () => {
@@ -29,9 +30,11 @@ export const actions = {
             await client.register.query({ name, email })
             return { success: true }
         } catch (err) {
-            console.error('==> Reg Error', err)
             const message =
-                err instanceof Error ? err.message : 'Something went wrong.'
+                err instanceof TRPCClientError
+                    ? err.message
+                    : 'Something went wrong.'
+
             return { success: false, message }
         }
     },
