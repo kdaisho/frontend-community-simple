@@ -12,7 +12,14 @@
 
 <h1>Become a member</h1>
 
-<form method="POST" action="?/register" use:enhance>
+<form
+	method="POST"
+	action="?/register"
+	use:enhance={() =>
+		({ update }) => {
+			update({ reset: false });
+		}}
+>
 	<fieldset>
 		<label for="name">Name</label>
 		<input id="name" type="text" name="name" autocomplete="name" />
@@ -22,7 +29,7 @@
 	</fieldset>
 	<fieldset>
 		<label for="email">Email</label>
-		<input id="email" type="email" name="email" autocomplete="username" value="s@s.ca" />
+		<input id="email" type="email" name="email" autocomplete="username" />
 		{#if form?.errors?.email}
 			<p style="color: red">{form.errors.email}</p>
 		{/if}

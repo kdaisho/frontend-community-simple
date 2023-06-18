@@ -33,7 +33,7 @@ async function server() {
                     }
                 }
 
-                console.error('==> Log this error', log)
+                // console.error('==> Log this error', log)
             },
         })
     )
