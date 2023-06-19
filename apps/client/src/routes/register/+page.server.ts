@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types'
 import { TRPCClientError } from '@trpc/client'
 import { client } from '$lib/trpc'
-import { handleTrpcClientError } from '$lib/utils'
+import { fail } from '@sveltejs/kit'
 
 export const load = (async () => {
     return {
@@ -35,9 +35,13 @@ export const actions = {
             return { success: true }
         } catch (err) {
             if (err instanceof TRPCClientError) {
-                return handleTrpcClientError(err)
+                const errors = JSON.parse(err.message)
+                return fail(422, {
+                    name,
+                    email,
+                    error: errors.map((e: { message: string }) => e.message),
+                })
             }
-            return { success: false, message: 'Failed to register' }
         }
     },
 } satisfies Actions
