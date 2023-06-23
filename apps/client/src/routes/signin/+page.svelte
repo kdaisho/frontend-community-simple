@@ -12,6 +12,10 @@
 
 <h1>Sign in</h1>
 
+{#if form?.error}
+	<p class="error">{form.error}</p>
+{/if}
+
 <form method="POST" action="?/signIn" use:enhance>
 	<fieldset>
 		<label for="email">Email</label>
