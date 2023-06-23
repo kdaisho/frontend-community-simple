@@ -9,7 +9,7 @@
         "dev": "npm-run-all --parallel dev:client dev:server",
         "lint": "eslint --ext .ts,.svelte .",
         "prepare": "husky install",
-        "bootstrap": "rm -rf node_modules apps/client/node_modules apps/server/node_modules && pnpm install && docker compose down && (docker volume rm frontend-community-simple_fcdata) && docker compose up -d --force-recreate && pnpm -F server migrate"
+        "bootstrap": "rm -rf node_modules apps/client/node_modules apps/server/node_modules && pnpm install && docker compose down && docker volume rm frontend-community-simple_fcdata && docker compose up -d --force-recreate && pnpm -F server migrate"
     },
     "keywords": [],
     "author": "",
