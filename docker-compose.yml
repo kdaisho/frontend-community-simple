@@ -3,12 +3,17 @@ version: '3.8'
 services:
     postgres:
         image: postgres:15.3-alpine
-        container_name: postgres
+        container_name: fc_db
         restart: always
         ports:
             - 5432:5432
         environment:
             DB_CONNECTION: ${DB_CONNECTION}
-            POSTGRES_DB: todo
+            POSTGRES_DB: frontend_community
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        volumes:
+            - fcdata:/var/lib/postgresql/data
+
+volumes:
+    fcdata:

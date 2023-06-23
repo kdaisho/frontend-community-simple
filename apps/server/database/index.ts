@@ -9,15 +9,6 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-interface PersonTable {
-    id: Generated<number>
-    first_name: string
-    gender: 'male' | 'female' | 'other'
-    middle_name: string | null
-    last_name: string | null
-    created_at: ColumnType<Date, string | undefined, never>
-}
-
 interface Todo {
     id: Generated<number>
     task: string
@@ -33,7 +24,6 @@ interface User {
 }
 
 export interface Database {
-    person: PersonTable
     todo: Todo
     user: User
 }

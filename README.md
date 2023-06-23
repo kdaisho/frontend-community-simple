@@ -3,15 +3,16 @@
 ### Run postgres container
 
 ```bash
-docker compose up
+docker compose up -d
 
-# append `-d` (detached) to run in background
 ```
 
-### Get in docker container (postgresql)
+_-d_ - (`detached`) runs the container in background
+
+### Get in docker container (postgresql) and connect to my database
 
 ```bash
-docker exec -u postgres -it postgres psql
+docker exec -u postgres -it fc_db psql -d frontend_community
 ```
 
 ### Create migration template
@@ -20,4 +21,20 @@ docker exec -u postgres -it postgres psql
 NAME=<migration_file_name> pnpm -F server create-migration
 ```
 
-_-F_ - short for `--filter`
+_-F_ - (`--filter`) filters workspace by name
+
+### Database info
+
+#### Database volumes
+
+list all volumes
+
+```bash
+docker volume ls
+```
+
+Inspect volume
+
+```bash
+docker volume inspect <volume_name>
+```
