@@ -1,8 +1,6 @@
 import { ServerClient } from 'postmark'
 
-// const { POSTMARK_API_TOKEN } = process.env
-
-const mailClient = new ServerClient(process.env.POSTMARK_API_TOKEN as string)
+const mailClient = new ServerClient(process.env.POSTMARK_API_TOKEN || '')
 
 export async function sendEmail({
     email,
