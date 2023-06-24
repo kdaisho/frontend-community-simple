@@ -24,3 +24,9 @@
 
 	<button>Submit</button>
 </form>
+
+<style>
+	input {
+		width: 100%;
+	}
+</style>
