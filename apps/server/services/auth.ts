@@ -7,7 +7,6 @@ type HandleRegisterProps = {
 }
 
 export async function handleRegister({ name, email }: HandleRegisterProps) {
-    // find a user using email
     const foundUser = await db
         .selectFrom('user')
         .select('id')
@@ -18,8 +17,11 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
         throw new Error('User already exists')
     }
 
-    // if not, send an email to user to create an account
-    sendEmail({ email, subject: 'Create your account' })
+    sendEmail({
+        email,
+        subject: 'Create your account',
+        body: `<h1>Nice to meet you ${name}.</h1><a href="http://localhost:5173/login?register=true&email=${email}">Click here to create your account and sign in</a>`,
+    })
 }
 
 export async function handleSignIn({ email }: { email: string }) {
@@ -30,6 +32,11 @@ export async function handleSignIn({ email }: { email: string }) {
         .where('email', '=', email)
         .executeTakeFirst()
 
+    if (!user) {
+        // show a message to user that an email has been sent
+        console.error('==> User not found', { email })
+    }
+
     console.log('==> DB', { user })
 
     if (user) {
@@ -38,7 +45,11 @@ export async function handleSignIn({ email }: { email: string }) {
         // if yes, return auth n token
 
         // if not, send email to user to login
-        sendEmail({ email, subject: 'Sign in to your account' })
+        sendEmail({
+            email,
+            subject: 'Login to your account',
+            body: `<h1>Sign in</h1><a href="http://localhost:5173/login?email=${email}">Click here to login</a>`,
+        })
 
         // show a message to user that an email has been sent
         return { success: true }

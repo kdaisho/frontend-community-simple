@@ -19,7 +19,9 @@
         "@types/pg": "^8.10.0",
         "dotenv": "^16.0.3",
         "nodemon": "^2.0.22",
-        "ts-node": "^10.9.1"
+        "postmark": "^3.0.18",
+        "ts-node": "^10.9.1",
+        "tsconfig": "workspace:^"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.345.0",
