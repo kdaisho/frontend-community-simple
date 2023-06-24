@@ -122,6 +122,9 @@ importers:
       ts-node:
         specifier: ^10.9.1
         version: 10.9.1(@types/node@20.2.3)(typescript@5.0.2)
+      tsconfig:
+        specifier: workspace:^
+        version: link:../../packages/tsconfig
 
   packages/tsconfig: {}
 
