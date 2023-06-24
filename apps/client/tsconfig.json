@@ -10,6 +10,11 @@
         "sourceMap": true,
         "strict": true
     }
+    // (June 2023) NOTE: "extends" doesn't accepts array of string, so i can't extend this with packages/tsconfig.base.json
+    // whenever i do this `"extends": ["./.svelte-kit/tsconfig.json"]`, i get tons of errors from svelte check
+    // it's redundant, but for now, i add compilerOptions here as exactly the same as packages/tsconfig.base.json
+    // once "extends" accepts array of string, i'll add "tsconfig/tsconfig.base.json" to the array and will remove compilerOptions
+
     // Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
     //
     // If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes
