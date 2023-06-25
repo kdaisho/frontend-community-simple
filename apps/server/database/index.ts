@@ -1,9 +1,4 @@
-import {
-    type ColumnType,
-    type Generated,
-    Kysely,
-    PostgresDialect,
-} from 'kysely'
+import { type ColumnType, type Generated, Kysely, PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
 import dotenv from 'dotenv'
 

@@ -1,5 +1,5 @@
 import { type Actions, redirect } from '@sveltejs/kit'
-import { client } from '$lib/trpc'
+import client from '$lib/trpc'
 
 interface File {
     arrayBuffer: () => Promise<ArrayBuffer>
