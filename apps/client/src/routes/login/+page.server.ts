@@ -16,12 +16,20 @@ export const load = (async ({ url }) => {
         }
 
         if (parsed.register && parsed.name) {
-            const response = await client.createUser.query({
+            const newUser = await client.createUser.query({
                 name: parsed.name,
                 email: parsed.email,
             })
-            console.log('==> response', response)
-            return { success: true }
+            console.log('==> newUser', newUser)
+
+            if (newUser) {
+                const session = await client.createSession.query({
+                    userId: newUser.id,
+                })
+                console.log('==> session', session)
+
+                return { session }
+            }
         } else {
             // handle login
             console.log('==>', 'handling logging in')

@@ -81,7 +81,7 @@ export async function handleSignIn({ email }: { email: string }) {
 }
 
 export async function saveUser({ name, email }: HandleRegisterProps) {
-    await db
+    return await db
         .insertInto('user')
         .values({
             name,
@@ -89,8 +89,26 @@ export async function saveUser({ name, email }: HandleRegisterProps) {
         })
         .onConflict(oc => oc.column('email').doNothing())
         .returning('id')
-        .execute()
-    return true
+        .executeTakeFirst()
+}
+
+type SaveSessionProps = {
+    userId: number
+    durationHours: number
+}
+
+export async function saveSession({ userId, durationHours }: SaveSessionProps) {
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + durationHours)
+
+    return await db
+        .insertInto('session')
+        .values({
+            user_id: userId,
+            expires_at: expiresAt,
+        })
+        .returning('token')
+        .executeTakeFirst()
 }
 
 export async function handleAuthenticate(authToken: string) {

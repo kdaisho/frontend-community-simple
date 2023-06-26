@@ -18,9 +18,18 @@ interface User {
     created_at: ColumnType<Date, string | undefined, never>
 }
 
+interface Session {
+    id: Generated<number>
+    token: Generated<string>
+    created_at: Generated<Date | null>
+    expires_at: ColumnType<Date>
+    user_id: number | null
+}
+
 export interface Database {
     todo: Todo
     user: User
+    session: Session
 }
 
 export const db = new Kysely<Database>({
