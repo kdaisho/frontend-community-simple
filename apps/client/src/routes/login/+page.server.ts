@@ -2,8 +2,9 @@ import { JWT_SIGNATURE } from '$env/static/private'
 import type { PageServerLoad } from './$types'
 import client from '$lib/trpc'
 import jwt from 'jsonwebtoken'
+import { redirect } from '@sveltejs/kit'
 
-export const load = (async ({ url }) => {
+export const load = (async ({ url, cookies }) => {
     const authToken = url.searchParams.get('token')
 
     if (!authToken) return null
@@ -20,21 +21,39 @@ export const load = (async ({ url }) => {
                 name: parsed.name,
                 email: parsed.email,
             })
-            console.log('==> newUser', newUser)
 
-            if (newUser) {
-                const session = await client.createSession.query({
-                    userId: newUser.id,
-                })
-                console.log('==> session', session)
+            if (!newUser) throw new Error('Creating user failed')
 
-                return { session }
-            }
+            const session = await client.createSession.query({
+                userId: newUser.id,
+            })
+
+            if (!session) throw new Error('Creating session failed')
+
+            console.log('==> User created, saving session token', session)
+
+            cookies.set('session', session.token, { path: '/' })
         } else {
-            // handle login
-            console.log('==>', 'handling logging in')
+            console.log('==> handling signing in', { authToken })
+            const user = await client.getUser.query({
+                email: parsed.email,
+            })
+
+            if (!user) throw new Error('User not found')
+
+            const session = await client.createSession.query({
+                userId: user.id,
+            })
+
+            if (!session) throw new Error('Creating session failed')
+
+            console.log('==> User found, saving session token', session)
+
+            cookies.set('session', session.token, { path: '/' })
         }
     } catch (err) {
-        console.error('==> invalid token', err)
+        console.error(err)
     }
+
+    throw redirect(307, '/')
 }) satisfies PageServerLoad

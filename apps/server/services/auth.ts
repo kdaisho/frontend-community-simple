@@ -80,6 +80,10 @@ export async function handleSignIn({ email }: { email: string }) {
     }
 }
 
+export async function findUser(email: string) {
+    return await db.selectFrom('user').select('id').where('email', '=', email).executeTakeFirst()
+}
+
 export async function saveUser({ name, email }: HandleRegisterProps) {
     return await db
         .insertInto('user')
@@ -101,7 +105,7 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + durationHours)
 
-    return await db
+    const sessionToken = await db
         .insertInto('session')
         .values({
             user_id: userId,
@@ -109,6 +113,10 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
         })
         .returning('token')
         .executeTakeFirst()
+
+    console.log('==> DB', sessionToken)
+
+    return sessionToken
 }
 
 export async function handleAuthenticate(authToken: string) {
