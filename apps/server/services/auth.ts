@@ -26,8 +26,18 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
             email,
             register: true,
         },
-        JWT_SIGNATURE || ''
+        JWT_SIGNATURE || '',
+        { expiresIn: 60 * 10 }
     )
+
+    await db
+        .insertInto('footprint')
+        .values({
+            email,
+            token: authToken,
+            pristine: true,
+        })
+        .execute()
 
     sendEmail({
         email,
@@ -54,13 +64,19 @@ export async function handleSignIn({ email }: { email: string }) {
             {
                 email,
             },
-            JWT_SIGNATURE || ''
+            JWT_SIGNATURE || '',
+            { expiresIn: 60 * 10 }
         )
-        // check if user has registered for authn
 
-        // if yes, return auth n token
+        await db
+            .updateTable('footprint')
+            .where('token', '=', authToken)
+            .where('pristine', '=', true)
+            .set({
+                pristine: false,
+            })
+            .executeTakeFirstOrThrow()
 
-        // if not, send email to user to login
         sendEmail({
             email,
             subject: 'Login to your account',
@@ -117,12 +133,4 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
     console.log('==> DB', sessionToken)
 
     return sessionToken
-}
-
-export async function handleAuthenticate(authToken: string) {
-    console.log('==> handleAuthenticate', {
-        authToken,
-    })
-
-    const parsed = jwt.verify(authToken, 'lol')
 }

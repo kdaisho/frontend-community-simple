@@ -14,11 +14,7 @@ export async function createTodo(todo: { task: string }) {
     return id
 }
 
-export async function updateTodo(todo: {
-    id: number
-    task?: string
-    completed?: boolean
-}) {
+export async function updateTodo(todo: { id: number; task?: string; completed?: boolean }) {
     const { id } = await db
         .updateTable('todo')
         .set({

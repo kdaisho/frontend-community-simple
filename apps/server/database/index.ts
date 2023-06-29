@@ -26,10 +26,19 @@ interface Session {
     user_id: number | null
 }
 
+interface Footprint {
+    id: Generated<number>
+    email: string
+    token: string
+    pristine: boolean
+    created_at: ColumnType<Date, string | undefined, never>
+}
+
 export interface Database {
     todo: Todo
     user: User
     session: Session
+    footprint: Footprint
 }
 
 export const db = new Kysely<Database>({
