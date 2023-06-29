@@ -6,9 +6,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .createTable('todo')
         .addColumn('id', 'serial', col => col.primaryKey())
         .addColumn('task', 'varchar', col => col.notNull())
-        .addColumn('completed', 'boolean', col =>
-            col.notNull().defaultTo(false)
-        )
+        .addColumn('completed', 'boolean', col => col.notNull().defaultTo(false))
         .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`now()`))
         .execute()
 }

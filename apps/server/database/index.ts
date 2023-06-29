@@ -1,9 +1,4 @@
-import {
-    type ColumnType,
-    type Generated,
-    Kysely,
-    PostgresDialect,
-} from 'kysely'
+import { type ColumnType, type Generated, Kysely, PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
 import dotenv from 'dotenv'
 
@@ -23,9 +18,27 @@ interface User {
     created_at: ColumnType<Date, string | undefined, never>
 }
 
+interface Session {
+    id: Generated<number>
+    token: Generated<string>
+    created_at: Generated<Date | null>
+    expires_at: ColumnType<Date>
+    user_id: number | null
+}
+
+interface Footprint {
+    id: Generated<number>
+    email: string
+    token: string
+    pristine: boolean
+    created_at: ColumnType<Date, string | undefined, never>
+}
+
 export interface Database {
     todo: Todo
     user: User
+    session: Session
+    footprint: Footprint
 }
 
 export const db = new Kysely<Database>({

@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types'
-import { client } from '$lib/trpc'
+import client from '$lib/trpc'
 import { json } from '@sveltejs/kit'
 
 export const POST = (async ({ request }) => {

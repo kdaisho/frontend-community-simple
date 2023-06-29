@@ -1,4 +1,4 @@
-import { handleRegister, handleSignIn } from '../services/auth'
+import { findUser, handleRegister, handleSignIn, saveSession, saveUser } from '../services/auth'
 import { publicProcedure, router } from '../trpc'
 import { z } from 'zod'
 
@@ -12,15 +12,34 @@ const signInPayload = z.object({
 })
 
 export const authRouter = router({
-    register: publicProcedure
-        .input(registerPayload)
+    register: publicProcedure.input(registerPayload).query(async ({ input }) => {
+        await handleRegister({
+            name: input.name,
+            email: input.email,
+        })
+    }),
+    signIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
+        return await handleSignIn({ email: input.email })
+    }),
+    createUser: publicProcedure
+        .input(z.object({ name: z.string(), email: z.string().email() }))
         .query(async ({ input }) => {
-            await handleRegister({
+            return await saveUser({
                 name: input.name,
                 email: input.email,
             })
         }),
-    signIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
-        return await handleSignIn({ email: input.email })
-    }),
+    getUser: publicProcedure
+        .input(z.object({ email: z.string().email() }))
+        .query(async ({ input }) => {
+            return await findUser(input.email)
+        }),
+    createSession: publicProcedure
+        .input(z.object({ userId: z.number() }))
+        .query(async ({ input }) => {
+            return await saveSession({
+                userId: input.userId,
+                durationHours: 3,
+            })
+        }),
 })
