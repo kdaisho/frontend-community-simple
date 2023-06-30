@@ -5,29 +5,29 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 interface Todo {
-    id: Generated<number>
+    id: Generated<string>
     task: string
     completed: boolean
     created_at: ColumnType<Date, string | undefined, never>
 }
 
 interface User {
-    id: Generated<number>
+    id: Generated<string>
     name: string
     email: string
     created_at: ColumnType<Date, string | undefined, never>
 }
 
 interface Session {
-    id: Generated<number>
+    id: Generated<string>
     token: Generated<string>
     created_at: Generated<Date | null>
     expires_at: ColumnType<Date>
-    user_id: number | null
+    user_id: string | null
 }
 
 interface Footprint {
-    id: Generated<number>
+    id: Generated<string>
     email: string
     token: string
     pristine: boolean

@@ -14,7 +14,7 @@ export const POST = (async ({ request }) => {
     }
 
     const query = {
-        id: Number(data.id),
+        id: data.id,
         ...(task && { task }),
         ...(completed !== undefined && { completed }),
     }

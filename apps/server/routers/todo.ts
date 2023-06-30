@@ -7,7 +7,7 @@ const createTodoPayload = z.object({
 })
 
 const updateTodoPayload = z.object({
-    id: z.number(),
+    id: z.string(),
     task: z.string().optional(),
     completed: z.boolean().optional(),
 })
@@ -19,7 +19,7 @@ export const todoRouter = router({
     updateTodo: publicProcedure
         .input(updateTodoPayload)
         .query(async ({ input }) => await updateTodo(input)),
-    deleteTodo: publicProcedure.input(z.number()).query(({ input }) => {
+    deleteTodo: publicProcedure.input(z.string()).query(({ input }) => {
         deleteTodo(input)
     }),
     getTodos: publicProcedure.query(async () => {
