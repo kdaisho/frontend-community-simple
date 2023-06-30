@@ -35,7 +35,7 @@ export const authRouter = router({
             return await findUser(input.email)
         }),
     createSession: publicProcedure
-        .input(z.object({ userId: z.number() }))
+        .input(z.object({ userId: z.string() }))
         .query(async ({ input }) => {
             return await saveSession({
                 userId: input.userId,

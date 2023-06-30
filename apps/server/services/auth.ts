@@ -113,7 +113,7 @@ export async function saveUser({ name, email }: HandleRegisterProps) {
 }
 
 type SaveSessionProps = {
-    userId: number
+    userId: string
     durationHours: number
 }
 
@@ -129,8 +129,6 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
         })
         .returning('token')
         .executeTakeFirst()
-
-    console.log('==> DB', sessionToken)
 
     return sessionToken
 }

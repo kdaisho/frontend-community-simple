@@ -1,7 +1,7 @@
 import { db } from '../database'
 
 export async function getTodos() {
-    return await db.selectFrom('todo').selectAll().orderBy('id').execute()
+    return await db.selectFrom('todo').selectAll().orderBy('created_at').execute()
 }
 
 export async function createTodo(todo: { task: string }) {
@@ -14,7 +14,7 @@ export async function createTodo(todo: { task: string }) {
     return id
 }
 
-export async function updateTodo(todo: { id: number; task?: string; completed?: boolean }) {
+export async function updateTodo(todo: { id: string; task?: string; completed?: boolean }) {
     const { id } = await db
         .updateTable('todo')
         .set({
@@ -28,12 +28,12 @@ export async function updateTodo(todo: { id: number; task?: string; completed?: 
     return id
 }
 
-export async function deleteTodo(_id: number) {
-    const { id } = await db
+export async function deleteTodo(id: string) {
+    const todo = await db
         .deleteFrom('todo')
-        .where('id', '=', _id)
+        .where('id', '=', id)
         .returning('id')
         .executeTakeFirstOrThrow()
 
-    return id
+    return todo.id
 }
