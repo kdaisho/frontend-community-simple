@@ -69,13 +69,13 @@ export async function handleSignIn({ email }: { email: string }) {
         )
 
         await db
-            .updateTable('footprint')
-            .where('token', '=', authToken)
-            .where('pristine', '=', true)
-            .set({
-                pristine: false,
+            .insertInto('footprint')
+            .values({
+                email,
+                token: authToken,
+                pristine: true,
             })
-            .executeTakeFirstOrThrow()
+            .execute()
 
         sendEmail({
             email,
@@ -131,4 +131,42 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
         .executeTakeFirst()
 
     return sessionToken
+}
+
+export async function findUserBySessionToken(token: string) {
+    return await db
+        .selectFrom('user')
+        .select(['id', 'name', 'email'])
+        .where(
+            'id',
+            '=',
+            db
+                .selectFrom('session')
+                .select('user_id')
+                .where('token', '=', token)
+                .where('expires_at', '>', new Date())
+        )
+        .executeTakeFirst()
+}
+
+export async function findPristineFootprint(token: string) {
+    const fp = await db
+        .selectFrom('footprint')
+        .select('id')
+        .where('token', '=', token)
+        .where('pristine', '=', true)
+        .executeTakeFirst()
+
+    return fp?.id
+}
+
+export async function consumeFootprint(id: string) {
+    const fp = await db
+        .updateTable('footprint')
+        .set({ pristine: false })
+        .where('id', '=', id)
+        .returning('id')
+        .executeTakeFirst()
+
+    return fp?.id
 }
