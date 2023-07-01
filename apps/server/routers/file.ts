@@ -20,9 +20,7 @@ export const fileRouter = router({
             mimeType: input.mimetype,
         })
     }),
-    download: publicProcedure
-        .input(downloadPayload)
-        .query(async ({ input }) => {
-            return await handleDownload({ fileName: input.filename })
-        }),
+    download: publicProcedure.input(downloadPayload).query(async ({ input }) => {
+        return await handleDownload({ fileName: input.filename })
+    }),
 })

@@ -32,8 +32,6 @@ async function server() {
                         data: { message: 'Unknown error occurred' },
                     }
                 }
-
-                // console.error('==> Log this error', log)
             },
         })
     )
