@@ -1,5 +1,15 @@
-import { findUser, handleRegister, handleSignIn, saveSession, saveUser } from '../services/auth'
+import {
+    consumeFootprint,
+    findPristineFootprint,
+    findUser,
+    findUserBySessionToken,
+    handleRegister,
+    handleSignIn,
+    saveSession,
+    saveUser,
+} from '../services/auth'
 import { publicProcedure, router } from '../trpc'
+import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
 const registerPayload = z.object({
@@ -42,4 +52,23 @@ export const authRouter = router({
                 durationHours: 3,
             })
         }),
+    getUserBySessionToken: publicProcedure
+        .input(z.object({ sessionToken: z.string().uuid() }))
+        .query(async ({ input }) => {
+            return await findUserBySessionToken(input.sessionToken)
+        }),
+    findFootprintByTokenOrThrow: publicProcedure.input(z.string()).query(async ({ input }) => {
+        const pristineFootprintId = await findPristineFootprint(input)
+        if (!pristineFootprintId) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Pristine footprint not found' })
+        }
+
+        const consumedFootprintId = await consumeFootprint(pristineFootprintId)
+        if (!consumedFootprintId) {
+            throw new TRPCError({
+                code: 'INTERNAL_SERVER_ERROR',
+                message: 'Failed to consume footprint',
+            })
+        }
+    }),
 })

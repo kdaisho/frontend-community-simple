@@ -10,6 +10,8 @@ export const load = (async ({ url, cookies }) => {
     if (!authToken) return null
 
     try {
+        await client.findFootprintByTokenOrThrow.query(authToken)
+
         const parsed = jwt.verify(authToken, JWT_SIGNATURE) as {
             email: string
             name?: string
@@ -30,11 +32,8 @@ export const load = (async ({ url, cookies }) => {
 
             if (!session) throw new Error('Creating session failed')
 
-            console.log('==> User created, saving session token', session)
-
             cookies.set('session', session.token, { path: '/' })
         } else {
-            console.log('==> handling signing in', { authToken })
             const user = await client.getUser.query({
                 email: parsed.email,
             })
@@ -46,8 +45,6 @@ export const load = (async ({ url, cookies }) => {
             })
 
             if (!session) throw new Error('Creating session failed')
-
-            console.log('==> User found, saving session token', session)
 
             cookies.set('session', session.token, { path: '/' })
         }
