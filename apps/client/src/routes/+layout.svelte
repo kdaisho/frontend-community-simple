@@ -26,9 +26,6 @@
 </main>
 
 <style>
-    :root {
-        --app-width: 600px;
-    }
     .app-layout {
         margin: 0 auto;
         max-width: var(--app-width);

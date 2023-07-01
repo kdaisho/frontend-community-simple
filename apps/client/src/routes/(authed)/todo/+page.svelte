@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { ActionData, PageData } from './$types'
     import Button from '$lib/components/Button.svelte'
+    import NeumorphismButton from '$lib/components/NeumorphismButton.svelte'
     import { debounce } from '$lib/utils'
     import { enhance } from '$app/forms'
     import { invalidateAll } from '$app/navigation'
@@ -68,7 +69,7 @@
 <div class="todo-page">
     <h1>TODO</h1>
     <p>
-        <Button on:click={showDialog}>Add a todo</Button>
+        <NeumorphismButton width={40} on:click={showDialog}>+</NeumorphismButton>
     </p>
 
     <dialog bind:this={dialog} on:click={clickOutside} on:keydown>
@@ -137,9 +138,20 @@
         width: 100%;
     }
 
+    input {
+        background: inherit;
+    }
+
+    input:focus-visible {
+        background: #fff;
+        border-radius: var(--border-radius);
+        box-shadow: inset 2px 2px 6px rgb(0 0 0 / 20%);
+        outline: none;
+    }
+
     dialog {
         border: none;
-        border-radius: 6px;
+        border-radius: var(--border-radius-large);
         box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
             rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
         padding: 1rem;
@@ -160,6 +172,11 @@
     }
 
     .create-task input {
+        border: none;
+        background: #efefef;
+        border-radius: var(--border-radius);
+        box-shadow: inset 2px 2px 6px #cbcbcb, inset -2px -2px 6px #fff;
+        outline: none;
         padding: 0.25rem 0.5rem;
     }
 </style>
