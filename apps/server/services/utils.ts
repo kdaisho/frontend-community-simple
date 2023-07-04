@@ -6,16 +6,18 @@ export async function sendEmail({
     email,
     subject,
     body,
+    url,
 }: {
     email: string
     subject: string
     body: string
+    url?: string
 }) {
-    console.log('==>', 'sending email', email, subject)
-    return await mailClient.sendEmail({
-        From: 'admin@daishodesign.com',
-        To: email,
-        Subject: subject,
-        HtmlBody: body,
-    })
+    console.log('==> sending email', url)
+    // return await mailClient.sendEmail({
+    //     From: 'admin@daishodesign.com',
+    //     To: email,
+    //     Subject: subject,
+    //     HtmlBody: body,
+    // })
 }

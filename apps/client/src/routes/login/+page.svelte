@@ -10,4 +10,4 @@
     }
 </script>
 
-<h1>Handling signin</h1>
+<h1>Login</h1>

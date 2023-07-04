@@ -1,24 +1,35 @@
 <script lang="ts">
+    import type { LayoutServerData } from './$types'
     import '../app.css'
+
+    export let data: LayoutServerData
 </script>
 
 <nav>
-    <h2>Frontend Community</h2>
+    <div>
+        <h2>
+            <a href="/">Frontend Community</a>
+        </h2>
 
-    <ul class="links">
-        <li>
-            <a href="/register">Register</a>
-        </li>
-        <li>
-            <a href="/signin">Sign in</a>
-        </li>
-        <li>
-            <a href="/file-storage">File storage</a>
-        </li>
-        <li>
-            <a href="/todo">TODO</a>
-        </li>
-    </ul>
+        <ul class="links">
+            <li>
+                <a href="/register">Register</a>
+            </li>
+            <li>
+                <a href="/signin">Sign in</a>
+            </li>
+            <li>
+                <a href="/file-storage">File storage</a>
+            </li>
+            <li>
+                <a href="/todo">TODO</a>
+            </li>
+        </ul>
+    </div>
+
+    <div>
+        {data.userName}
+    </div>
 </nav>
 
 <main class="app-layout">
@@ -46,5 +57,10 @@
         display: flex;
         flex-flow: row nowrap;
         gap: 1rem;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
     }
 </style>

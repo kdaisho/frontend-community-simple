@@ -43,6 +43,7 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
         email,
         subject: 'Create your account',
         body: `<h1>Nice to meet you ${name}.</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to create your account and sign in</a>`,
+        url: `${BASE_URL}/login?token=${authToken}`,
     })
 }
 
@@ -81,6 +82,7 @@ export async function handleSignIn({ email }: { email: string }) {
             email,
             subject: 'Login to your account',
             body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
+            url: `${BASE_URL}/login?token=${authToken}`,
         })
 
         // show a message to user that an email has been sent
@@ -97,7 +99,11 @@ export async function handleSignIn({ email }: { email: string }) {
 }
 
 export async function findUser(email: string) {
-    return await db.selectFrom('user').select('id').where('email', '=', email).executeTakeFirst()
+    return await db
+        .selectFrom('user')
+        .select(['id', 'name', 'email'])
+        .where('email', '=', email)
+        .executeTakeFirst()
 }
 
 export async function saveUser({ name, email }: HandleRegisterProps) {
@@ -108,7 +114,7 @@ export async function saveUser({ name, email }: HandleRegisterProps) {
             email,
         })
         .onConflict(oc => oc.column('email').doNothing())
-        .returning('id')
+        .returning(['id', 'name', 'email'])
         .executeTakeFirst()
 }
 

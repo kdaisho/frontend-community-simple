@@ -7,7 +7,9 @@ import { redirect } from '@sveltejs/kit'
 export const load = (async ({ url, cookies }) => {
     const authToken = url.searchParams.get('token')
 
-    if (!authToken) return null
+    if (!authToken) {
+        throw redirect(307, '/')
+    }
 
     try {
         await client.findFootprintByTokenOrThrow.query(authToken)
@@ -18,39 +20,39 @@ export const load = (async ({ url, cookies }) => {
             register?: boolean
         }
 
+        let user
+
         if (parsed.register && parsed.name) {
-            const newUser = await client.createUser.query({
+            user = await client.createUser.query({
                 name: parsed.name,
                 email: parsed.email,
             })
 
-            if (!newUser) throw new Error('Creating user failed')
-
-            const session = await client.createSession.query({
-                userId: newUser.id,
-            })
-
-            if (!session) throw new Error('Creating session failed')
-
-            cookies.set('session', session.token, { path: '/' })
+            if (!user) {
+                throw new Error('Creating user failed')
+            }
         } else {
-            const user = await client.getUser.query({
+            user = await client.getUser.query({
                 email: parsed.email,
             })
 
-            if (!user) throw new Error('User not found')
-
-            const session = await client.createSession.query({
-                userId: user.id,
-            })
-
-            if (!session) throw new Error('Creating session failed')
-
-            cookies.set('session', session.token, { path: '/' })
+            if (!user) {
+                throw new Error('User not found')
+            }
         }
+
+        const session = await client.createSession.query({
+            userId: user.id,
+        })
+
+        if (!session) {
+            throw new Error('Creating session failed')
+        }
+
+        cookies.set('session', session.token, { path: '/' })
     } catch (err) {
         console.error(err)
     }
 
-    throw redirect(307, '/')
+    throw redirect(307, '/dashboard')
 }) satisfies PageServerLoad
