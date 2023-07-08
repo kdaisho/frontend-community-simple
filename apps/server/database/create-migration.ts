@@ -20,11 +20,12 @@ const filename = `${year}${month}${day}${hours}${minutes}-${name}.ts`
 
 const content = `
 // migration ${year}-${month}-${day}, ${hours}:${minutes}
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
+import type { Database } from '../index'
 
-export async function up(db: Kysely<any>): Promise<void> {}
+export async function up(db: Kysely<Database>): Promise<void> {}
 
-export async function down(db: Kysely<any>): Promise<void> {}
+export async function down(db: Kysely<Database>): Promise<void> {}
 `
 
 fs.writeFile(path + filename, content, err => {
