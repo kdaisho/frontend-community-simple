@@ -3,7 +3,7 @@
 </script>
 
 <button {type} on:click>
-    <slot>Empty</slot>
+    <slot>slot is required</slot>
 </button>
 
 <style>
