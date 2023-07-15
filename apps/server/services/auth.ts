@@ -98,7 +98,7 @@ export async function handleSignIn({ email }: { email: string }) {
     }
 }
 
-export async function findUser(email: string) {
+export async function findUserByEmail(email: string) {
     return await db
         .selectFrom('user')
         .select(['id', 'name', 'email'])
@@ -112,6 +112,7 @@ export async function saveUser({ name, email }: HandleRegisterProps) {
         .values({
             name,
             email,
+            webauthn: false,
         })
         .onConflict(oc => oc.column('email').doNothing())
         .returning(['id', 'name', 'email'])
@@ -175,4 +176,26 @@ export async function consumeFootprint(id: string) {
         .executeTakeFirst()
 
     return fp?.id
+}
+
+export async function findUserDevices(userId: string) {
+    return await db
+        .selectFrom('webauthn')
+        .select('devices')
+        .where('user_id', '=', userId)
+        .executeTakeFirstOrThrow()
+}
+
+export async function updateWebauthnWithCurrentChallenge({
+    userId,
+    currentChallenge,
+}: {
+    userId: string
+    currentChallenge: string
+}) {
+    return await db
+        .updateTable('webauthn')
+        .set({ current_challenge: currentChallenge })
+        .where('user_id', '=', userId)
+        .execute()
 }

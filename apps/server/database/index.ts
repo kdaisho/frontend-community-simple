@@ -15,6 +15,7 @@ interface User {
     id: Generated<string>
     name: string
     email: string
+    webauthn: boolean
     created_at: ColumnType<Date, string | undefined, never>
 }
 
@@ -34,11 +35,29 @@ interface Footprint {
     created_at: ColumnType<Date, string | undefined, never>
 }
 
+interface Footprint {
+    id: Generated<string>
+    email: string
+    token: string
+    pristine: boolean
+    created_at: ColumnType<Date, string | undefined, never>
+}
+
+interface Webauthn {
+    id: Generated<string>
+    user_id: string
+    current_challenge: string
+    devices: string
+    created_at: ColumnType<Date, string | undefined, never>
+    updated_at: ColumnType<Date, string | undefined, never>
+}
+
 export interface Database {
     todo: Todo
     user: User
     session: Session
     footprint: Footprint
+    webauthn: Webauthn
 }
 
 export const db = new Kysely<Database>({

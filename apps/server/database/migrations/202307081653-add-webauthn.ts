@@ -11,7 +11,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
             col.references('user.id').unique().onDelete('cascade').onUpdate('cascade')
         )
         .addColumn('current_challenge', 'text', col => col.notNull())
-        .addColumn('device', 'text', col => col.notNull())
+        .addColumn('devices', 'json', col => col.notNull())
         .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`now()`))
         .addColumn('updated_at', 'timestamp', col => col.defaultTo(sql`now()`))
         .execute()

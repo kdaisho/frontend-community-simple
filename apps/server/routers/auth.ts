@@ -1,16 +1,25 @@
 import {
     consumeFootprint,
     findPristineFootprint,
-    findUser,
+    findUserByEmail,
     findUserBySessionToken,
+    // findUserDevices,
     handleRegister,
     handleSignIn,
     saveSession,
     saveUser,
+    updateWebauthnWithCurrentChallenge,
 } from '../services/auth'
+import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server'
 import { publicProcedure, router } from '../trpc'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
+
+// rp: relying party
+const rpId = 'localhost'
+const protocol = 'http'
+const port = 5173
+const expectedOrigin = `${protocol}://${rpId}:${port}`
 
 const registerPayload = z.object({
     name: z.string().min(1, { message: 'Name is required' }),
@@ -42,7 +51,7 @@ export const authRouter = router({
     getUser: publicProcedure
         .input(z.object({ email: z.string().email() }))
         .query(async ({ input }) => {
-            return await findUser(input.email)
+            return await findUserByEmail(input.email)
         }),
     createSession: publicProcedure
         .input(z.object({ userId: z.string() }))
@@ -70,5 +79,29 @@ export const authRouter = router({
                 message: 'Failed to consume footprint',
             })
         }
+    }),
+    getRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
+        const user = await findUserByEmail(input)
+
+        if (!user) {
+            return
+        }
+
+        // const webauthn = await findUserDevices(user.id)
+        // const devices = JSON.parse(webauthn.devices) as Record<string, unknown>[]
+
+        const registrationOptions = generateRegistrationOptions({
+            rpName: 'frontend-community',
+            rpID: rpId,
+            userID: user.email,
+            userName: user.name,
+            attestationType: 'none',
+        })
+        await updateWebauthnWithCurrentChallenge({
+            userId: user.id,
+            currentChallenge: registrationOptions.challenge,
+        })
+
+        return registrationOptions
     }),
 })
