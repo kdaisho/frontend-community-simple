@@ -1,3 +1,4 @@
+import type { JsonValue } from '../types'
 import { db } from '../database'
 import jwt from 'jsonwebtoken'
 import { sendEmail } from './utils'
@@ -178,12 +179,12 @@ export async function consumeFootprint(id: string) {
     return fp?.id
 }
 
-export async function findUserDevices(userId: string) {
+export async function findRegisteredDevices(userId: string) {
     return await db
         .selectFrom('webauthn')
         .select('devices')
         .where('user_id', '=', userId)
-        .executeTakeFirstOrThrow()
+        .executeTakeFirst()
 }
 
 export async function updateWebauthnWithCurrentChallenge({
@@ -193,9 +194,31 @@ export async function updateWebauthnWithCurrentChallenge({
     userId: string
     currentChallenge: string
 }) {
+    // TODO: insert if a record with the same userId doesn't exist
+    // otherwise updateTable
     return await db
-        .updateTable('webauthn')
-        .set({ current_challenge: currentChallenge })
-        .where('user_id', '=', userId)
+        .insertInto('webauthn')
+        .values({ user_id: userId, current_challenge: currentChallenge })
+        .onConflict(oc => oc.column('user_id').doUpdateSet({ current_challenge: currentChallenge }))
         .execute()
+}
+
+export async function findCurrentChallenge(userId: string) {
+    console.log('==> DAO 1', userId)
+    const yo = await db
+        .selectFrom('webauthn')
+        .select(['current_challenge', 'devices'])
+        .where('user_id', '=', userId)
+        .executeTakeFirstOrThrow()
+
+    console.log('==> DAO 2', yo)
+    return yo
+}
+
+export async function updateUserWithWebauthn(userId: string) {
+    return await db.updateTable('user').set({ webauthn: true }).where('id', '=', userId).execute()
+}
+
+export async function saveNewDevices({ userId, devices }: { userId: string; devices: JsonValue }) {
+    return await db.updateTable('webauthn').set({ devices }).where('user_id', '=', userId).execute()
 }

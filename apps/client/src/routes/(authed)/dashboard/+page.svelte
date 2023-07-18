@@ -7,13 +7,19 @@
     export let data: PageServerData
     export let form: PublicKeyCredentialCreationOptionsJSON
 
+    let registrationData: string
+    let submitButton: HTMLButtonElement
+
     $: if (form) {
         startRegistration(form)
-            .then(res => {
-                console.log('==> RES', res)
+            .then(data => {
+                registrationData = JSON.stringify(data)
             })
             .catch(err => {
                 console.log('==> UI ERR', err)
+            })
+            .finally(() => {
+                submitButton.click()
             })
     }
 </script>
@@ -27,7 +33,11 @@
         async ({ update }) =>
             await update({ reset: false })}
 >
-    <button type="submit">Register Touch ID for next login </button>
-
+    <button type="submit">Register Touch ID for next login</button>
     <input type="hidden" name="userId" value={data.email} />
+</form>
+
+<form method="POST" action="?/registrationWebAuthnVerification" use:enhance>
+    <button type="submit" bind:this={submitButton} hidden>Submit</button>
+    <input type="hidden" name="registrationData" value={registrationData} />
 </form>

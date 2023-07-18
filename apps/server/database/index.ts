@@ -1,8 +1,11 @@
 import { type ColumnType, type Generated, Kysely, PostgresDialect } from 'kysely'
+import type { JsonValue } from '../types'
 import { Pool } from 'pg'
 import dotenv from 'dotenv'
 
 dotenv.config()
+
+type Json = ColumnType<JsonValue, any, any>
 
 interface Todo {
     id: Generated<string>
@@ -47,7 +50,7 @@ interface Webauthn {
     id: Generated<string>
     user_id: string
     current_challenge: string
-    devices: string
+    devices: any | null
     created_at: ColumnType<Date, string | undefined, never>
     updated_at: ColumnType<Date, string | undefined, never>
 }
