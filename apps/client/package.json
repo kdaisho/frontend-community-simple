@@ -15,6 +15,7 @@
     },
     "devDependencies": {
         "@playwright/test": "^1.28.1",
+        "@simplewebauthn/typescript-types": "^7.0.0",
         "@sveltejs/adapter-auto": "^2.0.0",
         "@sveltejs/kit": "^1.20.4",
         "@testing-library/jest-dom": "^5.16.5",
@@ -37,6 +38,7 @@
     },
     "type": "module",
     "dependencies": {
+        "@simplewebauthn/browser": "^7.2.0",
         "@trpc/client": "^10.27.1",
         "jsonwebtoken": "^9.0.0"
     }
