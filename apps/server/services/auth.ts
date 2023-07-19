@@ -51,7 +51,7 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
 export async function handleSignIn({ email }: { email: string }) {
     const user = await db
         .selectFrom('user')
-        .select('id')
+        .select(['id', 'webauthn'])
         .where('email', '=', email)
         .executeTakeFirst()
 
@@ -61,6 +61,12 @@ export async function handleSignIn({ email }: { email: string }) {
         })
     }
 
+    if (user?.webauthn) {
+        console.log('==> this user enabled webauthn')
+        return { success: true, userId: user.id, webauthn: user.webauthn }
+    }
+
+    // may not need this check for user as user is guaranteed to be here. there's a check `if (!user)` above
     if (user) {
         const authToken = jwt.sign(
             {
@@ -89,6 +95,8 @@ export async function handleSignIn({ email }: { email: string }) {
         // show a message to user that an email has been sent
         return {
             success: true,
+            userId: user.id,
+            webauthn: false,
         }
     }
 
@@ -96,6 +104,8 @@ export async function handleSignIn({ email }: { email: string }) {
     // as we should not to give user a hint that the email is not registered
     return {
         success: false,
+        userId: null,
+        webauthn: false,
     }
 }
 

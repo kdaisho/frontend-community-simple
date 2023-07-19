@@ -3,8 +3,8 @@ import { TRPCClientError } from '@trpc/client'
 import client from '$lib/trpc'
 import { fail } from '@sveltejs/kit'
 
-export const load = (async ({ params }) => {
-    console.log('LOAD SignIn ==>', params)
+export const load = (async ({ locals }) => {
+    console.log('LOAD SignIn ==>', locals)
 }) satisfies PageServerLoad
 
 export const actions = {
@@ -20,8 +20,12 @@ export const actions = {
         }
 
         try {
-            await client.signIn.query({ email })
-            return { success: true }
+            const response = await client.signIn.query({ email })
+            return {
+                success: true,
+                userId: response.userId,
+                webauthn: response.webauthn,
+            }
         } catch (err) {
             if (err instanceof TRPCClientError) {
                 const errors = JSON.parse(err.message)
@@ -32,5 +36,16 @@ export const actions = {
             }
             return { success: false, message: 'Failed to sign in' }
         }
+    },
+    signInWebAuthn: async ({ request }) => {
+        const formData = await request.formData()
+        const userId = formData.get('userId')
+
+        console.log('==> GOT USER ID', userId)
+
+        /* TODO run two methods from SimpleWebAuthn
+            1. generateAuthenticationOptions (server)
+            2. startAuthentication (client)
+        */
     },
 } satisfies Actions
