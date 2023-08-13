@@ -12,13 +12,15 @@ import {
     findRegisteredDevices,
     findUserByEmail,
     findUserBySessionToken,
+    findUserWithWebAuthnByEmail,
     handleRegister,
     handleSignIn,
     saveNewDevices,
     saveSession,
     saveUser,
+    updateUserWithCurrentChallenge,
     updateUserWithWebauthn,
-    updateWebauthnWithCurrentChallenge,
+    // updateWebauthnWithCurrentChallenge,
 } from '../services/auth'
 import { publicProcedure, router } from '../../trpc'
 import { TRPCError } from '@trpc/server'
@@ -41,7 +43,7 @@ const signInPayload = z.object({
 })
 
 const registrationVerificationPayload = z.object({
-    userId: z.string(),
+    email: z.string().email({ message: 'Email is not valid' }),
     data: z.any(),
 })
 
@@ -58,6 +60,7 @@ export const authRouter = router({
     createUser: publicProcedure
         .input(z.object({ name: z.string(), email: z.string().email() }))
         .query(async ({ input }) => {
+            console.log('==> SAVING THIS', input)
             return await saveUser({
                 name: input.name,
                 email: input.email,
@@ -95,12 +98,18 @@ export const authRouter = router({
             })
         }
     }),
+    // 1st
     getWebAuthnRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
-        const user = await findUserByEmail(input)
+        console.log('==> ROUTER P1', input)
+        const user = await findUserWithWebAuthnByEmail(input)
 
         if (!user) return null // throw tPRC error here
 
-        const webauthn = await findRegisteredDevices(user.id)
+        console.log('==> U', user)
+
+        const deviceList = user.devices ? JSON.parse(user.devices) : null
+
+        // const webauthn = await findRegisteredDevices(user.id)
 
         const registrationOptions = generateRegistrationOptions({
             rpName: 'frontend-community',
@@ -108,8 +117,14 @@ export const authRouter = router({
             userID: user.email,
             userName: user.name,
             attestationType: 'none',
-            excludeCredentials: webauthn?.devices
-                ? webauthn.devices.map(
+            /**
+             * Passing in a user's list of already-registered authenticator IDs here prevents users from
+             * registering the same device multiple times. The authenticator will simply throw an error in
+             * the browser if it's asked to perform registration when one of these ID's already resides
+             * on it.
+             */
+            excludeCredentials: deviceList
+                ? deviceList.map(
                       (device: {
                           credentialID: { [s: string]: number } | ArrayLike<number>
                           transports: any
@@ -122,35 +137,42 @@ export const authRouter = router({
                 : [],
         })
 
-        console.log('==> IS THIS SAVING DEVICES TO DB?', user.id) // not yet, we jus provide the options for registration
+        // console.log('==> IS THIS SAVING DEVICES TO DB?', user.id) // not yet, we jus provide the options for registration
 
-        await updateWebauthnWithCurrentChallenge({
+        await updateUserWithCurrentChallenge({
             userId: user.id,
             currentChallenge: registrationOptions.challenge,
         })
 
+        // await updateWebauthnWithCurrentChallenge({
+        //     userId: user.id,
+        //     currentChallenge: registrationOptions.challenge,
+        // })
+
         return registrationOptions
     }),
+    // 2nd
     verifyWebAuthnRegistrationResponse: publicProcedure
         .input(registrationVerificationPayload)
         .query(async ({ input }) => {
             console.log('==> verifyWebAuthnRegistrationResponse 1', input)
+            const { email, data: stringData } = input
+            const data = JSON.parse(stringData)
 
-            const { userId } = input
-            const { current_challenge: currentChallenge, devices } = await findCurrentChallenge(
-                userId
-            )
+            const user = await findUserWithWebAuthnByEmail(email)
 
-            console.log('==> verifyWebAuthnRegistrationResponse 2', currentChallenge)
-            console.log('==> verifyWebAuthnRegistrationResponse 3', devices)
+            if (!user) return null // throw tPRC error here
 
-            const data = JSON.parse(input.data)
+            const expectedChallenge = user?.current_challenge as string // at this point, the value should be here
+
+            console.log('==> verifyWebAuthnRegistrationResponse 2', expectedChallenge)
+
             let verification: VerifiedRegistrationResponse
 
             try {
                 verification = await verifyRegistrationResponse({
                     response: data,
-                    expectedChallenge: currentChallenge,
+                    expectedChallenge,
                     expectedOrigin,
                     expectedRPID: rpId,
                 })
@@ -160,15 +182,15 @@ export const authRouter = router({
                     message: 'Verification registration failed',
                 })
             }
-
             const { verified, registrationInfo } = verification
+
+            const deviceList = user.devices ? JSON.parse(user.devices) : null
 
             if (verified && registrationInfo) {
                 const { credentialPublicKey, credentialID, counter } = registrationInfo
-
                 // convert stringified Uint8Array into real Uint8Array
-                const uint8ArrayDevices = devices
-                    ? devices.reduce(
+                const uint8ArrayDevices = deviceList
+                    ? deviceList.reduce(
                           (
                               acc: Partial<typeof registrationInfo>[],
                               cur: typeof registrationInfo
@@ -189,9 +211,8 @@ export const authRouter = router({
                           []
                       )
                     : []
-
-                const existingDevice = devices
-                    ? devices.find((device: Record<string, Uint8Array>) => {
+                const existingDevice = deviceList
+                    ? deviceList.find((device: Record<string, Uint8Array>) => {
                           return device.credentialID === credentialID
                       })
                     : false
@@ -205,17 +226,17 @@ export const authRouter = router({
                         counter,
                         transports: data.transports,
                     }
-
                     uint8ArrayDevices.push(newDevice)
 
                     console.log('==> SAVING NEW DEVICES 1', uint8ArrayDevices)
 
-                    await updateUserWithWebauthn(userId)
-                    await saveNewDevices({ userId, devices: JSON.stringify(uint8ArrayDevices) })
+                    await updateUserWithWebauthn(user.id)
+                    await saveNewDevices({
+                        userId: user.id,
+                        devices: JSON.stringify(uint8ArrayDevices),
+                    })
                 }
-
                 console.log('==>', 'DONE')
-
                 return { ok: true }
             }
         }),
@@ -226,30 +247,31 @@ export const authRouter = router({
         // Require users to use a previously-registered loginOptions
 
         const options = generateAuthenticationOptions({
-            allowCredentials: devices.map(
-                (authenticator: { credentialID: any; transports?: any }) => {
-                    console.log('==> Extracted MAP', authenticator.credentialID)
+            // allowCredentials: devices.map(
+            //     (authenticator: { credentialID: any; transports?: any }) => {
+            //         console.log('==> Extracted MAP', authenticator.credentialID)
 
-                    const yey = getCredentialIdFromStringifiedDevices(authenticator.credentialID)
+            //         const yey = getCredentialIdFromStringifiedDevices(authenticator.credentialID)
 
-                    console.log('==> Extracted MAP', yey)
+            //         console.log('==> Extracted MAP', yey)
 
-                    const myObj = {
-                        // id: authenticator.credentialID,
-                        id: yey,
-                        type: 'public-key',
-                        // Optional
-                        transports: authenticator?.transports,
-                    }
-                    console.log('==> Extracted RESULT', myObj)
-                    return myObj
-                }
-            ),
+            //         const myObj = {
+            //             // id: authenticator.credentialID,
+            //             id: yey,
+            //             type: 'public-key',
+            //             // Optional
+            //             transports: authenticator?.transports,
+            //         }
+            //         console.log('==> Extracted RESULT', myObj)
+            //         return myObj
+            //     }
+            // ),
+            allowCredentials: [], //temporary
             userVerification: 'preferred',
             // rpID: rpId,
         })
 
-        console.log('==> OPTIONS', options)
+        // console.log('==> OPTIONS', options)
         return options
     }),
 })

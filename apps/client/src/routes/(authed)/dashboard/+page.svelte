@@ -5,48 +5,54 @@
     import { startRegistration } from '@simplewebauthn/browser'
 
     export let data: PageServerData
-    export let form: { registrationOptions: PublicKeyCredentialCreationOptionsJSON | null }
+    export let form: {
+        registrationOptions: PublicKeyCredentialCreationOptionsJSON | null
+        registrationOptions_: PublicKeyCredentialCreationOptionsJSON | null
+    }
 
     let registrationData: string
     let submitButton: HTMLButtonElement
+    let step1 = true
 
     $: {
         console.log('==> reactive', form)
     }
 
-    $: if (form && form.registrationOptions) {
+    $: if (form?.registrationOptions && step1) {
         startRegistration(form.registrationOptions)
             .then(data => {
-                alert('success!')
                 registrationData = JSON.stringify(data)
+                step1 = false
             })
             .catch(err => {
-                console.log('==> Dashboard UI ERR', err)
+                console.error('==> Dashboard UI ERR', err)
             })
             .finally(() => {
-                // submitButton.click()
-                // form.registrationOptions = null
+                submitButton.click()
+                alert('You can now login with WebAuthn')
             })
     }
-
-    // TODO: Final step is run '/auth/webauth-login-verification' step
-    // pass registrationData to verifyAuthenticationResponse (SimpleWebAuthn method)
 </script>
 
 <h1>Dashboard of {data.userName}</h1>
 
-<form
-    method="POST"
-    action="?/registerWebAuthn"
-    use:enhance={() =>
-        async ({ update }) =>
-            await update({ reset: false })}
->
-    <button type="submit">Register Touch ID for next login</button>
-    <input type="hidden" name="userId" value={data.email} />
-</form>
+<!-- WEBAUTHN 1st endpoint -->
+{#if step1}
+    <form
+        method="POST"
+        action="?/webauthn-registration-options"
+        use:enhance={() =>
+            async ({ update }) =>
+                await update({ reset: false })}
+    >
+        <button type="submit">Register Touch ID for next login</button>
+        <input type="hidden" name="email" value={data.email} />
+    </form>
+{/if}
 
-<form method="POST" action="?/registrationWebAuthnVerification" use:enhance>
-    <button type="submit" bind:this={submitButton}>Submit Special</button>
-    <input name="registrationData" value={registrationData} />
+<!-- WEBAUTHN 2st endpoint -->
+<form method="POST" action="?/webauthn-registration-verification" use:enhance>
+    <button type="submit" bind:this={submitButton} hidden>Submit Special</button>
+    <input type="hidden" name="email" value={data.email} />
+    <input type="hidden" name="registrationData" value={registrationData} />
 </form>

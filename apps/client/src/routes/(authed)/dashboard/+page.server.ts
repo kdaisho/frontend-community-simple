@@ -10,24 +10,17 @@ export const load = (async ({ locals }) => {
 }) satisfies PageServerLoad
 
 export const actions = {
-    registerWebAuthn: async ({ request }) => {
+    // WEBAUTHN 1st endpoint
+    'webauthn-registration-options': async ({ request }) => {
         const formData = await request.formData()
-        const userId = formData.get('userId') as string
+        const email = formData.get('email') as string
 
-        if (!userId) {
-            return { success: false, message: 'userId not found' }
+        if (!email) {
+            return { success: false, message: 'Email not submitted' }
         }
 
         try {
-            const registrationOptions = await client.getWebAuthnRegistrationOptions.query(userId)
-
-            if (registrationOptions && registrationOptions.authenticatorSelection) {
-                registrationOptions.authenticatorSelection.residentKey = 'required'
-                registrationOptions.authenticatorSelection.requireResidentKey = true
-                registrationOptions.extensions = {
-                    credProps: true,
-                }
-            }
+            const registrationOptions = await client.getWebAuthnRegistrationOptions.query(email)
 
             return { registrationOptions }
         } catch (err) {
@@ -35,13 +28,14 @@ export const actions = {
         }
     },
 
-    registrationWebAuthnVerification: async ({ request, locals }) => {
+    'webauthn-registration-verification': async ({ request, locals }) => {
         const formData = await request.formData()
+        const email = formData.get('email') as string
         const registrationData = formData.get('registrationData') as string
 
         return {
             registrationOptions_: await client.verifyWebAuthnRegistrationResponse.query({
-                userId: locals.user.id,
+                email,
                 data: registrationData,
             }),
         }

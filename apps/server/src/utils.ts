@@ -13,7 +13,7 @@ export async function sendEmail({
     body: string
     url?: string
 }) {
-    console.log('==> sending email', url)
+    console.log(url)
     // return await mailClient.sendEmail({
     //     From: 'admin@daishodesign.com',
     //     To: email,
