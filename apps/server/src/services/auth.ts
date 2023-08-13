@@ -1,7 +1,7 @@
 import type { JsonValue } from '../types'
-import { db } from '../database'
+import { db } from '../../database'
 import jwt from 'jsonwebtoken'
-import { sendEmail } from './utils'
+import { sendEmail } from '../utils'
 
 type HandleRegisterProps = {
     name: string
@@ -68,6 +68,7 @@ export async function handleSignIn({ email }: { email: string }) {
 
     // may not need this check for user as user is guaranteed to be here. there's a check `if (!user)` above
     if (user) {
+        console.log('==>', 'HEEEEE')
         const authToken = jwt.sign(
             {
                 email,
@@ -214,15 +215,17 @@ export async function updateWebauthnWithCurrentChallenge({
 }
 
 export async function findCurrentChallenge(userId: string) {
-    console.log('==> DAO 1', userId)
-    const yo = await db
+    console.log('==> FOUND CHALLENGE 1', userId)
+
+    const foundCurrentChallenge_ = await db
         .selectFrom('webauthn')
         .select(['current_challenge', 'devices'])
         .where('user_id', '=', userId)
         .executeTakeFirstOrThrow()
 
-    console.log('==> DAO 2', yo)
-    return yo
+    console.log('==> FOUND CHALLENGE 2', foundCurrentChallenge_)
+
+    return foundCurrentChallenge_
 }
 
 export async function updateUserWithWebauthn(userId: string) {
@@ -230,5 +233,20 @@ export async function updateUserWithWebauthn(userId: string) {
 }
 
 export async function saveNewDevices({ userId, devices }: { userId: string; devices: JsonValue }) {
-    return await db.updateTable('webauthn').set({ devices }).where('user_id', '=', userId).execute()
+    try {
+        console.log('==> Saving DEVICES', { userId, devices })
+        await db.updateTable('webauthn').set({ devices }).where('user_id', '=', userId).execute()
+    } catch (err) {
+        console.log('==> Saving DEVICES FAILED', err)
+    }
+}
+
+export async function findLoginOptions(userId: string) {
+    const options = await db
+        .selectFrom('webauthn')
+        .select(['current_challenge', 'devices'])
+        .where('user_id', '=', userId)
+        .executeTakeFirstOrThrow()
+
+    return options.devices
 }

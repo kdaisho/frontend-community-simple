@@ -5,23 +5,32 @@
     import { startRegistration } from '@simplewebauthn/browser'
 
     export let data: PageServerData
-    export let form: PublicKeyCredentialCreationOptionsJSON
+    export let form: { registrationOptions: PublicKeyCredentialCreationOptionsJSON | null }
 
     let registrationData: string
     let submitButton: HTMLButtonElement
 
-    $: if (form) {
-        startRegistration(form)
+    $: {
+        console.log('==> reactive', form)
+    }
+
+    $: if (form && form.registrationOptions) {
+        startRegistration(form.registrationOptions)
             .then(data => {
+                alert('success!')
                 registrationData = JSON.stringify(data)
             })
             .catch(err => {
-                console.log('==> UI ERR', err)
+                console.log('==> Dashboard UI ERR', err)
             })
             .finally(() => {
-                submitButton.click()
+                // submitButton.click()
+                // form.registrationOptions = null
             })
     }
+
+    // TODO: Final step is run '/auth/webauth-login-verification' step
+    // pass registrationData to verifyAuthenticationResponse (SimpleWebAuthn method)
 </script>
 
 <h1>Dashboard of {data.userName}</h1>
@@ -38,6 +47,6 @@
 </form>
 
 <form method="POST" action="?/registrationWebAuthnVerification" use:enhance>
-    <button type="submit" bind:this={submitButton} hidden>Submit</button>
-    <input type="hidden" name="registrationData" value={registrationData} />
+    <button type="submit" bind:this={submitButton}>Submit Special</button>
+    <input name="registrationData" value={registrationData} />
 </form>

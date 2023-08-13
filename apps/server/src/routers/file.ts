@@ -1,5 +1,5 @@
 import { handleDownload, handleUpload } from '../services/file'
-import { publicProcedure, router } from '../trpc'
+import { publicProcedure, router } from '../../trpc'
 import { z } from 'zod'
 
 const uploadPayload = z.object({

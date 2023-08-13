@@ -1,4 +1,4 @@
-import { db } from '../database'
+import { db } from '../../database'
 
 export async function getTodos() {
     return await db.selectFrom('todo').selectAll().orderBy('created_at').execute()

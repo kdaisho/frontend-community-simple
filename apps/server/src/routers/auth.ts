@@ -1,11 +1,13 @@
 import {
     type VerifiedRegistrationResponse,
+    generateAuthenticationOptions,
     generateRegistrationOptions,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import {
     consumeFootprint,
     findCurrentChallenge,
+    findLoginOptions,
     findPristineFootprint,
     findRegisteredDevices,
     findUserByEmail,
@@ -18,8 +20,9 @@ import {
     updateUserWithWebauthn,
     updateWebauthnWithCurrentChallenge,
 } from '../services/auth'
-import { publicProcedure, router } from '../trpc'
+import { publicProcedure, router } from '../../trpc'
 import { TRPCError } from '@trpc/server'
+import { getCredentialIdFromStringifiedDevices } from '../utils'
 import { z } from 'zod'
 
 // rp: relying party
@@ -92,7 +95,7 @@ export const authRouter = router({
             })
         }
     }),
-    getRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
+    getWebAuthnRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
         const user = await findUserByEmail(input)
 
         if (!user) return null // throw tPRC error here
@@ -119,6 +122,8 @@ export const authRouter = router({
                 : [],
         })
 
+        console.log('==> IS THIS SAVING DEVICES TO DB?', user.id) // not yet, we jus provide the options for registration
+
         await updateWebauthnWithCurrentChallenge({
             userId: user.id,
             currentChallenge: registrationOptions.challenge,
@@ -126,13 +131,19 @@ export const authRouter = router({
 
         return registrationOptions
     }),
-    verifyWebauthnRegistrationResponse: publicProcedure
+    verifyWebAuthnRegistrationResponse: publicProcedure
         .input(registrationVerificationPayload)
         .query(async ({ input }) => {
+            console.log('==> verifyWebAuthnRegistrationResponse 1', input)
+
             const { userId } = input
             const { current_challenge: currentChallenge, devices } = await findCurrentChallenge(
                 userId
             )
+
+            console.log('==> verifyWebAuthnRegistrationResponse 2', currentChallenge)
+            console.log('==> verifyWebAuthnRegistrationResponse 3', devices)
+
             const data = JSON.parse(input.data)
             let verification: VerifiedRegistrationResponse
 
@@ -185,6 +196,8 @@ export const authRouter = router({
                       })
                     : false
 
+                console.log('==> SAVING NEW DEVICES 0', existingDevice)
+
                 if (!existingDevice) {
                     const newDevice = {
                         credentialPublicKey,
@@ -195,6 +208,8 @@ export const authRouter = router({
 
                     uint8ArrayDevices.push(newDevice)
 
+                    console.log('==> SAVING NEW DEVICES 1', uint8ArrayDevices)
+
                     await updateUserWithWebauthn(userId)
                     await saveNewDevices({ userId, devices: JSON.stringify(uint8ArrayDevices) })
                 }
@@ -204,4 +219,37 @@ export const authRouter = router({
                 return { ok: true }
             }
         }),
+    getWebAuthnLoginOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
+        const devices = await findLoginOptions(input)
+        console.log('==> Extracted devices', devices)
+        console.log('==> Extracted devices type', Array.isArray(devices)) // somehow it's already array of objects
+        // Require users to use a previously-registered loginOptions
+
+        const options = generateAuthenticationOptions({
+            allowCredentials: devices.map(
+                (authenticator: { credentialID: any; transports?: any }) => {
+                    console.log('==> Extracted MAP', authenticator.credentialID)
+
+                    const yey = getCredentialIdFromStringifiedDevices(authenticator.credentialID)
+
+                    console.log('==> Extracted MAP', yey)
+
+                    const myObj = {
+                        // id: authenticator.credentialID,
+                        id: yey,
+                        type: 'public-key',
+                        // Optional
+                        transports: authenticator?.transports,
+                    }
+                    console.log('==> Extracted RESULT', myObj)
+                    return myObj
+                }
+            ),
+            userVerification: 'preferred',
+            // rpID: rpId,
+        })
+
+        console.log('==> OPTIONS', options)
+        return options
+    }),
 })

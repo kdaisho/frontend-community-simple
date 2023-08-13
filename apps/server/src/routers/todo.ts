@@ -1,5 +1,5 @@
 import { createTodo, deleteTodo, getTodos, updateTodo } from '../services/todo'
-import { publicProcedure, router } from '../trpc'
+import { publicProcedure, router } from '../../trpc'
 import { z } from 'zod'
 
 const createTodoPayload = z.object({

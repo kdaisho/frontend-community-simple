@@ -1,12 +1,12 @@
+import dotenv from 'dotenv'
+dotenv.config()
+// eslint-disable-next-line sort-imports
 import { TRPCError } from '@trpc/server'
-import { appRouter } from './routers'
+import { appRouter } from './src/routers'
 import cors from 'cors'
 import { createExpressMiddleware } from '@trpc/server/adapters/express'
-import dotenv from 'dotenv'
 import express from 'express'
 import { getHTTPStatusCodeFromError } from '@trpc/server/http'
-
-dotenv.config()
 
 async function server() {
     const app = express()

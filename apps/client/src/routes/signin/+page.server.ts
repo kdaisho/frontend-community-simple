@@ -39,7 +39,7 @@ export const actions = {
     },
     signInWebAuthn: async ({ request }) => {
         const formData = await request.formData()
-        const userId = formData.get('userId')
+        const userId = formData.get('userId') as string
 
         console.log('==> GOT USER ID', userId)
 
@@ -47,5 +47,13 @@ export const actions = {
             1. generateAuthenticationOptions (server)
             2. startAuthentication (client)
         */
+
+        if (!userId) {
+            return fail(422, {
+                error: ['User not found'],
+            })
+        }
+
+        return { loginOptions: await client.getWebAuthnLoginOptions.query(userId) }
     },
 } satisfies Actions

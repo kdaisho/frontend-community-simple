@@ -21,3 +21,14 @@ export async function sendEmail({
     //     HtmlBody: body,
     // })
 }
+
+export function getCredentialIdFromStringifiedDevices(
+    stringifiedObject: { [s: string]: number } | ArrayLike<number>
+) {
+    console.log(
+        '==> getCredentialIdFromStringifiedDevices',
+        Array.isArray(stringifiedObject),
+        stringifiedObject
+    )
+    return Uint8Array.from(Object.values(stringifiedObject))
+}

@@ -1,9 +1,6 @@
 import { type ColumnType, type Generated, Kysely, PostgresDialect } from 'kysely'
-import type { JsonValue } from '../types'
+import type { JsonValue } from '../src/types'
 import { Pool } from 'pg'
-import dotenv from 'dotenv'
-
-dotenv.config()
 
 type Json = ColumnType<JsonValue, any, any>
 

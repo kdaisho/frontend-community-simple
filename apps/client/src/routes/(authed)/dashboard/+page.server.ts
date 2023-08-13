@@ -19,7 +19,7 @@ export const actions = {
         }
 
         try {
-            const registrationOptions = await client.getRegistrationOptions.query(userId)
+            const registrationOptions = await client.getWebAuthnRegistrationOptions.query(userId)
 
             if (registrationOptions && registrationOptions.authenticatorSelection) {
                 registrationOptions.authenticatorSelection.residentKey = 'required'
@@ -29,9 +29,9 @@ export const actions = {
                 }
             }
 
-            return registrationOptions
+            return { registrationOptions }
         } catch (err) {
-            console.log('==> PG Error', err)
+            console.error(err)
         }
     },
 
@@ -39,9 +39,11 @@ export const actions = {
         const formData = await request.formData()
         const registrationData = formData.get('registrationData') as string
 
-        await client.verifyWebauthnRegistrationResponse.query({
-            userId: locals.user.id,
-            data: registrationData,
-        })
+        return {
+            registrationOptions_: await client.verifyWebAuthnRegistrationResponse.query({
+                userId: locals.user.id,
+                data: registrationData,
+            }),
+        }
     },
 } satisfies Actions
