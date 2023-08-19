@@ -2,6 +2,7 @@ import {
     type VerifiedRegistrationResponse,
     generateAuthenticationOptions,
     generateRegistrationOptions,
+    verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import {
@@ -18,20 +19,26 @@ import {
     saveNewDevices,
     saveSession,
     saveUser,
+    sendLoginEmail,
     updateUserWithCurrentChallenge,
     updateUserWithWebauthn,
     // updateWebauthnWithCurrentChallenge,
 } from '../services/auth'
 import { publicProcedure, router } from '../../trpc'
 import { TRPCError } from '@trpc/server'
-import { getCredentialIdFromStringifiedDevices } from '../utils'
+import base64url from 'base64url'
+import { getUint8ArrayFromArrayLikeObject } from '../utils'
 import { z } from 'zod'
+
+console.log('==> base64', base64url)
+console.log('==> base64', typeof base64url)
 
 // rp: relying party
 const rpId = 'localhost'
 const protocol = 'http'
 const port = 5173
 const expectedOrigin = `${protocol}://${rpId}:${port}`
+let dynamicChallenge: string
 
 const registerPayload = z.object({
     name: z.string().min(1, { message: 'Name is required' }),
@@ -55,7 +62,11 @@ export const authRouter = router({
         })
     }),
     signIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
+        console.log('==> KOOOO', input)
         return await handleSignIn({ email: input.email })
+    }),
+    sendLoginEmail: publicProcedure.input(z.string()).query(async ({ input }) => {
+        await sendLoginEmail(input)
     }),
     createUser: publicProcedure
         .input(z.object({ name: z.string(), email: z.string().email() }))
@@ -107,7 +118,7 @@ export const authRouter = router({
 
         console.log('==> U', user)
 
-        const deviceList = user.devices ? JSON.parse(user.devices) : null
+        // const deviceList = user.devices ? JSON.parse(user.devices) : null
 
         // const webauthn = await findRegisteredDevices(user.id)
 
@@ -123,8 +134,8 @@ export const authRouter = router({
              * the browser if it's asked to perform registration when one of these ID's already resides
              * on it.
              */
-            excludeCredentials: deviceList
-                ? deviceList.map(
+            excludeCredentials: user.devices
+                ? user.devices.map(
                       (device: {
                           credentialID: { [s: string]: number } | ArrayLike<number>
                           transports: any
@@ -184,16 +195,26 @@ export const authRouter = router({
             }
             const { verified, registrationInfo } = verification
 
-            const deviceList = user.devices ? JSON.parse(user.devices) : null
+            console.log('==> ohhhhhh PARSING 1', typeof user.devices)
+            console.log('==> ohhhhhh PARSING 2', user.devices)
+
+            // at this point, user.devices can be, highly likely, null so JSON.parse runs without any problem (null is part of JSON), no error thrown.
+            // this conversion may not necessary then?
+
+            // const deviceList = user.devices ? JSON.parse(user.devices) : null
 
             if (verified && registrationInfo) {
                 const { credentialPublicKey, credentialID, counter } = registrationInfo
                 // convert stringified Uint8Array into real Uint8Array
-                const uint8ArrayDevices = deviceList
-                    ? deviceList.reduce(
+                const uint8ArrayDevices = user.devices
+                    ? user.devices.reduce(
                           (
-                              acc: Partial<typeof registrationInfo>[],
-                              cur: typeof registrationInfo
+                              acc: any,
+                              cur: {
+                                  credentialPublicKey: ArrayLike<number> | { [s: string]: number }
+                                  credentialID: ArrayLike<number> | { [s: string]: number }
+                                  counter: number | undefined
+                              }
                           ) => {
                               const obj: Partial<typeof registrationInfo> = {
                                   credentialPublicKey,
@@ -211,8 +232,8 @@ export const authRouter = router({
                           []
                       )
                     : []
-                const existingDevice = deviceList
-                    ? deviceList.find((device: Record<string, Uint8Array>) => {
+                const existingDevice = user.devices
+                    ? user.devices.find((device: Record<string, Uint8Array>) => {
                           return device.credentialID === credentialID
                       })
                     : false
@@ -240,38 +261,122 @@ export const authRouter = router({
                 return { ok: true }
             }
         }),
-    getWebAuthnLoginOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
-        const devices = await findLoginOptions(input)
-        console.log('==> Extracted devices', devices)
-        console.log('==> Extracted devices type', Array.isArray(devices)) // somehow it's already array of objects
-        // Require users to use a previously-registered loginOptions
+    // 3rd
+    getWebAuthnLoginOptions: publicProcedure
+        .input(z.object({ email: z.string() }))
+        .query(async ({ input }) => {
+            const user = await findUserWithWebAuthnByEmail(input.email)
 
-        const options = generateAuthenticationOptions({
-            // allowCredentials: devices.map(
-            //     (authenticator: { credentialID: any; transports?: any }) => {
-            //         console.log('==> Extracted MAP', authenticator.credentialID)
+            if (!user) return null // throw tPRC error here
 
-            //         const yey = getCredentialIdFromStringifiedDevices(authenticator.credentialID)
+            const response = generateAuthenticationOptions({
+                allowCredentials: user.devices
+                    ? user.devices.map(
+                          (authenticator: {
+                              credentialID: ArrayLike<number> | { [s: string]: number }
+                              transports: unknown
+                          }) => {
+                              return {
+                                  id: getUint8ArrayFromArrayLikeObject(authenticator.credentialID),
+                                  type: 'public-key' as const,
+                                  transports: authenticator?.transports, // Optional
+                              }
+                          }
+                      )
+                    : [],
+                userVerification: 'preferred',
+            })
 
-            //         console.log('==> Extracted MAP', yey)
+            console.log('==> response:', response)
 
-            //         const myObj = {
-            //             // id: authenticator.credentialID,
-            //             id: yey,
-            //             type: 'public-key',
-            //             // Optional
-            //             transports: authenticator?.transports,
-            //         }
-            //         console.log('==> Extracted RESULT', myObj)
-            //         return myObj
-            //     }
-            // ),
-            allowCredentials: [], //temporary
-            userVerification: 'preferred',
-            // rpID: rpId,
-        })
+            dynamicChallenge = response.challenge
 
-        // console.log('==> OPTIONS', options)
-        return options
-    }),
+            console.log('==> response: dynamic challenge', dynamicChallenge)
+
+            return response
+
+            // passing the result from generateAuthenticationOptions to the 4th method directly
+            // verifyAuthenticationResponse({
+            //     response,
+            //     expectedChallenge: findCurrentChallenge(user.email),
+            //     expectedOrigin,
+            //     expectedRPID: rpId,
+            //     authenticator: {
+            //         attachment: 'platform',
+            //         transport: 'usb',
+            //         requireResidentKey: false,
+            //         userVerification: 'preferred',
+            //     },
+            // })
+        }),
+    // 4th
+    verifyWebAuthnLogin: publicProcedure
+        .input(z.object({ email: z.string().email(), registrationDataParsed: z.any() }))
+        .query(async ({ input }) => {
+            console.log('==>', input)
+            console.log('==> verifyWebAuthnLogin 1', input.registrationDataParsed)
+
+            const user = await findUserWithWebAuthnByEmail(input.email)
+
+            console.log('==> USER', user)
+
+            if (!user) return null // throw tPRC error here
+
+            // user would look like this;
+            // {
+            //     id: 'ad59b5da-cda8-484f-9d5a-02ad5f032350',
+            //     name: 'aa',
+            //     email: 'aa@aa.aa',
+            //     current_challenge: '0shB7pcflFMDBSU73X7nV-ne26OlGQ94xhImYDRrGQ4',
+            //     devices: [
+            //         {
+            //             credentialPublicKey: [Object],
+            //             credentialID: [Object],
+            //             counter: 0,
+            //         },
+            //     ],
+            //     webauthn: true,
+            // }
+
+            const expectedChallenge = user.current_challenge
+
+            let dbAuthenticator
+            console.log('==>', 'try 1')
+            const bodyCredIDBuffer = base64url.toBuffer(input.registrationDataParsed.rawId)
+            console.log('==>', 'try 2', bodyCredIDBuffer)
+
+            for (const device of user.devices) {
+                const currentCredential = Buffer.from(
+                    getUint8ArrayFromArrayLikeObject(device.credentialID)
+                )
+                console.log('==>', 'try 3', currentCredential)
+                if (bodyCredIDBuffer.equals(currentCredential)) {
+                    dbAuthenticator = device
+                    break
+                }
+            }
+
+            if (!dbAuthenticator) {
+                console.error('NO dbAuthenticator found')
+            }
+
+            console.log('==> I am going to use this challenge!', dynamicChallenge)
+            console.log('==> bodyCredIDBuffer', bodyCredIDBuffer) // we finally reached here
+
+            const verification = await verifyAuthenticationResponse({
+                response: input.registrationDataParsed,
+                // expectedChallenge: user.current_challenge as string,
+                expectedChallenge: dynamicChallenge,
+                expectedOrigin,
+                expectedRPID: rpId,
+                authenticator: {
+                    ...dbAuthenticator,
+                    credentialPublicKey: Buffer.from(
+                        getUint8ArrayFromArrayLikeObject(dbAuthenticator.credentialPublicKey)
+                    ),
+                },
+            })
+
+            console.log('==>', verification) // yatta!!
+        }),
 })

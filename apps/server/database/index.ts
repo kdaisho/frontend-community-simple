@@ -16,7 +16,8 @@ interface User {
     name: string
     email: string
     current_challenge: string | null
-    devices: string | null
+    // devices: string | null
+    devices: any | null
     webauthn: boolean
     created_at: ColumnType<Date, string | undefined, never>
 }

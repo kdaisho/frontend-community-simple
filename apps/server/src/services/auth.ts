@@ -51,7 +51,7 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
 export async function handleSignIn({ email }: { email: string }) {
     const user = await db
         .selectFrom('user')
-        .select(['id', 'webauthn'])
+        .select(['id', 'email', 'webauthn'])
         .where('email', '=', email)
         .executeTakeFirst()
 
@@ -63,12 +63,11 @@ export async function handleSignIn({ email }: { email: string }) {
 
     if (user?.webauthn) {
         console.log('==> this user enabled webauthn')
-        return { success: true, userId: user.id, webauthn: user.webauthn }
+        return { success: true, userId: user.id, email: user.email, webauthn: user.webauthn }
     }
 
     // may not need this check for user as user is guaranteed to be here. there's a check `if (!user)` above
     if (user) {
-        console.log('==>', 'HEEEEE')
         const authToken = jwt.sign(
             {
                 email,
@@ -86,7 +85,7 @@ export async function handleSignIn({ email }: { email: string }) {
             })
             .execute()
 
-        sendEmail({
+        await sendEmail({
             email,
             subject: 'Login to your account',
             body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
@@ -97,6 +96,7 @@ export async function handleSignIn({ email }: { email: string }) {
         return {
             success: true,
             userId: user.id,
+            email: user.email,
             webauthn: false,
         }
     }
@@ -106,8 +106,37 @@ export async function handleSignIn({ email }: { email: string }) {
     return {
         success: false,
         userId: null,
+        email: '',
         webauthn: false,
     }
+}
+
+export async function sendLoginEmail(email: string) {
+    const authToken = jwt.sign(
+        {
+            email,
+        },
+        JWT_SIGNATURE || '',
+        { expiresIn: 60 * 10 }
+    )
+
+    await db
+        .insertInto('footprint')
+        .values({
+            email,
+            token: authToken,
+            pristine: true,
+        })
+        .execute()
+
+    console.log('==>', 'decided to login with email')
+
+    await sendEmail({
+        email,
+        subject: 'Login to your account',
+        body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
+        url: `${BASE_URL}/login?token=${authToken}`,
+    })
 }
 
 export async function findUserByEmail(email: string) {

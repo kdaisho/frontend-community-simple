@@ -22,11 +22,11 @@ export async function sendEmail({
     // })
 }
 
-export function getCredentialIdFromStringifiedDevices(
+export function getUint8ArrayFromArrayLikeObject(
     stringifiedObject: { [s: string]: number } | ArrayLike<number>
 ) {
     console.log(
-        '==> getCredentialIdFromStringifiedDevices',
+        '==> getUint8ArrayFromArrayLikeObject',
         Array.isArray(stringifiedObject),
         stringifiedObject
     )
