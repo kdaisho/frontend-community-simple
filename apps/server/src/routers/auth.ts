@@ -278,13 +278,14 @@ export const authRouter = router({
                           }) => {
                               return {
                                   id: getUint8ArrayFromArrayLikeObject(authenticator.credentialID),
-                                  type: 'public-key' as const,
+                                  type: 'public-key',
                                   transports: authenticator?.transports, // Optional
                               }
                           }
                       )
                     : [],
                 userVerification: 'preferred',
+                rpID: rpId,
             })
 
             console.log('==> response:', response)
@@ -294,20 +295,6 @@ export const authRouter = router({
             console.log('==> response: dynamic challenge', dynamicChallenge)
 
             return response
-
-            // passing the result from generateAuthenticationOptions to the 4th method directly
-            // verifyAuthenticationResponse({
-            //     response,
-            //     expectedChallenge: findCurrentChallenge(user.email),
-            //     expectedOrigin,
-            //     expectedRPID: rpId,
-            //     authenticator: {
-            //         attachment: 'platform',
-            //         transport: 'usb',
-            //         requireResidentKey: false,
-            //         userVerification: 'preferred',
-            //     },
-            // })
         }),
     // 4th
     verifyWebAuthnLogin: publicProcedure
@@ -315,13 +302,9 @@ export const authRouter = router({
         .query(async ({ input }) => {
             console.log('==>', input)
             console.log('==> verifyWebAuthnLogin 1', input.registrationDataParsed)
-
             const user = await findUserWithWebAuthnByEmail(input.email)
-
             console.log('==> USER', user)
-
             if (!user) return null // throw tPRC error here
-
             // user would look like this;
             // {
             //     id: 'ad59b5da-cda8-484f-9d5a-02ad5f032350',
@@ -337,14 +320,11 @@ export const authRouter = router({
             //     ],
             //     webauthn: true,
             // }
-
             const expectedChallenge = user.current_challenge
-
             let dbAuthenticator
             console.log('==>', 'try 1')
             const bodyCredIDBuffer = base64url.toBuffer(input.registrationDataParsed.rawId)
             console.log('==>', 'try 2', bodyCredIDBuffer)
-
             for (const device of user.devices) {
                 const currentCredential = Buffer.from(
                     getUint8ArrayFromArrayLikeObject(device.credentialID)
@@ -355,14 +335,11 @@ export const authRouter = router({
                     break
                 }
             }
-
             if (!dbAuthenticator) {
                 console.error('NO dbAuthenticator found')
             }
-
             console.log('==> I am going to use this challenge!', dynamicChallenge)
             console.log('==> bodyCredIDBuffer', bodyCredIDBuffer) // we finally reached here
-
             const verification = await verifyAuthenticationResponse({
                 response: input.registrationDataParsed,
                 // expectedChallenge: user.current_challenge as string,
@@ -376,7 +353,6 @@ export const authRouter = router({
                     ),
                 },
             })
-
-            console.log('==>', verification) // yatta!!
+            console.log('==> LAST', verification) // yatta!!
         }),
 })

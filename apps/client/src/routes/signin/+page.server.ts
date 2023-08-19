@@ -38,6 +38,7 @@ export const actions = {
     },
     // 3rd
     'webauthn-login-options': async ({ request }) => {
+        console.log('==>', '======================== 33333')
         const formData = await request.formData()
         const email = formData.get('email') as string
 
@@ -60,11 +61,13 @@ export const actions = {
     },
     // 4th
     'webauthn-login-verification': async ({ request }) => {
+        console.log('==>', '======================== 44444')
         const formData = await request.formData()
         const registrationDataString = formData.get('registrationData') as string
         const registrationDataParsed = JSON.parse(registrationDataString)
+        const email = formData.get('email') as string
 
-        console.log('==> ho ho', registrationDataParsed)
+        console.log('==> ho ho', { email, registrationDataParsed })
 
         if (!registrationDataParsed) {
             return fail(422, {
@@ -73,7 +76,7 @@ export const actions = {
         }
 
         try {
-            await client.verifyWebAuthnLogin.query({ email: 'aa@aa.aa', registrationDataParsed })
+            await client.verifyWebAuthnLogin.query({ email, registrationDataParsed })
         } catch (err) {
             console.error('Webauthn verification failed', err)
         }

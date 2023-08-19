@@ -25,10 +25,5 @@ export async function sendEmail({
 export function getUint8ArrayFromArrayLikeObject(
     stringifiedObject: { [s: string]: number } | ArrayLike<number>
 ) {
-    console.log(
-        '==> getUint8ArrayFromArrayLikeObject',
-        Array.isArray(stringifiedObject),
-        stringifiedObject
-    )
     return Uint8Array.from(Object.values(stringifiedObject))
 }

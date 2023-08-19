@@ -3,16 +3,15 @@
     import { enhance } from '$app/forms'
     import { startAuthentication } from '@simplewebauthn/browser'
 
-    export let data: PageData
-    export let form: any
+    export let form: ActionData
 
     let registrationData: any
-    let loginEndpoint: string
     let submitButton: HTMLButtonElement
     let done = false
+    let email: HTMLInputElement
 
     $: {
-        console.log('UI Sign ==>', { data, form })
+        console.log('UI Sign ==>', { loginOptions: form?.loginOptions })
 
         if (form?.loginOptions) {
             startAuthentication(form.loginOptions)
@@ -29,14 +28,6 @@
                 })
             // const verificationRes = await API.webAuthn.loginVerification(email, loginRes)
         }
-
-        if (form?.success) {
-            if (form.webauthn) {
-                loginEndpoint = 'signInWithWebAuthn'
-            } else if (form.email) {
-                loginEndpoint = 'signInWithEmail'
-            }
-        }
     }
 </script>
 
@@ -49,7 +40,7 @@
 <form method="POST" action="?/signIn" use:enhance>
     <fieldset>
         <label for="email">Email</label>
-        <input id="email" type="email" name="email" autocomplete="username" value="aa@aa.aa" />
+        <input id="email" type="email" name="email" autocomplete="username" bind:value={email} />
     </fieldset>
 
     <button>Submit</button>
@@ -60,9 +51,8 @@
 {#if form?.success && !form?.loginOptions}
     <form method="POST" action="?/webauthn-login-options" use:enhance>
         {#if form?.webauthn}
-            <p>{loginEndpoint}</p>
             <button type="submit">Log in with Touch ID / Passkey</button>
-            <input type="email" name="email" value={form.email} style="opacity: .2;" />
+            <input type="email" name="email" value={email} style="opacity: .2;" />
             <p>Or</p>
         {/if}
     </form>
@@ -76,6 +66,7 @@
 {#if !done}
     <form method="POST" action="?/webauthn-login-verification" use:enhance>
         <button type="submit" bind:this={submitButton} hidden>Submit Special 2</button>
+        <input name="email" value={email} style="opacity: .35" />
         <input name="registrationData" value={registrationData} style="opacity: .35" />
     </form>
 {/if}
