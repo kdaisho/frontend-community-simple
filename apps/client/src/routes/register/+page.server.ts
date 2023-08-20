@@ -1,16 +1,7 @@
-import type { Actions, PageServerLoad } from './$types'
+import type { Actions } from './$types'
 import { TRPCClientError } from '@trpc/client'
 import client from '$lib/trpc'
 import { fail } from '@sveltejs/kit'
-
-export const load = (async () => {
-    return {
-        user: {
-            id: 'som',
-            name: 'Some user',
-        },
-    }
-}) satisfies PageServerLoad
 
 export const actions = {
     register: async ({ request }) => {

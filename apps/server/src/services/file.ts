@@ -48,7 +48,6 @@ export async function handleDownload({ fileName }: HandleDownloadProps) {
         const signedUrl = await getSignedUrl(s3Client, command, {
             expiresIn: 3600,
         })
-        console.log('==>', { signedUrl })
         return { success: true, url: signedUrl }
     } catch (err) {
         const message = err instanceof Error ? err.message : 'Download failed'

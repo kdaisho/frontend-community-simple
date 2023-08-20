@@ -1,13 +1,8 @@
 <script lang="ts">
-    import type { ActionData, PageData } from './$types'
+    import type { ActionData } from './$types'
     import { enhance } from '$app/forms'
 
-    export let data: PageData
     export let form: ActionData
-
-    $: {
-        console.log('UI Register ==>', { data, form })
-    }
 </script>
 
 <h1>Join our community</h1>

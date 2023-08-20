@@ -1,13 +1,7 @@
-import type { Actions, PageServerLoad } from './$types'
+import type { Actions } from './$types'
 import { TRPCClientError } from '@trpc/client'
 import client from '$lib/trpc'
 import { fail } from '@sveltejs/kit'
-
-const { BASE_URL, JWT_SIGNATURE } = process.env
-
-export const load = (async ({ locals }) => {
-    console.log('LOAD SignIn ==>', locals)
-}) satisfies PageServerLoad
 
 export const actions = {
     'signIn': async ({ request }) => {
@@ -38,16 +32,8 @@ export const actions = {
     },
     // 3rd
     'webauthn-login-options': async ({ request }) => {
-        console.log('==>', '======================== 33333')
         const formData = await request.formData()
         const email = formData.get('email') as string
-
-        console.log('==> GOT USER ID', email)
-
-        /* TODO run two methods from SimpleWebAuthn
-            1. generateAuthenticationOptions (server)
-            2. startAuthentication (client)
-        */
 
         if (!email) {
             return fail(422, {
@@ -55,34 +41,8 @@ export const actions = {
             })
         }
 
-        console.log('==>', 'RED')
-
         return { success: true, data: await client.getWebAuthnLoginOptions.query({ email }) }
     },
-    // 4th
-    'webauthn-login-verification': async ({ request }) => {
-        console.log('==>', '======================== 44444')
-        const formData = await request.formData()
-        const registrationDataString = formData.get('registrationData') as string
-        console.log('==>', '======================== 44444', registrationDataString)
-        const registrationDataParsed = JSON.parse(registrationDataString)
-        const email = formData.get('email') as string
-
-        console.log('==> ho ho', { email, registrationDataParsed })
-
-        if (!registrationDataParsed) {
-            return fail(422, {
-                error: ['Registration data not found'],
-            })
-        }
-
-        try {
-            await client.verifyWebAuthnLogin.query({ email, registrationDataParsed })
-        } catch (err) {
-            console.error('Webauthn verification failed', err)
-        }
-    },
-
     'signInWithEmail': async ({ request }) => {
         const formData = await request.formData()
         const email = formData.get('email') as string

@@ -1,8 +1,4 @@
 <script lang="ts">
-    import type {
-        AuthenticationResponseJSON,
-        PublicKeyCredentialRequestOptionsJSON,
-    } from '@simplewebauthn/typescript-types'
     import type { ActionData } from './$types'
     import { enhance } from '$app/forms'
     import { goto } from '$app/navigation'
@@ -69,17 +65,6 @@
     <input type="email" name="email" value={email} style="opacity: .2;" />
     <button>Log in with email</button>
 </form>
-
-<!-- 
-{#await authResponsePromise then value}
-    <form method="POST" action="?/webauthn-login-verification" use:enhance>
-        <button type="submit" bind:this={submitButton} hidden>Submit Special 2</button>
-        <input name="email" value={email} style="opacity: .35" />
-        <input name="registrationData" value={JSON.stringify(value)} style="opacity: .35" />
-    </form>
-{:catch error}
-    <p class="error">{error.message}</p>
-{/await} -->
 
 <style>
     input {

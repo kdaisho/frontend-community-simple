@@ -1,4 +1,3 @@
-import type { JsonValue } from '../types'
 import { db } from '../../database'
 import jwt from 'jsonwebtoken'
 import { sendEmail } from '../utils'
@@ -129,8 +128,6 @@ export async function sendLoginEmail(email: string) {
         })
         .execute()
 
-    console.log('==>', 'decided to login with email')
-
     await sendEmail({
         email,
         subject: 'Login to your account',
@@ -227,14 +224,6 @@ export async function consumeFootprint(id: string) {
     return fp?.id
 }
 
-export async function findRegisteredDevices(userId: string) {
-    // return await db
-    //     .selectFrom('webauthn')
-    //     .select('devices')
-    //     .where('user_id', '=', userId)
-    //     .executeTakeFirst()
-}
-
 export async function updateUserWithCurrentChallenge({
     userId,
     currentChallenge,
@@ -249,51 +238,14 @@ export async function updateUserWithCurrentChallenge({
         .execute()
 }
 
-// export async function updateWebauthnWithCurrentChallenge({
-//     userId,
-//     currentChallenge,
-// }: {
-//     userId: string
-//     currentChallenge: string
-// }) {
-// TODO: insert if a record with the same userId doesn't exist
-// otherwise updateTable
-// return await db
-//     .insertInto('webauthn')
-//     .values({ user_id: userId, current_challenge: currentChallenge })
-//     .onConflict(oc => oc.column('user_id').doUpdateSet({ current_challenge: currentChallenge }))
-//     .execute()
-// }
-
-export async function findCurrentChallenge(userId: string) {
-    // console.log('==> FOUND CHALLENGE 1', userId)
-    // const foundCurrentChallenge_ = await db
-    //     .selectFrom('webauthn')
-    //     .select(['current_challenge', 'devices'])
-    //     .where('user_id', '=', userId)
-    //     .executeTakeFirstOrThrow()
-    // console.log('==> FOUND CHALLENGE 2', foundCurrentChallenge_)
-    // return foundCurrentChallenge_
-}
-
 export async function updateUserWithWebauthn(userId: string) {
     return await db.updateTable('user').set({ webauthn: true }).where('id', '=', userId).execute()
 }
 
 export async function saveNewDevices({ userId, devices }: { userId: string; devices: string }) {
     try {
-        console.log('==> Saving DEVICES', { userId, devices })
         await db.updateTable('user').set({ devices }).where('id', '=', userId).execute()
     } catch (err) {
         console.log('==> Saving DEVICES FAILED', err)
     }
-}
-
-export async function findLoginOptions(userId: string) {
-    // const options = await db
-    //     .selectFrom('webauthn')
-    //     .select(['current_challenge', 'devices'])
-    //     .where('user_id', '=', userId)
-    //     .executeTakeFirstOrThrow()
-    // return options.devices
 }

@@ -7,10 +7,7 @@ import {
 } from '@simplewebauthn/server'
 import {
     consumeFootprint,
-    findCurrentChallenge,
-    findLoginOptions,
     findPristineFootprint,
-    findRegisteredDevices,
     findUserByEmail,
     findUserBySessionToken,
     findUserWithWebAuthnByEmail,
@@ -22,7 +19,6 @@ import {
     sendLoginEmail,
     updateUserWithCurrentChallenge,
     updateUserWithWebauthn,
-    // updateWebauthnWithCurrentChallenge,
 } from '../services/auth'
 import { publicProcedure, router } from '../../trpc'
 import { TRPCError } from '@trpc/server'
@@ -30,15 +26,12 @@ import base64url from 'base64url'
 import { getUint8ArrayFromArrayLikeObject } from '../utils'
 import { z } from 'zod'
 
-console.log('==> base64', base64url)
-console.log('==> base64', typeof base64url)
-
 // rp: relying party
 const rpId = 'localhost'
 const protocol = 'http'
 const port = 5173
 const expectedOrigin = `${protocol}://${rpId}:${port}`
-let dynamicChallenge: string
+let challenge: string
 
 const registerPayload = z.object({
     name: z.string().min(1, { message: 'Name is required' }),
@@ -62,7 +55,6 @@ export const authRouter = router({
         })
     }),
     signIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
-        console.log('==> KOOOO', input)
         return await handleSignIn({ email: input.email })
     }),
     sendLoginEmail: publicProcedure.input(z.string()).query(async ({ input }) => {
@@ -71,7 +63,6 @@ export const authRouter = router({
     createUser: publicProcedure
         .input(z.object({ name: z.string(), email: z.string().email() }))
         .query(async ({ input }) => {
-            console.log('==> SAVING THIS', input)
             return await saveUser({
                 name: input.name,
                 email: input.email,
@@ -111,16 +102,9 @@ export const authRouter = router({
     }),
     // 1st
     getWebAuthnRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
-        console.log('==> ROUTER P1', input)
         const user = await findUserWithWebAuthnByEmail(input)
 
         if (!user) return null // throw tPRC error here
-
-        console.log('==> U', user)
-
-        // const deviceList = user.devices ? JSON.parse(user.devices) : null
-
-        // const webauthn = await findRegisteredDevices(user.id)
 
         const registrationOptions = generateRegistrationOptions({
             rpName: 'frontend-community',
@@ -148,17 +132,10 @@ export const authRouter = router({
                 : [],
         })
 
-        // console.log('==> IS THIS SAVING DEVICES TO DB?', user.id) // not yet, we jus provide the options for registration
-
         await updateUserWithCurrentChallenge({
             userId: user.id,
             currentChallenge: registrationOptions.challenge,
         })
-
-        // await updateWebauthnWithCurrentChallenge({
-        //     userId: user.id,
-        //     currentChallenge: registrationOptions.challenge,
-        // })
 
         return registrationOptions
     }),
@@ -166,7 +143,6 @@ export const authRouter = router({
     verifyWebAuthnRegistrationResponse: publicProcedure
         .input(registrationVerificationPayload)
         .query(async ({ input }) => {
-            console.log('==> verifyWebAuthnRegistrationResponse 1', input)
             const { email, data: stringData } = input
             const data = JSON.parse(stringData)
 
@@ -175,8 +151,6 @@ export const authRouter = router({
             if (!user) return null // throw tPRC error here
 
             const expectedChallenge = user?.current_challenge as string // at this point, the value should be here
-
-            console.log('==> verifyWebAuthnRegistrationResponse 2', expectedChallenge)
 
             let verification: VerifiedRegistrationResponse
 
@@ -195,21 +169,12 @@ export const authRouter = router({
             }
             const { verified, registrationInfo } = verification
 
-            console.log('==> ohhhhhh PARSING 1', typeof user.devices)
-            console.log('==> ohhhhhh PARSING 2', user.devices)
-
-            // at this point, user.devices can be, highly likely, null so JSON.parse runs without any problem (null is part of JSON), no error thrown.
-            // this conversion may not necessary then?
-
-            // const deviceList = user.devices ? JSON.parse(user.devices) : null
-
             if (verified && registrationInfo) {
                 const { credentialPublicKey, credentialID, counter } = registrationInfo
-                // convert stringified Uint8Array into real Uint8Array
                 const uint8ArrayDevices = user.devices
                     ? user.devices.reduce(
                           (
-                              acc: any,
+                              acc: unknown[],
                               cur: {
                                   credentialPublicKey: ArrayLike<number> | { [s: string]: number }
                                   credentialID: ArrayLike<number> | { [s: string]: number }
@@ -238,8 +203,6 @@ export const authRouter = router({
                       })
                     : false
 
-                console.log('==> SAVING NEW DEVICES 0', existingDevice)
-
                 if (!existingDevice) {
                     const newDevice = {
                         credentialPublicKey,
@@ -249,15 +212,13 @@ export const authRouter = router({
                     }
                     uint8ArrayDevices.push(newDevice)
 
-                    console.log('==> SAVING NEW DEVICES 1', uint8ArrayDevices)
-
                     await updateUserWithWebauthn(user.id)
                     await saveNewDevices({
                         userId: user.id,
                         devices: JSON.stringify(uint8ArrayDevices),
                     })
                 }
-                console.log('==>', 'DONE')
+
                 return { ok: true }
             }
         }),
@@ -271,22 +232,23 @@ export const authRouter = router({
 
             const response = generateAuthenticationOptions({
                 allowCredentials: user.devices
-                    ? user.devices.map((authenticator: any) => {
-                          return {
-                              id: getUint8ArrayFromArrayLikeObject(authenticator.credentialID),
-                              type: 'public-key',
-                              transports: authenticator?.transports, // Optional
+                    ? user.devices.map(
+                          (authenticator: {
+                              credentialID: ArrayLike<number> | { [s: string]: number }
+                              transports: unknown
+                          }) => {
+                              return {
+                                  id: getUint8ArrayFromArrayLikeObject(authenticator.credentialID),
+                                  type: 'public-key',
+                                  transports: authenticator?.transports, // Optional
+                              }
                           }
-                      })
+                      )
                     : [],
                 userVerification: 'preferred',
             })
 
-            console.log('==> response:', response)
-
-            dynamicChallenge = response.challenge
-
-            console.log('==> response: dynamic challenge', dynamicChallenge)
+            challenge = response.challenge
 
             return response
         }),
@@ -315,11 +277,9 @@ export const authRouter = router({
                 console.error('NO dbAuthenticator found')
             }
 
-            console.log('==> bodyCredIDBuffer', bodyCredIDBuffer) // we finally reached here
-
             const verification = await verifyAuthenticationResponse({
                 response: input.registrationDataParsed,
-                expectedChallenge: dynamicChallenge,
+                expectedChallenge: challenge,
                 expectedOrigin,
                 expectedRPID: rpId,
                 authenticator: {
@@ -329,7 +289,7 @@ export const authRouter = router({
                     ),
                 },
             })
-            console.log('==> LAST', verification) // yatta!!
+
             return { userId: user.id, verified: verification.verified }
         }),
 })
