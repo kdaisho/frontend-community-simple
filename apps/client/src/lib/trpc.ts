@@ -1,4 +1,4 @@
-import type { AppRouter } from '../../../server/routers'
+import type { AppRouter } from '../../../server/src/routers'
 import { createTRPCProxyClient } from '@trpc/client'
 import { httpBatchLink } from '@trpc/client/links/httpBatchLink'
 

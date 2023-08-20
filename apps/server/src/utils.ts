@@ -13,11 +13,17 @@ export async function sendEmail({
     body: string
     url?: string
 }) {
-    console.log('==> sending email', url)
+    console.log(url)
     // return await mailClient.sendEmail({
     //     From: 'admin@daishodesign.com',
     //     To: email,
     //     Subject: subject,
     //     HtmlBody: body,
     // })
+}
+
+export function getUint8ArrayFromArrayLikeObject(
+    stringifiedObject: { [s: string]: number } | ArrayLike<number>
+) {
+    return Uint8Array.from(Object.values(stringifiedObject))
 }

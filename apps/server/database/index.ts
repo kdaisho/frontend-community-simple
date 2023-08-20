@@ -1,9 +1,6 @@
 import { type ColumnType, type Generated, Kysely, PostgresDialect } from 'kysely'
-import type { JsonValue } from '../types'
+import type { JsonValue } from '../src/types'
 import { Pool } from 'pg'
-import dotenv from 'dotenv'
-
-dotenv.config()
 
 type Json = ColumnType<JsonValue, any, any>
 
@@ -18,6 +15,9 @@ interface User {
     id: Generated<string>
     name: string
     email: string
+    current_challenge: string | null
+    // devices: string | null
+    devices: any | null
     webauthn: boolean
     created_at: ColumnType<Date, string | undefined, never>
 }
@@ -46,21 +46,11 @@ interface Footprint {
     created_at: ColumnType<Date, string | undefined, never>
 }
 
-interface Webauthn {
-    id: Generated<string>
-    user_id: string
-    current_challenge: string
-    devices: any | null
-    created_at: ColumnType<Date, string | undefined, never>
-    updated_at: ColumnType<Date, string | undefined, never>
-}
-
 export interface Database {
     todo: Todo
     user: User
     session: Session
     footprint: Footprint
-    webauthn: Webauthn
 }
 
 export const db = new Kysely<Database>({

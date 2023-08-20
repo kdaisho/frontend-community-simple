@@ -10,38 +10,34 @@ export const load = (async ({ locals }) => {
 }) satisfies PageServerLoad
 
 export const actions = {
-    registerWebAuthn: async ({ request }) => {
+    // WEBAUTHN 1st endpoint
+    'webauthn-registration-options': async ({ request }) => {
         const formData = await request.formData()
-        const userId = formData.get('userId') as string
+        const email = formData.get('email') as string
 
-        if (!userId) {
-            return { success: false, message: 'userId not found' }
+        if (!email) {
+            return { success: false, message: 'Email not submitted' }
         }
 
         try {
-            const registrationOptions = await client.getRegistrationOptions.query(userId)
+            const registrationOptions = await client.getWebAuthnRegistrationOptions.query(email)
 
-            if (registrationOptions && registrationOptions.authenticatorSelection) {
-                registrationOptions.authenticatorSelection.residentKey = 'required'
-                registrationOptions.authenticatorSelection.requireResidentKey = true
-                registrationOptions.extensions = {
-                    credProps: true,
-                }
-            }
-
-            return registrationOptions
+            return { registrationOptions }
         } catch (err) {
-            console.log('==> PG Error', err)
+            console.error(err)
         }
     },
 
-    registrationWebAuthnVerification: async ({ request, locals }) => {
+    'webauthn-registration-verification': async ({ request, locals }) => {
         const formData = await request.formData()
+        const email = formData.get('email') as string
         const registrationData = formData.get('registrationData') as string
 
-        await client.verifyWebauthnRegistrationResponse.query({
-            userId: locals.user.id,
-            data: registrationData,
-        })
+        return {
+            registrationOptions_: await client.verifyWebAuthnRegistrationResponse.query({
+                email,
+                data: registrationData,
+            }),
+        }
     },
 } satisfies Actions

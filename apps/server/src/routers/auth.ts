@@ -1,25 +1,29 @@
 import {
     type VerifiedRegistrationResponse,
+    generateAuthenticationOptions,
     generateRegistrationOptions,
+    verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import {
     consumeFootprint,
-    findCurrentChallenge,
     findPristineFootprint,
-    findRegisteredDevices,
     findUserByEmail,
     findUserBySessionToken,
+    findUserWithWebAuthnByEmail,
     handleRegister,
     handleSignIn,
     saveNewDevices,
     saveSession,
     saveUser,
+    sendLoginEmail,
+    updateUserWithCurrentChallenge,
     updateUserWithWebauthn,
-    updateWebauthnWithCurrentChallenge,
 } from '../services/auth'
-import { publicProcedure, router } from '../trpc'
+import { publicProcedure, router } from '../../trpc'
 import { TRPCError } from '@trpc/server'
+import base64url from 'base64url'
+import { getUint8ArrayFromArrayLikeObject } from '../utils'
 import { z } from 'zod'
 
 // rp: relying party
@@ -27,6 +31,7 @@ const rpId = 'localhost'
 const protocol = 'http'
 const port = 5173
 const expectedOrigin = `${protocol}://${rpId}:${port}`
+let challenge: string
 
 const registerPayload = z.object({
     name: z.string().min(1, { message: 'Name is required' }),
@@ -38,7 +43,7 @@ const signInPayload = z.object({
 })
 
 const registrationVerificationPayload = z.object({
-    userId: z.string(),
+    email: z.string().email({ message: 'Email is not valid' }),
     data: z.any(),
 })
 
@@ -51,6 +56,9 @@ export const authRouter = router({
     }),
     signIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
         return await handleSignIn({ email: input.email })
+    }),
+    sendLoginEmail: publicProcedure.input(z.string()).query(async ({ input }) => {
+        await sendLoginEmail(input)
     }),
     createUser: publicProcedure
         .input(z.object({ name: z.string(), email: z.string().email() }))
@@ -92,12 +100,11 @@ export const authRouter = router({
             })
         }
     }),
-    getRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
-        const user = await findUserByEmail(input)
+    // 1st
+    getWebAuthnRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
+        const user = await findUserWithWebAuthnByEmail(input)
 
         if (!user) return null // throw tPRC error here
-
-        const webauthn = await findRegisteredDevices(user.id)
 
         const registrationOptions = generateRegistrationOptions({
             rpName: 'frontend-community',
@@ -105,8 +112,14 @@ export const authRouter = router({
             userID: user.email,
             userName: user.name,
             attestationType: 'none',
-            excludeCredentials: webauthn?.devices
-                ? webauthn.devices.map(
+            /**
+             * Passing in a user's list of already-registered authenticator IDs here prevents users from
+             * registering the same device multiple times. The authenticator will simply throw an error in
+             * the browser if it's asked to perform registration when one of these ID's already resides
+             * on it.
+             */
+            excludeCredentials: user.devices
+                ? user.devices.map(
                       (device: {
                           credentialID: { [s: string]: number } | ArrayLike<number>
                           transports: any
@@ -119,27 +132,32 @@ export const authRouter = router({
                 : [],
         })
 
-        await updateWebauthnWithCurrentChallenge({
+        await updateUserWithCurrentChallenge({
             userId: user.id,
             currentChallenge: registrationOptions.challenge,
         })
 
         return registrationOptions
     }),
-    verifyWebauthnRegistrationResponse: publicProcedure
+    // 2nd
+    verifyWebAuthnRegistrationResponse: publicProcedure
         .input(registrationVerificationPayload)
         .query(async ({ input }) => {
-            const { userId } = input
-            const { current_challenge: currentChallenge, devices } = await findCurrentChallenge(
-                userId
-            )
-            const data = JSON.parse(input.data)
+            const { email, data: stringData } = input
+            const data = JSON.parse(stringData)
+
+            const user = await findUserWithWebAuthnByEmail(email)
+
+            if (!user) return null // throw tPRC error here
+
+            const expectedChallenge = user?.current_challenge as string // at this point, the value should be here
+
             let verification: VerifiedRegistrationResponse
 
             try {
                 verification = await verifyRegistrationResponse({
                     response: data,
-                    expectedChallenge: currentChallenge,
+                    expectedChallenge,
                     expectedOrigin,
                     expectedRPID: rpId,
                 })
@@ -149,18 +167,19 @@ export const authRouter = router({
                     message: 'Verification registration failed',
                 })
             }
-
             const { verified, registrationInfo } = verification
 
             if (verified && registrationInfo) {
                 const { credentialPublicKey, credentialID, counter } = registrationInfo
-
-                // convert stringified Uint8Array into real Uint8Array
-                const uint8ArrayDevices = devices
-                    ? devices.reduce(
+                const uint8ArrayDevices = user.devices
+                    ? user.devices.reduce(
                           (
-                              acc: Partial<typeof registrationInfo>[],
-                              cur: typeof registrationInfo
+                              acc: unknown[],
+                              cur: {
+                                  credentialPublicKey: ArrayLike<number> | { [s: string]: number }
+                                  credentialID: ArrayLike<number> | { [s: string]: number }
+                                  counter: number | undefined
+                              }
                           ) => {
                               const obj: Partial<typeof registrationInfo> = {
                                   credentialPublicKey,
@@ -178,9 +197,8 @@ export const authRouter = router({
                           []
                       )
                     : []
-
-                const existingDevice = devices
-                    ? devices.find((device: Record<string, Uint8Array>) => {
+                const existingDevice = user.devices
+                    ? user.devices.find((device: Record<string, Uint8Array>) => {
                           return device.credentialID === credentialID
                       })
                     : false
@@ -192,16 +210,86 @@ export const authRouter = router({
                         counter,
                         transports: data.transports,
                     }
-
                     uint8ArrayDevices.push(newDevice)
 
-                    await updateUserWithWebauthn(userId)
-                    await saveNewDevices({ userId, devices: JSON.stringify(uint8ArrayDevices) })
+                    await updateUserWithWebauthn(user.id)
+                    await saveNewDevices({
+                        userId: user.id,
+                        devices: JSON.stringify(uint8ArrayDevices),
+                    })
                 }
-
-                console.log('==>', 'DONE')
 
                 return { ok: true }
             }
+        }),
+    // 3rd
+    getWebAuthnLoginOptions: publicProcedure
+        .input(z.object({ email: z.string() }))
+        .query(async ({ input }) => {
+            const user = await findUserWithWebAuthnByEmail(input.email)
+
+            if (!user) return null // throw tPRC error here
+
+            const response = generateAuthenticationOptions({
+                allowCredentials: user.devices
+                    ? user.devices.map(
+                          (authenticator: {
+                              credentialID: ArrayLike<number> | { [s: string]: number }
+                              transports: unknown
+                          }) => {
+                              return {
+                                  id: getUint8ArrayFromArrayLikeObject(authenticator.credentialID),
+                                  type: 'public-key',
+                                  transports: authenticator?.transports, // Optional
+                              }
+                          }
+                      )
+                    : [],
+                userVerification: 'preferred',
+            })
+
+            challenge = response.challenge
+
+            return response
+        }),
+    // 4th
+    verifyWebAuthnLogin: publicProcedure
+        .input(z.object({ email: z.string().email(), registrationDataParsed: z.any() }))
+        .query(async ({ input }) => {
+            const user = await findUserWithWebAuthnByEmail(input.email)
+
+            if (!user) return null // throw tPRC error here
+
+            let dbAuthenticator
+            const bodyCredIDBuffer = base64url.toBuffer(input.registrationDataParsed.rawId)
+
+            for (const device of user.devices) {
+                const currentCredential = Buffer.from(
+                    getUint8ArrayFromArrayLikeObject(device.credentialID)
+                )
+                if (bodyCredIDBuffer.equals(currentCredential)) {
+                    dbAuthenticator = device
+                    break
+                }
+            }
+
+            if (!dbAuthenticator) {
+                console.error('NO dbAuthenticator found')
+            }
+
+            const verification = await verifyAuthenticationResponse({
+                response: input.registrationDataParsed,
+                expectedChallenge: challenge,
+                expectedOrigin,
+                expectedRPID: rpId,
+                authenticator: {
+                    ...dbAuthenticator,
+                    credentialPublicKey: Buffer.from(
+                        getUint8ArrayFromArrayLikeObject(dbAuthenticator.credentialPublicKey)
+                    ),
+                },
+            })
+
+            return { userId: user.id, verified: verification.verified }
         }),
 })

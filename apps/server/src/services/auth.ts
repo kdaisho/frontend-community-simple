@@ -1,7 +1,6 @@
-import type { JsonValue } from '../types'
-import { db } from '../database'
+import { db } from '../../database'
 import jwt from 'jsonwebtoken'
-import { sendEmail } from './utils'
+import { sendEmail } from '../utils'
 
 type HandleRegisterProps = {
     name: string
@@ -51,7 +50,7 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
 export async function handleSignIn({ email }: { email: string }) {
     const user = await db
         .selectFrom('user')
-        .select('id')
+        .select(['id', 'email', 'webauthn'])
         .where('email', '=', email)
         .executeTakeFirst()
 
@@ -61,6 +60,12 @@ export async function handleSignIn({ email }: { email: string }) {
         })
     }
 
+    if (user?.webauthn) {
+        console.log('==> this user enabled webauthn')
+        return { success: true, userId: user.id, email: user.email, webauthn: user.webauthn }
+    }
+
+    // may not need this check for user as user is guaranteed to be here. there's a check `if (!user)` above
     if (user) {
         const authToken = jwt.sign(
             {
@@ -79,7 +84,7 @@ export async function handleSignIn({ email }: { email: string }) {
             })
             .execute()
 
-        sendEmail({
+        await sendEmail({
             email,
             subject: 'Login to your account',
             body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
@@ -89,6 +94,9 @@ export async function handleSignIn({ email }: { email: string }) {
         // show a message to user that an email has been sent
         return {
             success: true,
+            userId: user.id,
+            email: user.email,
+            webauthn: false,
         }
     }
 
@@ -96,13 +104,50 @@ export async function handleSignIn({ email }: { email: string }) {
     // as we should not to give user a hint that the email is not registered
     return {
         success: false,
+        userId: null,
+        email: '',
+        webauthn: false,
     }
+}
+
+export async function sendLoginEmail(email: string) {
+    const authToken = jwt.sign(
+        {
+            email,
+        },
+        JWT_SIGNATURE || '',
+        { expiresIn: 60 * 10 }
+    )
+
+    await db
+        .insertInto('footprint')
+        .values({
+            email,
+            token: authToken,
+            pristine: true,
+        })
+        .execute()
+
+    await sendEmail({
+        email,
+        subject: 'Login to your account',
+        body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
+        url: `${BASE_URL}/login?token=${authToken}`,
+    })
 }
 
 export async function findUserByEmail(email: string) {
     return await db
         .selectFrom('user')
         .select(['id', 'name', 'email'])
+        .where('email', '=', email)
+        .executeTakeFirst()
+}
+
+export async function findUserWithWebAuthnByEmail(email: string) {
+    return await db
+        .selectFrom('user')
+        .select(['id', 'name', 'email', 'current_challenge', 'devices', 'webauthn'])
         .where('email', '=', email)
         .executeTakeFirst()
 }
@@ -179,46 +224,28 @@ export async function consumeFootprint(id: string) {
     return fp?.id
 }
 
-export async function findRegisteredDevices(userId: string) {
-    return await db
-        .selectFrom('webauthn')
-        .select('devices')
-        .where('user_id', '=', userId)
-        .executeTakeFirst()
-}
-
-export async function updateWebauthnWithCurrentChallenge({
+export async function updateUserWithCurrentChallenge({
     userId,
     currentChallenge,
 }: {
     userId: string
     currentChallenge: string
 }) {
-    // TODO: insert if a record with the same userId doesn't exist
-    // otherwise updateTable
     return await db
-        .insertInto('webauthn')
-        .values({ user_id: userId, current_challenge: currentChallenge })
-        .onConflict(oc => oc.column('user_id').doUpdateSet({ current_challenge: currentChallenge }))
+        .updateTable('user')
+        .set({ current_challenge: currentChallenge })
+        .where('id', '=', userId)
         .execute()
-}
-
-export async function findCurrentChallenge(userId: string) {
-    console.log('==> DAO 1', userId)
-    const yo = await db
-        .selectFrom('webauthn')
-        .select(['current_challenge', 'devices'])
-        .where('user_id', '=', userId)
-        .executeTakeFirstOrThrow()
-
-    console.log('==> DAO 2', yo)
-    return yo
 }
 
 export async function updateUserWithWebauthn(userId: string) {
     return await db.updateTable('user').set({ webauthn: true }).where('id', '=', userId).execute()
 }
 
-export async function saveNewDevices({ userId, devices }: { userId: string; devices: JsonValue }) {
-    return await db.updateTable('webauthn').set({ devices }).where('user_id', '=', userId).execute()
+export async function saveNewDevices({ userId, devices }: { userId: string; devices: string }) {
+    try {
+        await db.updateTable('user').set({ devices }).where('id', '=', userId).execute()
+    } catch (err) {
+        console.log('==> Saving DEVICES FAILED', err)
+    }
 }
