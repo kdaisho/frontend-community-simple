@@ -57,13 +57,14 @@ export const actions = {
 
         console.log('==>', 'RED')
 
-        return { loginOptions: await client.getWebAuthnLoginOptions.query({ email }) }
+        return { success: true, data: await client.getWebAuthnLoginOptions.query({ email }) }
     },
     // 4th
     'webauthn-login-verification': async ({ request }) => {
         console.log('==>', '======================== 44444')
         const formData = await request.formData()
         const registrationDataString = formData.get('registrationData') as string
+        console.log('==>', '======================== 44444', registrationDataString)
         const registrationDataParsed = JSON.parse(registrationDataString)
         const email = formData.get('email') as string
 

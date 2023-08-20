@@ -14,10 +14,6 @@
     let submitButton: HTMLButtonElement
     let step1 = true
 
-    $: {
-        console.log('==> reactive', form)
-    }
-
     $: if (form?.registrationOptions && step1) {
         startRegistration(form.registrationOptions)
             .then(data => {
