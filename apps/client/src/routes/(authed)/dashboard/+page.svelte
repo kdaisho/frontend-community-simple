@@ -5,50 +5,52 @@
     import { startRegistration } from '@simplewebauthn/browser'
 
     export let data: PageServerData
-    export let form: {
-        registrationOptions: PublicKeyCredentialCreationOptionsJSON | null
-        registrationOptions_: PublicKeyCredentialCreationOptionsJSON | null
-    }
 
-    let registrationData: string
-    let submitButton: HTMLButtonElement
-    let step1 = true
+    async function handleRegistration(result: unknown) {
+        const { data } = result as {
+            data: { registrationOptions: PublicKeyCredentialCreationOptionsJSON; email: string }
+        }
 
-    $: if (form?.registrationOptions && step1) {
-        startRegistration(form.registrationOptions)
-            .then(data => {
-                registrationData = JSON.stringify(data)
-                step1 = false
-            })
-            .catch(err => {
-                console.error('==> Dashboard UI ERR', err)
-            })
-            .finally(() => {
-                submitButton.click()
-                alert('You can now login with WebAuthn')
-            })
+        const registrationResponse = await startRegistration(data.registrationOptions)
+        const stringifiedRegistrationResponse = JSON.stringify(registrationResponse)
+
+        if (stringifiedRegistrationResponse) {
+            try {
+                const response = await fetch('api/webauthn-registration-verification', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: data.email,
+                        data: stringifiedRegistrationResponse,
+                    }),
+                })
+
+                if (response.ok) {
+                    const { success, message } = await response.json()
+                    if (success) {
+                        alert(message)
+                    }
+                }
+            } catch (err) {
+                console.error('webauthn registration verification failed', err)
+            }
+        }
     }
 </script>
 
 <h1>Dashboard of {data.userName}</h1>
 
-<!-- WEBAUTHN 1st endpoint -->
-{#if step1}
-    <form
-        method="POST"
-        action="?/webauthn-registration-options"
-        use:enhance={() =>
-            async ({ update }) =>
-                await update({ reset: false })}
-    >
-        <button type="submit">Register Touch ID for next login</button>
-        <input type="hidden" name="email" value={data.email} />
-    </form>
-{/if}
-
-<!-- WEBAUTHN 2st endpoint -->
-<form method="POST" action="?/webauthn-registration-verification" use:enhance>
-    <button type="submit" bind:this={submitButton} hidden>Submit Special</button>
+<form
+    method="POST"
+    action="?/webauthn-registration-options"
+    use:enhance={() => {
+        return async ({ result, update }) => {
+            if (result.status === 200) {
+                await handleRegistration(result)
+            }
+            await update({ reset: false })
+        }
+    }}
+>
+    <button type="submit">Register Touch ID for next login</button>
     <input type="hidden" name="email" value={data.email} />
-    <input type="hidden" name="registrationData" value={registrationData} />
 </form>
