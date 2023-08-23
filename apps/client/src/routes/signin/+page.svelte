@@ -6,7 +6,7 @@
     import { startAuthentication } from '@simplewebauthn/browser'
 
     export let form: ActionData
-    let email = 'tt@tt.tt'
+    let email: string
 
     async function handleAuthentication(result: unknown) {
         const { data } = result as {
@@ -17,14 +17,14 @@
 
         if (authenticationResponse) {
             try {
-                const verificationResponse = await fetch('api/webauthn-login-verification', {
+                const response = await fetch('api/webauthn-login-verification', {
                     method: 'POST',
                     body: JSON.stringify({
                         email: data.email,
                         data: authenticationResponse,
                     }),
                 })
-                const { success, redirectTo } = await verificationResponse.json()
+                const { success, redirectTo } = await response.json()
                 if (success) {
                     goto(redirectTo)
                 }
@@ -52,29 +52,33 @@
 
 <br />
 
-<form
-    method="POST"
-    action="?/webauthn-login-options"
-    use:enhance={() => {
-        return async ({ result, update }) => {
-            if (result.status === 200) {
-                await handleAuthentication(result)
-            }
-            await update({ reset: false })
-        }
-    }}
->
-    {#if form?.webauthn}
-        <button type="submit">Log in with Touch ID / Passkey</button>
-        <input type="email" name="email" value={email} style="opacity: .2;" />
-        <p>Or</p>
+{#if form?.success}
+    {#if form.webauthn}
+        <form
+            method="POST"
+            action="?/webauthn-login-options"
+            use:enhance={() => {
+                return async ({ result, update }) => {
+                    if (result.status === 200) {
+                        await handleAuthentication(result)
+                    }
+                    await update({ reset: false })
+                }
+            }}
+        >
+            <button type="submit">Log in with Touch ID / Passkey</button>
+            <input type="hidden" name="email" bind:value={email} />
+            <p>Or</p>
+        </form>
     {/if}
-</form>
 
-<form method="POST" action="?/signInWithEmail" use:enhance>
-    <input type="email" name="email" value={email} style="opacity: .2;" />
-    <button>Log in with email</button>
-</form>
+    {#if form.email}
+        <form method="POST" action="?/signInWithEmail" use:enhance>
+            <input type="hidden" name="email" bind:value={email} />
+            <button>Log in with email</button>
+        </form>
+    {/if}
+{/if}
 
 <style>
     input {
