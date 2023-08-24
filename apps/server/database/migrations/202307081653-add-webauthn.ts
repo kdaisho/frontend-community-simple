@@ -1,8 +1,7 @@
 // migration 2023-07-08, 16:53
 import { Kysely, sql } from 'kysely'
-import type { Database } from '../index'
 
-export async function up(db: Kysely<Database>): Promise<void> {
+export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable('webauthn')
         .ifNotExists()
@@ -17,6 +16,6 @@ export async function up(db: Kysely<Database>): Promise<void> {
         .execute()
 }
 
-export async function down(db: Kysely<Database>): Promise<void> {
+export async function down(db: Kysely<any>): Promise<void> {
     await db.schema.dropTable('webauthn').execute()
 }

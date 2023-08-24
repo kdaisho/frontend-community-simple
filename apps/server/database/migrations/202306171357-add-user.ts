@@ -1,8 +1,7 @@
 // migration 2023-06-17, 13:57
 import { Kysely, sql } from 'kysely'
-import type { Database } from '../index'
 
-export async function up(db: Kysely<Database>): Promise<void> {
+export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .createTable('user')
         .addColumn('id', 'uuid', col => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
@@ -12,6 +11,6 @@ export async function up(db: Kysely<Database>): Promise<void> {
         .execute()
 }
 
-export async function down(db: Kysely<Database>): Promise<void> {
+export async function down(db: Kysely<any>): Promise<void> {
     await db.schema.dropTable('user').execute()
 }
