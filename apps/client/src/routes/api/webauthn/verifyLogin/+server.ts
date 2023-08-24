@@ -1,12 +1,11 @@
 import client from '$lib/trpc'
 import { json } from '@sveltejs/kit'
 
-// webauthn 4th method
 export async function POST({ request, cookies }: { request: Request; cookies: any }) {
     const { email, data } = await request.json()
 
     try {
-        const response = await client.verifyWebAuthnLogin.query({
+        const response = await client.WebAuthnVerifyLogin.query({
             email,
             registrationDataParsed: data,
         })

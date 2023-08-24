@@ -17,7 +17,7 @@
 
         if (authenticationResponse) {
             try {
-                const response = await fetch('api/webauthn-login-verification', {
+                const response = await fetch('api/webauthn/verifyLogin', {
                     method: 'POST',
                     body: JSON.stringify({
                         email: data.email,
@@ -56,7 +56,7 @@
     {#if form.webauthn}
         <form
             method="POST"
-            action="?/webauthn-login-options"
+            action="?/webauthnGetLoginOptions"
             use:enhance={() => {
                 return async ({ result, update }) => {
                     if (result.status === 200) {
