@@ -1,5 +1,5 @@
-import { db } from '../../database'
 import jwt from 'jsonwebtoken'
+import { db } from '../../database'
 import { sendEmail } from '../utils'
 
 type HandleRegisterProps = {

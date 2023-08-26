@@ -4,7 +4,7 @@ import client from '$lib/trpc'
 import { fail } from '@sveltejs/kit'
 
 export const actions = {
-    'signIn': async ({ request }) => {
+    signIn: async ({ request }) => {
         const formData = await request.formData()
         const email = (formData.get('email') as string).trim()
 
@@ -30,8 +30,7 @@ export const actions = {
             return { success: false, message: 'Failed to sign in' }
         }
     },
-    // 3rd
-    'webauthn-login-options': async ({ request }) => {
+    webauthnGetLoginOptions: async ({ request }) => {
         const formData = await request.formData()
         const email = formData.get('email') as string
 
@@ -41,9 +40,9 @@ export const actions = {
             })
         }
 
-        return { email, loginOptions: await client.getWebAuthnLoginOptions.query({ email }) }
+        return { email, loginOptions: await client.WebAuthnGetLoginOptions.query({ email }) }
     },
-    'signInWithEmail': async ({ request }) => {
+    signInWithEmail: async ({ request }) => {
         const formData = await request.formData()
         const email = formData.get('email') as string
 

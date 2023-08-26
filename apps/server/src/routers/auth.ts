@@ -1,10 +1,14 @@
 import {
-    type VerifiedRegistrationResponse,
     generateAuthenticationOptions,
     generateRegistrationOptions,
     verifyAuthenticationResponse,
     verifyRegistrationResponse,
+    type VerifiedRegistrationResponse,
 } from '@simplewebauthn/server'
+import { TRPCError } from '@trpc/server'
+import base64url from 'base64url'
+import { z } from 'zod'
+import { publicProcedure, router } from '../../trpc'
 import {
     consumeFootprint,
     findPristineFootprint,
@@ -20,11 +24,7 @@ import {
     updateUserWithCurrentChallenge,
     updateUserWithWebauthn,
 } from '../services/auth'
-import { publicProcedure, router } from '../../trpc'
-import { TRPCError } from '@trpc/server'
-import base64url from 'base64url'
 import { getUint8ArrayFromArrayLikeObject } from '../utils'
-import { z } from 'zod'
 
 // rp: relying party
 const rpId = 'localhost'
@@ -100,7 +100,7 @@ export const authRouter = router({
             })
         }
     }),
-    // 1st
+    // webauthn registration step 1 (1 of 4 total)
     getWebAuthnRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
         const user = await findUserWithWebAuthnByEmail(input)
 
@@ -139,7 +139,7 @@ export const authRouter = router({
 
         return registrationOptions
     }),
-    // 2nd
+    // webauthn registration step 2 (2 of 4 total)
     verifyWebAuthnRegistrationResponse: publicProcedure
         .input(registrationVerificationPayload)
         .query(async ({ input }) => {
@@ -222,8 +222,8 @@ export const authRouter = router({
                 return { ok: true }
             }
         }),
-    // 3rd
-    getWebAuthnLoginOptions: publicProcedure
+    // webauthn login step 1 (3 of 4 total)
+    WebAuthnGetLoginOptions: publicProcedure
         .input(z.object({ email: z.string() }))
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)
@@ -252,8 +252,8 @@ export const authRouter = router({
 
             return response
         }),
-    // 4th
-    verifyWebAuthnLogin: publicProcedure
+    // webauthn login step 2 (4 of 4 total)
+    WebAuthnVerifyLogin: publicProcedure
         .input(z.object({ email: z.string().email(), registrationDataParsed: z.any() }))
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)

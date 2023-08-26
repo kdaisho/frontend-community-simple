@@ -1,8 +1,8 @@
 <script lang="ts">
-    import type { PageServerData } from './$types'
-    import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/typescript-types'
     import { enhance } from '$app/forms'
     import { startRegistration } from '@simplewebauthn/browser'
+    import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/typescript-types'
+    import type { PageServerData } from './$types'
 
     export let data: PageServerData
 
@@ -16,7 +16,7 @@
 
         if (stringifiedRegistrationResponse) {
             try {
-                const response = await fetch('api/webauthn-registration-verification', {
+                const response = await fetch('api/webauthn/verifyRegistration', {
                     method: 'POST',
                     body: JSON.stringify({
                         email: data.email,
@@ -37,11 +37,11 @@
     }
 </script>
 
-<h1>Dashboard of {data.userName}</h1>
+<h1>{data.userName}'s Dashboard</h1>
 
 <form
     method="POST"
-    action="?/webauthn-registration-options"
+    action="?/webauthnGetRegistrationOptions"
     use:enhance={() => {
         return async ({ result, update }) => {
             if (result.status === 200) {

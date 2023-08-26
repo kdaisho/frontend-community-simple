@@ -1,6 +1,6 @@
+import client from '$lib/trpc'
 import type { Actions } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
-import client from '$lib/trpc'
 
 export const load = (async ({ locals }) => {
     return {
@@ -10,7 +10,7 @@ export const load = (async ({ locals }) => {
 }) satisfies PageServerLoad
 
 export const actions = {
-    'webauthn-registration-options': async ({ request }) => {
+    webauthnGetRegistrationOptions: async ({ request }) => {
         const formData = await request.formData()
         const email = formData.get('email') as string
 
