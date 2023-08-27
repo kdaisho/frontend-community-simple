@@ -1,7 +1,7 @@
 import client from '$lib/trpc'
-import { validateHumanInteraction } from '$lib/utils'
 import { fail } from '@sveltejs/kit'
 import { TRPCClientError } from '@trpc/client'
+import { validateHumanInteraction } from '../modules'
 import type { Actions } from './$types'
 
 export const actions = {

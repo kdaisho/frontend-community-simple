@@ -1,5 +1,5 @@
-import { type Handle, redirect } from '@sveltejs/kit'
 import client from '$lib/trpc'
+import { redirect, type Handle } from '@sveltejs/kit'
 
 export const handle = (async ({ event, resolve }) => {
     const sessionToken = event.cookies.get('session')
