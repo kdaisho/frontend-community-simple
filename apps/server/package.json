@@ -5,6 +5,7 @@
     "main": "index.js",
     "scripts": {
         "dev": "nodemon index.ts",
+        "prod": "ts-node index.ts",
         "migrate": "ts-node --files ./database/migrate.ts",
         "create-migration": "ts-node ./database/create-migration.ts $NAME",
         "create-todo": "ts-node ./services/todo/index.ts"
