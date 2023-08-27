@@ -1,12 +1,13 @@
 <script lang="ts">
-    import type { ActionData } from '../file-storage/$types'
-    import Button from '$lib/components/Button.svelte'
     import { enhance } from '$app/forms'
+    import Button from '$lib/components/Button.svelte'
+    import type { ActionData, PageData } from '../file-storage/$types'
 
+    export let data: PageData
     export let form: ActionData
 </script>
 
-<h1>File storage</h1>
+<h1>{data.title}</h1>
 
 <form method="POST" action="file-storage?/uploadFile" use:enhance>
     <fieldset>

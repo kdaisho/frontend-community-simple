@@ -1,11 +1,16 @@
-import { type Actions, redirect } from '@sveltejs/kit'
 import client from '$lib/trpc'
+import { redirect, type Actions } from '@sveltejs/kit'
+import type { PageServerLoad } from './$types'
 
 interface File {
     arrayBuffer: () => Promise<ArrayBuffer>
     name: string
     type: string
 }
+
+export const load = (async () => {
+    return { title: 'File Storage' }
+}) satisfies PageServerLoad
 
 export const actions = {
     uploadFile: async event => {

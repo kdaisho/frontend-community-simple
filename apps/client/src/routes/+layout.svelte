@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from '$app/navigation'
     import { grecaptchaStore } from '$lib/stores'
     import { onMount } from 'svelte'
     import '../app.css'
@@ -16,6 +17,16 @@
                 })
         })
     })
+
+    async function handleLogout() {
+        const response = await fetch('/api/logout', {
+            method: 'POST',
+        })
+
+        if (response.status === 200) {
+            goto('/signin')
+        }
+    }
 </script>
 
 <nav>
@@ -32,6 +43,9 @@
                 <a href="/signin">Sign in</a>
             </li>
             <li>
+                <a href="/dashboard">Dashboard</a>
+            </li>
+            <li>
                 <a href="/file-storage">File storage</a>
             </li>
             <li>
@@ -40,8 +54,14 @@
         </ul>
     </div>
 
-    <div>
-        {data.userName}
+    <div class="user">
+        <p>
+            {data.userName}
+        </p>
+
+        {#if data.userName}
+            <button on:click={handleLogout}>Log out</button>
+        {/if}
     </div>
 </nav>
 
@@ -75,5 +95,10 @@
     a {
         color: inherit;
         text-decoration: none;
+    }
+
+    .user {
+        display: flex;
+        gap: 1rem;
     }
 </style>
