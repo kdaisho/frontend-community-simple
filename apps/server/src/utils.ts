@@ -14,12 +14,12 @@ export async function sendEmail({
     url?: string
 }) {
     console.log(url)
-    // return await mailClient.sendEmail({
-    //     From: 'admin@daishodesign.com',
-    //     To: email,
-    //     Subject: subject,
-    //     HtmlBody: body,
-    // })
+    return await mailClient.sendEmail({
+        From: 'admin@daishodesign.com',
+        To: email,
+        Subject: subject,
+        HtmlBody: body,
+    })
 }
 
 export function getUint8ArrayFromArrayLikeObject(

@@ -52,7 +52,7 @@
     <fieldset>
         <label for="email">Email</label>
         <input id="email" type="email" name="email" bind:value={email} autocomplete="username" />
-        <input name="grecaptchaToken" value={grecaptchaToken} />
+        <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
     </fieldset>
 
     <button>Submit</button>

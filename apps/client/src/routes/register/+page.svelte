@@ -32,7 +32,7 @@
             autocomplete="username"
             value={form?.email ?? ''}
         />
-        <input name="grecaptchaToken" value={grecaptchaToken} />
+        <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
     </fieldset>
 
     <button>Submit</button>
