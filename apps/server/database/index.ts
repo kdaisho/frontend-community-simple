@@ -1,8 +1,7 @@
-import { type ColumnType, type Generated, Kysely, PostgresDialect } from 'kysely'
-import type { JsonValue } from '../src/types'
+import { Kysely, PostgresDialect, type ColumnType, type Generated } from 'kysely'
 import { Pool } from 'pg'
 
-type Json = ColumnType<JsonValue, any, any>
+const { DB_CONNECTION, DB_NAME } = process.env
 
 interface Todo {
     id: Generated<string>
@@ -16,7 +15,6 @@ interface User {
     name: string
     email: string
     current_challenge: string | null
-    // devices: string | null
     devices: any | null
     webauthn: boolean
     created_at: ColumnType<Date, string | undefined, never>
@@ -56,7 +54,7 @@ export interface Database {
 export const db = new Kysely<Database>({
     dialect: new PostgresDialect({
         pool: new Pool({
-            connectionString: process.env.DATABASE_URL,
+            connectionString: `${DB_CONNECTION}/${DB_NAME}`,
         }),
     }),
 })

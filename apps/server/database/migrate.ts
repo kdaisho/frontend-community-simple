@@ -1,22 +1,19 @@
-import * as path from 'path'
-import {
-    FileMigrationProvider,
-    Kysely,
-    Migrator,
-    PostgresDialect,
-} from 'kysely'
-import type { Database } from './index'
-import { Pool } from 'pg'
 import dotenv from 'dotenv'
 import { promises as fs } from 'fs'
+import { FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely'
+import * as path from 'path'
+import { Pool } from 'pg'
+import type { Database } from './index'
 
 dotenv.config()
+
+const { DB_CONNECTION, DB_NAME } = process.env
 
 async function migrateToLatest() {
     const db = new Kysely<Database>({
         dialect: new PostgresDialect({
             pool: new Pool({
-                connectionString: process.env.DATABASE_URL,
+                connectionString: `${DB_CONNECTION}/${DB_NAME}`,
             }),
         }),
     })
@@ -34,9 +31,7 @@ async function migrateToLatest() {
 
     results?.forEach(it => {
         if (it.status === 'Success') {
-            console.log(
-                `migration "${it.migrationName}" was executed successfully`
-            )
+            console.log(`migration "${it.migrationName}" was executed successfully`)
         } else if (it.status === 'Error') {
             console.error(`failed to execute migration "${it.migrationName}"`)
         }

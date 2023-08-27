@@ -26,11 +26,11 @@ import {
 } from '../services/auth'
 import { getUint8ArrayFromArrayLikeObject } from '../utils'
 
+const { BASE_URL, RP_ID } = process.env
+
 // rp: relying party
-const rpId = 'localhost'
-const protocol = 'http'
-const port = 5173
-const expectedOrigin = `${protocol}://${rpId}:${port}`
+const rpId = RP_ID || 'localhost'
+const expectedOrigin = BASE_URL || ''
 let challenge: string
 
 const registerPayload = z.object({
