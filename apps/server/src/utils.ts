@@ -14,6 +14,12 @@ export async function sendEmail({
     url?: string
 }) {
     console.log(url)
+
+    if (!email.includes('+')) {
+        console.error('security: invalid email address')
+        return
+    }
+
     return await mailClient.sendEmail({
         From: 'admin@daishodesign.com',
         To: email,
