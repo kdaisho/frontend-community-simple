@@ -1,8 +1,15 @@
 <script lang="ts">
-    import type { ActionData } from './$types'
     import { enhance } from '$app/forms'
+    import { grecaptchaStore } from '$lib/stores'
+    import type { ActionData } from './$types'
 
     export let form: ActionData
+
+    let grecaptchaToken: string
+
+    grecaptchaStore.subscribe(value => {
+        grecaptchaToken = value ?? ''
+    })
 </script>
 
 <h1>Join our community</h1>
@@ -25,6 +32,7 @@
             autocomplete="username"
             value={form?.email ?? ''}
         />
+        <input name="grecaptchaToken" value={grecaptchaToken} />
     </fieldset>
 
     <button>Submit</button>

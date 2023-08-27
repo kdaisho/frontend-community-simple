@@ -1,12 +1,19 @@
 <script lang="ts">
-    import type { ActionData } from './$types'
-    import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types'
     import { enhance } from '$app/forms'
     import { goto } from '$app/navigation'
+    import { grecaptchaStore } from '$lib/stores'
     import { startAuthentication } from '@simplewebauthn/browser'
+    import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types'
+    import type { ActionData } from './$types'
 
     export let form: ActionData
     let email: string
+
+    let grecaptchaToken: string
+
+    grecaptchaStore.subscribe(value => {
+        grecaptchaToken = value ?? ''
+    })
 
     async function handleAuthentication(result: unknown) {
         const { data } = result as {
@@ -45,6 +52,7 @@
     <fieldset>
         <label for="email">Email</label>
         <input id="email" type="email" name="email" bind:value={email} autocomplete="username" />
+        <input name="grecaptchaToken" value={grecaptchaToken} />
     </fieldset>
 
     <button>Submit</button>

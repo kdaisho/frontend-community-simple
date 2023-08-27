@@ -1,12 +1,20 @@
-import type { Actions } from './$types'
-import { TRPCClientError } from '@trpc/client'
 import client from '$lib/trpc'
+import { validateHumanInteraction } from '$lib/utils'
 import { fail } from '@sveltejs/kit'
+import { TRPCClientError } from '@trpc/client'
+import type { Actions } from './$types'
 
 export const actions = {
     signIn: async ({ request }) => {
         const formData = await request.formData()
         const email = (formData.get('email') as string).trim()
+        const grecaptchaToken = formData.get('grecaptchaToken') as string
+        const recaptchaResult = await validateHumanInteraction(grecaptchaToken)
+
+        if (!recaptchaResult.success) {
+            console.error('sign in: request from bot')
+            return fail(400, { success: false, msg: 'Bot found at sign in' })
+        }
 
         if (!email.length) {
             return fail(422, {

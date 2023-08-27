@@ -1,8 +1,21 @@
 <script lang="ts">
-    import type { LayoutServerData } from './$types'
+    import { grecaptchaStore } from '$lib/stores'
+    import { onMount } from 'svelte'
     import '../app.css'
-
+    import type { LayoutServerData } from './$types'
     export let data: LayoutServerData
+
+    onMount(() => {
+        // eslint-disable-next-line no-undef
+        grecaptcha.ready(() => {
+            // eslint-disable-next-line no-undef
+            grecaptcha
+                .execute('6LeXi2slAAAAAKiqg4QBRJNbDRtqqcMNwS95pHjC', { action: 'submit' })
+                .then((token: string) => {
+                    grecaptchaStore.set(token)
+                })
+        })
+    })
 </script>
 
 <nav>

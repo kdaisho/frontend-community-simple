@@ -55,6 +55,9 @@ importers:
       '@testing-library/svelte':
         specifier: ^4.0.3
         version: 4.0.3(svelte@3.54.0)
+      '@types/grecaptcha':
+        specifier: ^3.0.4
+        version: 3.0.4
       '@types/jest':
         specifier: ^29.5.2
         version: 29.5.2
@@ -1953,6 +1956,10 @@ packages:
       '@types/express-serve-static-core': 4.17.35
       '@types/qs': 6.9.7
       '@types/serve-static': 1.15.1
+    dev: true
+
+  /@types/grecaptcha@3.0.4:
+    resolution: {integrity: sha512-7l1Y8DTGXkx/r4pwU1nMVAR+yD/QC+MCHKXAyEX/7JZhwcN1IED09aZ9vCjjkcGdhSQiu/eJqcXInpl6eEEEwg==}
     dev: true
 
   /@types/istanbul-lib-coverage@2.0.4:
