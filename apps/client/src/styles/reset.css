@@ -54,20 +54,3 @@ button:hover {
 ul {
     list-style: none;
 }
-
-/*
-  Common styles
-*/
-:root {
-    --app-bg: #efefef;
-    --app-width: 900px;
-    --border-radius: 4px;
-    --border-radius-large: 6px;
-}
-
-body {
-    background: var(--app-bg);
-    font-family: sans-serif;
-    font-size: 16px;
-    color: #333;
-}
