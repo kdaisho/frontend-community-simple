@@ -1,5 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms'
+    import RecaptchaPrivacyPolicy from '$lib/RecaptchaPrivacyPolicy.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import type { ActionData } from './$types'
 
@@ -37,6 +38,9 @@
 
     <button>Submit</button>
 </form>
+
+<br />
+<RecaptchaPrivacyPolicy />
 
 <style>
     input {

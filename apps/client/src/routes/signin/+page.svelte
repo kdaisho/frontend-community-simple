@@ -1,6 +1,7 @@
 <script lang="ts">
     import { enhance } from '$app/forms'
     import { goto } from '$app/navigation'
+    import RecaptchaPrivacyPolicy from '$lib/RecaptchaPrivacyPolicy.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import { startAuthentication } from '@simplewebauthn/browser'
     import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types'
@@ -33,7 +34,7 @@
                 })
                 const { success, redirectTo } = await response.json()
                 if (success) {
-                    goto(redirectTo)
+                    await goto(redirectTo)
                 }
             } catch (err) {
                 console.error('webauthn verification failed', err)
@@ -59,6 +60,7 @@
 </form>
 
 <br />
+<RecaptchaPrivacyPolicy />
 
 {#if form?.success}
     {#if form.webauthn}

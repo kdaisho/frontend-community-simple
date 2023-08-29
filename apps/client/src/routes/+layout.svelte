@@ -1,8 +1,9 @@
 <script lang="ts">
-    import { goto } from '$app/navigation'
+    import { goto, invalidateAll } from '$app/navigation'
     import { grecaptchaStore } from '$lib/stores'
     import { onMount } from 'svelte'
-    import '../app.css'
+    import '../styles/app.css'
+    import '../styles/reset.css'
     import type { LayoutServerData } from './$types'
     export let data: LayoutServerData
 
@@ -24,7 +25,7 @@
         })
 
         if (response.status === 200) {
-            goto('/signin')
+            await Promise.all([invalidateAll(), goto('/signin')])
         }
     }
 </script>
