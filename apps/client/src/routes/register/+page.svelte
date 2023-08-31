@@ -1,6 +1,7 @@
 <script lang="ts">
     import { enhance } from '$app/forms'
     import RecaptchaPrivacyPolicy from '$lib/RecaptchaPrivacyPolicy.svelte'
+    import Button from '$lib/components/Button.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import type { ActionData } from './$types'
 
@@ -36,13 +37,24 @@
         <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
     </fieldset>
 
-    <button>Submit</button>
+    <Button type="submit">Submit</Button>
 </form>
 
 <br />
 <RecaptchaPrivacyPolicy />
 
 <style>
+    form {
+        align-items: flex-start;
+        display: flex;
+        flex-flow: column nowrap;
+        gap: 1rem;
+    }
+
+    fieldset {
+        width: 100%;
+    }
+
     input {
         width: 100%;
     }
