@@ -2,6 +2,7 @@
     import { enhance } from '$app/forms'
     import { goto } from '$app/navigation'
     import RecaptchaPrivacyPolicy from '$lib/RecaptchaPrivacyPolicy.svelte'
+    import Button from '$lib/components/Button.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import { startAuthentication } from '@simplewebauthn/browser'
     import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types'
@@ -43,54 +44,79 @@
     }
 </script>
 
-<h1>Sign in</h1>
+<div class="sign-in">
+    <h1>Sign in</h1>
 
-{#if form && 'error' in form}
-    <p class="error">{form.error}</p>
-{/if}
+    <form method="POST" action="?/signIn" use:enhance>
+        <fieldset>
+            <label for="email">Email</label>
+            <input
+                id="email"
+                type="email"
+                name="email"
+                bind:value={email}
+                autocomplete="username"
+            />
+            <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
+        </fieldset>
 
-<form method="POST" action="?/signIn" use:enhance>
-    <fieldset>
-        <label for="email">Email</label>
-        <input id="email" type="email" name="email" bind:value={email} autocomplete="username" />
-        <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
-    </fieldset>
+        <Button type="submit">Submit</Button>
+    </form>
 
-    <button>Submit</button>
-</form>
+    <br />
 
-<br />
-<RecaptchaPrivacyPolicy />
-
-{#if form?.success}
-    {#if form.webauthn}
-        <form
-            method="POST"
-            action="?/webauthnGetLoginOptions"
-            use:enhance={() => {
-                return async ({ result, update }) => {
-                    if (result.status === 200) {
-                        await handleAuthentication(result)
+    {#if form?.success}
+        {#if form.webauthn}
+            <form
+                method="POST"
+                action="?/webauthnGetLoginOptions"
+                use:enhance={() => {
+                    return async ({ result, update }) => {
+                        if (result.status === 200) {
+                            await handleAuthentication(result)
+                        }
+                        await update({ reset: false })
                     }
-                    await update({ reset: false })
-                }
-            }}
-        >
-            <button type="submit">Log in with Touch ID / Passkey</button>
-            <input type="hidden" name="email" bind:value={email} />
-            <p>Or</p>
-        </form>
+                }}
+            >
+                <Button type="submit" bg="yellow">Log in with Touch ID / Passkey</Button>
+                <input type="hidden" name="email" bind:value={email} />
+            </form>
+        {/if}
+
+        {#if form.webauthn}
+            <p class="or">OR</p>
+        {/if}
+
+        {#if form.email}
+            <form method="POST" action="?/signInWithEmail" use:enhance>
+                <input type="hidden" name="email" bind:value={email} />
+                <Button type="submit" bg="yellow">Log in with email</Button>
+            </form>
+        {/if}
     {/if}
 
-    {#if form.email}
-        <form method="POST" action="?/signInWithEmail" use:enhance>
-            <input type="hidden" name="email" bind:value={email} />
-            <button>Log in with email</button>
-        </form>
-    {/if}
-{/if}
+    <RecaptchaPrivacyPolicy />
+</div>
 
 <style>
+    .sign-in {
+        display: flex;
+        flex-flow: column nowrap;
+        gap: 2rem;
+    }
+
+    form {
+        align-items: flex-start;
+        display: flex;
+        flex-flow: column nowrap;
+        gap: 1rem;
+    }
+
+    .or {
+        margin: 1rem 0;
+    }
+
     input {
         width: 100%;
     }

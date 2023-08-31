@@ -14,45 +14,44 @@
     })
 </script>
 
-<h1>Join our community</h1>
+<div class="register">
+    <h1>Join our community</h1>
 
-{#if form?.error}
-    <p class="error">{form.error}</p>
-{/if}
+    <form method="POST" action="?/register" use:enhance>
+        <fieldset>
+            <label for="name">Name</label>
+            <input id="name" type="text" name="name" value={form?.name ?? ''} autocomplete="name" />
+        </fieldset>
+        <fieldset>
+            <label for="email">Email</label>
+            <input
+                id="email"
+                type="email"
+                name="email"
+                autocomplete="username"
+                value={form?.email ?? ''}
+            />
+            <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
+        </fieldset>
 
-<form method="POST" action="?/register" use:enhance>
-    <fieldset>
-        <label for="name">Name</label>
-        <input id="name" type="text" name="name" value={form?.name ?? ''} autocomplete="name" />
-    </fieldset>
-    <fieldset>
-        <label for="email">Email</label>
-        <input
-            id="email"
-            type="email"
-            name="email"
-            autocomplete="username"
-            value={form?.email ?? ''}
-        />
-        <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
-    </fieldset>
+        <Button type="submit">Submit</Button>
+    </form>
+</div>
 
-    <Button type="submit">Submit</Button>
-</form>
-
-<br />
 <RecaptchaPrivacyPolicy />
 
 <style>
+    .register {
+        display: flex;
+        flex-flow: column nowrap;
+        gap: 2rem;
+    }
+
     form {
         align-items: flex-start;
         display: flex;
         flex-flow: column nowrap;
         gap: 1rem;
-    }
-
-    fieldset {
-        width: 100%;
     }
 
     input {

@@ -11,6 +11,7 @@
         color: #555;
         display: inline-block;
         font-size: var(--font-small);
+        margin-top: 2rem;
         padding: 0.75rem 1rem;
     }
 </style>
