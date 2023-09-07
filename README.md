@@ -98,3 +98,26 @@ To inspect a specific volume:
 ```bash
 docker volume inspect <volume_name>
 ```
+
+## Deployment
+
+_Last updated: Sep 4, 2023_
+
+We didn't set up a CI/CD pipeline yet, so you'll have to manually build the client and server apps.
+
+1. Log in to the server using SSH
+2. Run `git pull` to get the latest changes from the repository
+3. Run `pnpm build` to build the client and server apps
+4. Run `docker compose up -d` to run the database container if it's not already running
+
+    _Run this command to see if the database is up and running. If it is you'll get in to the database shell._
+
+```sh
+docker exec -u postgres -it fc_db psql -d frontend_community
+```
+
+5. Run PM2 with the following command. This should take two ports: (8895: client, 3001: server)
+
+```sh
+pm2 start npm --name fc -- run prod --watch
+```
