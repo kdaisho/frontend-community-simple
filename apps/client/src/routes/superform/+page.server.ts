@@ -11,23 +11,20 @@ export const actions = {
     save: async ({ request }: { request: any }) => {
         const fullSubmit = request.headers.get('full-submit') !== 'false'
 
-        console.log('==> fullSubmit?', fullSubmit)
-
         let form: any
 
         if (fullSubmit) {
-            form = await superValidate(request, schema, { errors: true })
+            form = await superValidate(request, schema)
         } else {
             const formData = await request.json()
-            form = await superValidate(formData, schema, { errors: false })
+            form = await superValidate(formData, schema)
         }
-
-        console.log('POST', form)
 
         if (!form.valid && !fullSubmit) {
             console.log('==>', 'we allow this to happen')
         } else if (!form.valid && fullSubmit) {
             console.log('==>', 'we cannot allow this to happen')
+            throw new Error('Form is not valid')
         }
 
         return { form }
