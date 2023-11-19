@@ -2,7 +2,7 @@
     export let id = ''
     export let type = 'text'
     export let name: string
-    export let value: string | undefined
+    export let value: string | undefined = undefined
     export let placeholder = ''
     export let autocomplete = ''
 </script>

@@ -11,7 +11,7 @@
 
     export let form: ActionData
 
-    let email: string
+    let email = ''
     let grecaptchaToken: string
 
     grecaptchaStore.subscribe(value => {
@@ -42,10 +42,6 @@
                 console.error('webauthn verification failed', err)
             }
         }
-    }
-
-    $: {
-        console.log('==> EMAIL', email)
     }
 </script>
 

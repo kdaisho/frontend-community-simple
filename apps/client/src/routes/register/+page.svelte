@@ -22,13 +22,7 @@
         <fieldset>
             <label for="name"
                 >Name
-                <TextInput
-                    id="name"
-                    type="text"
-                    name="name"
-                    value={form?.name ?? ''}
-                    autocomplete="name"
-                >
+                <TextInput id="name" type="text" name="name" autocomplete="name">
                     {#if form?.error && form.type === 'name'}
                         <p class="error">{form.error}</p>
                     {/if}
@@ -37,13 +31,7 @@
 
             <label for="email"
                 >Email
-                <TextInput
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={form?.email ?? ''}
-                    autocomplete="username"
-                >
+                <TextInput id="email" type="email" name="email" autocomplete="username">
                     {#if form?.error && form.type === 'email'}
                         <p class="error">{form.error}</p>
                     {/if}
