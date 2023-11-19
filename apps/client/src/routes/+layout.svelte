@@ -33,7 +33,7 @@
 <nav>
     <div>
         <h2>
-            <a href="/">Frontend Community</a>
+            <a href="/">Acme community</a>
         </h2>
 
         <ul class="links">
