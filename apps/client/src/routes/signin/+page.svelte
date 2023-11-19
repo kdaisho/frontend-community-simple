@@ -107,10 +107,10 @@
     }
 
     form {
-        align-items: flex-start;
         display: flex;
         flex-flow: column nowrap;
-        gap: 1rem;
+        gap: 1.5rem;
+        max-width: 400px;
     }
 
     .or {

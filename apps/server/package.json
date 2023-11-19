@@ -14,7 +14,7 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@simplewebauthn/typescript-types": "^7.0.0",
+        "@simplewebauthn/typescript-types": "^8.3.4",
         "@types/cors": "^2.8.13",
         "@types/express": "^4.17.17",
         "@types/jsonwebtoken": "^9.0.2",
@@ -29,7 +29,7 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.345.0",
         "@aws-sdk/s3-request-presigner": "^3.345.0",
-        "@simplewebauthn/server": "^7.3.1",
+        "@simplewebauthn/server": "^8.3.5",
         "@trpc/server": "^10.27.1",
         "base64url": "^3.0.1",
         "cors": "^2.8.5",

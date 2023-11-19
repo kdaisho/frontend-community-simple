@@ -134,7 +134,7 @@ export const authRouter = router({
 
         await updateUserWithCurrentChallenge({
             userId: user.id,
-            currentChallenge: registrationOptions.challenge,
+            currentChallenge: (await registrationOptions).challenge,
         })
 
         return registrationOptions
@@ -248,7 +248,7 @@ export const authRouter = router({
                 userVerification: 'preferred',
             })
 
-            challenge = response.challenge
+            challenge = (await response).challenge
 
             return response
         }),

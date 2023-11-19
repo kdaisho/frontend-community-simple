@@ -21,6 +21,9 @@
         <fieldset>
             <label for="name">Name</label>
             <input id="name" type="text" name="name" value={form?.name ?? ''} autocomplete="name" />
+            {#if form?.error && form.type === 'name'}
+                <p class="error">{form.error}</p>
+            {/if}
         </fieldset>
         <fieldset>
             <label for="email">Email</label>
@@ -31,6 +34,9 @@
                 autocomplete="username"
                 value={form?.email ?? ''}
             />
+            {#if form?.error && form.type === 'email'}
+                <p class="error">{form.error}</p>
+            {/if}
             <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
         </fieldset>
 
@@ -56,5 +62,9 @@
 
     input {
         width: 100%;
+    }
+
+    .error {
+        color: var(--danger);
     }
 </style>
