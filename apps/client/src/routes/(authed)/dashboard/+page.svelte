@@ -1,5 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms'
+    import Button from '$lib/components/Button.svelte'
     import { startRegistration } from '@simplewebauthn/browser'
     import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/typescript-types'
     import type { PageServerData } from './$types'
@@ -37,20 +38,33 @@
     }
 </script>
 
-<h1>{data.userName}'s Dashboard</h1>
+<div class="dashboard">
+    <h1>{data.userName}'s dashboard</h1>
 
-<form
-    method="POST"
-    action="?/webauthnGetRegistrationOptions"
-    use:enhance={() => {
-        return async ({ result, update }) => {
-            if (result.status === 200) {
-                await handleRegistration(result)
+    <form
+        method="POST"
+        action="?/webauthnGetRegistrationOptions"
+        use:enhance={() => {
+            return async ({ result, update }) => {
+                if (result.status === 200) {
+                    await handleRegistration(result)
+                }
+                await update({ reset: false })
             }
-            await update({ reset: false })
-        }
-    }}
->
-    <button type="submit">Register Touch ID for next login</button>
-    <input type="hidden" name="email" value={data.email} />
-</form>
+        }}
+    >
+        {#if !data.webauthn}
+            <Button type="submit">Register biometric ID for next login</Button>
+        {/if}
+
+        <input type="hidden" name="email" value={data.email} />
+    </form>
+</div>
+
+<style>
+    .dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+</style>

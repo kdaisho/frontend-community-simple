@@ -1,8 +1,8 @@
 import { JWT_SIGNATURE } from '$env/static/private'
-import type { PageServerLoad } from './$types'
 import client from '$lib/trpc'
-import jwt from 'jsonwebtoken'
 import { redirect } from '@sveltejs/kit'
+import jwt from 'jsonwebtoken'
+import type { PageServerLoad } from './$types'
 
 export const load = (async ({ url, cookies }) => {
     const authToken = url.searchParams.get('token')
@@ -29,7 +29,7 @@ export const load = (async ({ url, cookies }) => {
             })
 
             if (!user) {
-                throw new Error('Creating user failed')
+                throw new Error('Creating user failed.')
             }
         } else {
             user = await client.getUser.query({
@@ -37,7 +37,7 @@ export const load = (async ({ url, cookies }) => {
             })
 
             if (!user) {
-                throw new Error('User not found')
+                throw new Error('Something went wrong.')
             }
         }
 
@@ -46,7 +46,7 @@ export const load = (async ({ url, cookies }) => {
         })
 
         if (!session) {
-            throw new Error('Creating session failed')
+            throw new Error('Creating session failed.')
         }
 
         cookies.set('session', session.token, { path: '/' })

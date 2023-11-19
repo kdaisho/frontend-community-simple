@@ -55,13 +55,10 @@ export async function handleSignIn({ email }: { email: string }) {
         .executeTakeFirst()
 
     if (!user) {
-        console.error('==> User not found', {
-            email,
-        })
+        throw new Error("User not found, don't tell")
     }
 
     if (user?.webauthn) {
-        console.log('==> this user enabled webauthn')
         return { success: true, userId: user.id, email: user.email, webauthn: user.webauthn }
     }
 
@@ -189,7 +186,7 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
 export async function findUserBySessionToken(token: string) {
     return await db
         .selectFrom('user')
-        .select(['id', 'name', 'email'])
+        .select(['id', 'name', 'email', 'webauthn'])
         .where(
             'id',
             '=',

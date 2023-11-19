@@ -30,22 +30,22 @@
     }
 </script>
 
-<nav>
-    <div>
+<div class="acme-community">
+    <nav class="app-layout">
         <h2>
             <a href="/">Acme community</a>
         </h2>
 
-        <ul class="links">
-            <li>
-                <a href="/register">Register</a>
-            </li>
-            <li>
-                <a href="/signin">Sign in</a>
-            </li>
-            <li>
-                <a href="/dashboard">Dashboard</a>
-            </li>
+        <ul class="menu">
+            {#if !data.userName}
+                <li>
+                    <a href="/register">Register</a>
+                </li>
+                <li>
+                    <a href="/signin">Sign in</a>
+                </li>
+            {/if}
+
             <li>
                 <a href="/file-storage">File storage</a>
             </li>
@@ -53,44 +53,57 @@
                 <a href="/todo">TODO</a>
             </li>
         </ul>
-    </div>
 
-    <div class="user">
-        <p>
-            {data.userName}
-        </p>
+        <div class="user">
+            {#if data.userName}
+                <a href="/dashboard">You</a>
+                <button on:click={handleLogout}>Log out</button>
+            {/if}
+        </div>
+    </nav>
 
-        {#if data.userName}
-            <button on:click={handleLogout}>Log out</button>
-        {/if}
-    </div>
-</nav>
-
-<main class="app-layout">
-    <slot />
-</main>
+    <main class="app-layout app-content">
+        <slot />
+    </main>
+</div>
 
 <style>
+    .acme-community {
+        padding: 1.5rem 1rem;
+    }
+
     .app-layout {
-        margin: 0 auto;
         max-width: var(--app-width);
-        padding: 1rem 0;
+    }
+
+    .app-content {
+        margin: 0 auto;
+        padding: 2.5rem 0;
         width: 100%;
     }
 
     nav {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
-        height: 80px;
+        display: grid;
+        gap: 0.25rem 0.75rem;
+        grid-template-columns: auto auto;
+        grid-template-rows: 1fr 1fr;
+        grid-template-areas:
+            'title title'
+            'menu user';
         margin: 0 auto;
         max-width: var(--app-width);
     }
 
-    .links {
+    h2 {
+        grid-area: title;
+    }
+
+    .menu {
+        align-items: center;
         display: flex;
         flex-flow: row nowrap;
         gap: 1rem;
+        grid-area: menu;
     }
 
     a {
@@ -99,7 +112,23 @@
     }
 
     .user {
+        align-items: center;
         display: flex;
         gap: 1rem;
+        grid-area: user;
+        justify-content: flex-end;
+    }
+
+    @media (max-width: 480px) {
+        nav {
+            gap: 1rem 0.75rem;
+            grid-template-areas:
+                'title user'
+                'menu menu';
+        }
+
+        .user {
+            align-items: flex-end;
+        }
     }
 </style>

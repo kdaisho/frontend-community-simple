@@ -2,6 +2,7 @@
     import { enhance } from '$app/forms'
     import RecaptchaPrivacyPolicy from '$lib/RecaptchaPrivacyPolicy.svelte'
     import Button from '$lib/components/Button.svelte'
+    import TextInput from '$lib/components/TextInput.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import type { ActionData } from './$types'
 
@@ -15,30 +16,42 @@
 </script>
 
 <div class="register">
-    <h1>Join our community</h1>
+    <h1>Join us today</h1>
 
     <form method="POST" action="?/register" use:enhance>
         <fieldset>
-            <label for="name">Name</label>
-            <input id="name" type="text" name="name" value={form?.name ?? ''} autocomplete="name" />
-            {#if form?.error && form.type === 'name'}
-                <p class="error">{form.error}</p>
-            {/if}
+            <label for="name"
+                >Name
+                <TextInput
+                    id="name"
+                    type="text"
+                    name="name"
+                    value={form?.name ?? ''}
+                    autocomplete="name"
+                >
+                    {#if form?.error && form.type === 'name'}
+                        <p class="error">{form.error}</p>
+                    {/if}
+                </TextInput>
+            </label>
+
+            <label for="email"
+                >Email
+                <TextInput
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={form?.email ?? ''}
+                    autocomplete="username"
+                >
+                    {#if form?.error && form.type === 'email'}
+                        <p class="error">{form.error}</p>
+                    {/if}
+                </TextInput>
+            </label>
         </fieldset>
-        <fieldset>
-            <label for="email">Email</label>
-            <input
-                id="email"
-                type="email"
-                name="email"
-                autocomplete="username"
-                value={form?.email ?? ''}
-            />
-            {#if form?.error && form.type === 'email'}
-                <p class="error">{form.error}</p>
-            {/if}
-            <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
-        </fieldset>
+
+        <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
 
         <Button type="submit">Submit</Button>
     </form>
@@ -50,11 +63,18 @@
     .register {
         display: flex;
         flex-flow: column nowrap;
-        gap: 2rem;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
     }
 
     form {
-        align-items: flex-start;
+        max-width: var(--form-max-width);
+        display: flex;
+        flex-flow: column nowrap;
+        gap: 2.5rem;
+    }
+
+    fieldset {
         display: flex;
         flex-flow: column nowrap;
         gap: 1rem;
@@ -62,9 +82,5 @@
 
     input {
         width: 100%;
-    }
-
-    .error {
-        color: var(--danger);
     }
 </style>

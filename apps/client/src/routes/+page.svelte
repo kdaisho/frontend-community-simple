@@ -4,7 +4,7 @@
     export let data: LayoutServerData
 </script>
 
-<h2>update - {data.userName} {new Date().getTimezoneOffset()}</h2>
+<h2>Updates - {data.userName} {new Date().getTimezoneOffset()}</h2>
 
 <!-- svelte-ignore a11y-distracting-elements -->
 <marquee class="msg"
@@ -21,6 +21,6 @@
     }
 
     .msg span {
-        padding-left: 9rem;
+        padding-left: 12rem;
     }
 </style>

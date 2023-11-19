@@ -6,6 +6,7 @@ export const load = (async ({ locals }) => {
     return {
         userName: locals.user?.name,
         email: locals.user?.email,
+        webauthn: locals.user?.webauthn,
     }
 }) satisfies PageServerLoad
 

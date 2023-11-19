@@ -1,8 +1,14 @@
 import client from '$lib/trpc'
-import { fail } from '@sveltejs/kit'
-import { TRPCClientError } from '@trpc/client'
+import { fail, redirect } from '@sveltejs/kit'
+import { z } from 'zod'
 import { validateHumanInteraction } from '../modules'
-import type { Actions } from './$types'
+import type { Actions, PageServerLoad } from './$types'
+
+export const load = (({ locals }) => {
+    if (locals?.user) {
+        throw redirect(307, '/dashboard')
+    }
+}) satisfies PageServerLoad
 
 export const actions = {
     signIn: async ({ request }) => {
@@ -12,18 +18,22 @@ export const actions = {
         const recaptchaResult = await validateHumanInteraction(grecaptchaToken)
 
         if (!recaptchaResult.success) {
-            console.error('sign in: request from bot')
-            return fail(400, { success: false, msg: 'Bot found at sign in' })
+            console.error('sign in: request from a bot')
+            // TODO: recaptcha is too aggressive and blocks real users
+            // return fail(400, { success: false, msg: 'Bot found at sign in' })
         }
 
-        if (!email.length) {
-            return fail(422, {
-                email,
-                error: ['Email cannot be empty'],
+        if (!z.string().email().safeParse(email).success) {
+            console.log('==>', 99)
+            return fail(400, {
+                type: 'email',
+                value: email,
+                error: ['Email address is invalid.'],
             })
         }
 
         try {
+            console.log('==>', 100)
             const res = await client.signIn.query({ email })
             return {
                 success: res.success,
@@ -32,10 +42,11 @@ export const actions = {
                 webauthn: res.webauthn,
             }
         } catch (err) {
-            if (err instanceof TRPCClientError) {
-                console.error('==>', err)
-            }
-            return { success: false, message: 'Failed to sign in' }
+            return fail(400, {
+                type: 'email',
+                value: email,
+                error: ['Failed. You should know why.'],
+            })
         }
     },
     webauthnGetLoginOptions: async ({ request }) => {
@@ -43,8 +54,10 @@ export const actions = {
         const email = formData.get('email') as string
 
         if (!email) {
-            return fail(422, {
-                error: ['User not found'],
+            return fail(400, {
+                type: 'email',
+                value: email,
+                error: ['Failed. You should know why.'],
             })
         }
 
@@ -57,7 +70,11 @@ export const actions = {
         try {
             await client.sendLoginEmail.query(email)
         } catch (err) {
-            console.error('Sending login email failed.', err)
+            return fail(400, {
+                type: 'email',
+                value: email,
+                error: ['Email send failed.'],
+            })
         }
     },
 } satisfies Actions

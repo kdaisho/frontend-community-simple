@@ -3,7 +3,6 @@ import { redirect, type Handle } from '@sveltejs/kit'
 
 export const handle = (async ({ event, resolve }) => {
     const sessionToken = event.cookies.get('session')
-
     let user
 
     if (sessionToken) {
@@ -14,6 +13,7 @@ export const handle = (async ({ event, resolve }) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
+                webauthn: user.webauthn,
             }
         }
     }

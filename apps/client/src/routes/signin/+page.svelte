@@ -3,14 +3,15 @@
     import { goto } from '$app/navigation'
     import RecaptchaPrivacyPolicy from '$lib/RecaptchaPrivacyPolicy.svelte'
     import Button from '$lib/components/Button.svelte'
+    import TextInput from '$lib/components/TextInput.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import { startAuthentication } from '@simplewebauthn/browser'
     import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/typescript-types'
     import type { ActionData } from './$types'
 
     export let form: ActionData
-    let email: string
 
+    let email: string
     let grecaptchaToken: string
 
     grecaptchaStore.subscribe(value => {
@@ -42,6 +43,10 @@
             }
         }
     }
+
+    $: {
+        console.log('==> EMAIL', email)
+    }
 </script>
 
 <div class="sign-in">
@@ -49,14 +54,21 @@
 
     <form method="POST" action="?/signIn" use:enhance>
         <fieldset>
-            <label for="email">Email</label>
-            <input
-                id="email"
-                type="email"
-                name="email"
-                bind:value={email}
-                autocomplete="username"
-            />
+            <label for="email"
+                >Email
+                <TextInput
+                    id="email"
+                    type="email"
+                    name="email"
+                    bind:value={email}
+                    autocomplete="username"
+                >
+                    {#if form?.error && form.type === 'email'}
+                        <p class="error">{form.error}</p>
+                    {/if}</TextInput
+                >
+            </label>
+
             <input type="hidden" name="grecaptchaToken" value={grecaptchaToken} />
         </fieldset>
 
@@ -109,7 +121,7 @@
     form {
         display: flex;
         flex-flow: column nowrap;
-        gap: 1.5rem;
+        gap: 2.5rem;
         max-width: 400px;
     }
 

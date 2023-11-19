@@ -8,6 +8,7 @@ declare global {
                 id: string
                 email: string
                 name: string
+                webauthn: boolean
             }
         }
         // interface PageData {}
