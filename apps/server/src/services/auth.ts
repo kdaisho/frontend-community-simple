@@ -246,3 +246,7 @@ export async function saveNewDevices({ userId, devices }: { userId: string; devi
         console.log('==> Saving DEVICES FAILED', err)
     }
 }
+
+export async function saveBotAttempt(email: string) {
+    await db.insertInto('recaptcha').values({ email }).execute()
+}

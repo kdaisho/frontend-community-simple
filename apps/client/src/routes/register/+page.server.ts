@@ -20,9 +20,9 @@ export const actions = {
         const recaptchaResult = await validateHumanInteraction(grecaptchaToken)
 
         if (!recaptchaResult.success) {
+            // recaptcha is too aggressive and blocks real users. let's see how many we get (nov, 19 2023)
             console.error('register: request from a bot')
-            // TODO: recaptcha is too aggressive and blocks real users
-            // return fail(400, { success: false, msg: 'Bot found at register' })
+            await client.recordBotAttempt.query(email)
         }
 
         if (!name.length) {

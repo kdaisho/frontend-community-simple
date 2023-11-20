@@ -21,7 +21,6 @@ const filename = `${year}${month}${day}${hours}${minutes}-${name}.ts`
 const content = `
 // migration ${year}-${month}-${day}, ${hours}:${minutes}
 import { Kysely, sql } from 'kysely'
-import type { Database } from '../index'
 
 export async function up(db: Kysely<any>): Promise<void> {}
 

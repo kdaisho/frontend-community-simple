@@ -36,11 +36,9 @@ interface Footprint {
     created_at: ColumnType<Date, string | undefined, never>
 }
 
-interface Footprint {
-    id: Generated<string>
+interface Recaptcha {
+    id: Generated<number>
     email: string
-    token: string
-    pristine: boolean
     created_at: ColumnType<Date, string | undefined, never>
 }
 
@@ -49,6 +47,7 @@ export interface Database {
     user: User
     session: Session
     footprint: Footprint
+    recaptcha: Recaptcha
 }
 
 export const db = new Kysely<Database>({

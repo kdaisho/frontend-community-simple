@@ -17,6 +17,7 @@ import {
     findUserWithWebAuthnByEmail,
     handleRegister,
     handleSignIn,
+    saveBotAttempt,
     saveNewDevices,
     saveSession,
     saveUser,
@@ -48,6 +49,9 @@ const registrationVerificationPayload = z.object({
 })
 
 export const authRouter = router({
+    recordBotAttempt: publicProcedure.input(z.string()).query(async ({ input }) => {
+        await saveBotAttempt(input)
+    }),
     register: publicProcedure.input(registerPayload).query(async ({ input }) => {
         await handleRegister({
             name: input.name,
