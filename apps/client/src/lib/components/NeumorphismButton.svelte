@@ -1,9 +1,10 @@
 <script lang="ts">
     export let type: 'button' | 'submit' | 'reset' = 'button'
     export let width = 40
+    export let color = '#000'
 </script>
 
-<button {type} style="--neumorphism-button-width: {width}px" on:click>
+<button {type} style="--neumorphism-button-width: {width}px" style:color on:click>
     <slot>Empty</slot>
 </button>
 
@@ -15,7 +16,7 @@
     button {
         align-items: center;
         aspect-ratio: 1;
-        background: var(--app-bg);
+        background: var(--app-white);
         border-radius: 50%;
         box-shadow: -4px -4px 8px #fff, 4px 4px 8px rgb(0 0 0 / 24%);
         display: flex;

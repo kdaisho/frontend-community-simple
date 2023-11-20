@@ -31,6 +31,6 @@ fs.writeFile(path + filename, content, err => {
     if (err) {
         console.error('An error occurred:', err)
     } else {
-        console.log(`File "${filename}" created successfully!`)
+        console.info(`File "${filename}" created successfully!`)
     }
 })

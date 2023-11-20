@@ -42,8 +42,7 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
     sendEmail({
         email,
         subject: 'Create your account',
-        body: `<h1>Nice to meet you ${name}.</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to create your account and sign in</a>`,
-        url: `${BASE_URL}/login?token=${authToken}`,
+        body: `<h1>Almost there, ${name}!</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to create your account and sign in.</a>`,
     })
 }
 
@@ -85,7 +84,6 @@ export async function handleSignIn({ email }: { email: string }) {
             email,
             subject: 'Login to your account',
             body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
-            url: `${BASE_URL}/login?token=${authToken}`,
         })
 
         // show a message to user that an email has been sent
@@ -129,7 +127,6 @@ export async function sendLoginEmail(email: string) {
         email,
         subject: 'Login to your account',
         body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
-        url: `${BASE_URL}/login?token=${authToken}`,
     })
 }
 
@@ -243,7 +240,7 @@ export async function saveNewDevices({ userId, devices }: { userId: string; devi
     try {
         await db.updateTable('user').set({ devices }).where('id', '=', userId).execute()
     } catch (err) {
-        console.log('==> Saving DEVICES FAILED', err)
+        console.error('==> Saving DEVICES FAILED', err)
     }
 }
 

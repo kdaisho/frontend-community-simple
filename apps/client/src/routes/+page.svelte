@@ -16,7 +16,7 @@
 
 <style>
     .msg {
-        color: var(--black);
+        color: var(--app-black);
         margin-top: 1rem;
     }
 

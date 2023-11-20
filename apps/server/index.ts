@@ -2,11 +2,11 @@ import dotenv from 'dotenv'
 dotenv.config()
 // eslint-disable-next-line sort-imports
 import { TRPCError } from '@trpc/server'
-import { appRouter } from './src/routers'
-import cors from 'cors'
 import { createExpressMiddleware } from '@trpc/server/adapters/express'
-import express from 'express'
 import { getHTTPStatusCodeFromError } from '@trpc/server/http'
+import cors from 'cors'
+import express from 'express'
+import { appRouter } from './src/routers'
 
 async function server() {
     const app = express()
@@ -37,7 +37,7 @@ async function server() {
     )
 
     app.listen(3001, () => {
-        console.log('Server: listening on port 3001')
+        console.info('Server: listening on port 3001')
     })
 }
 

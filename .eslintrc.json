@@ -5,6 +5,6 @@
     "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
     "parserOptions": { "ecmaVersion": 2020, "sourceType": "module" },
     "rules": {
-        "no-console": 1
+        "no-console": ["error", { "allow": ["info", "warn", "error"] }]
     }
 }

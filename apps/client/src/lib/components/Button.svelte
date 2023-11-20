@@ -11,11 +11,11 @@
     button {
         background: var(--blue);
         border-radius: var(--border-radius);
-        color: var(--white);
+        color: var(--app-white);
         cursor: pointer;
         font-size: var(--font-medium);
         height: 40px;
-        min-width: 100px;
+        min-width: 50px;
         padding: 0.25rem 1rem;
         transition: background 0.2s ease-in;
         white-space: nowrap;
@@ -27,7 +27,7 @@
 
     button.yellow {
         background: var(--yellow);
-        color: var(--black);
+        color: var(--app-black);
     }
 
     button.red {

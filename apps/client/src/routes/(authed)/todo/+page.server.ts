@@ -1,22 +1,26 @@
+import client from '$lib/trpc'
 import type { Actions } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
-import client from '$lib/trpc'
 
-export const load = (async () => {
-    const todos = await client.getTodos.query()
+export const load = (async ({ locals }) => {
+    const todos = await client.getTodos.query(locals?.user.id)
     return { todos }
 }) satisfies PageServerLoad
 
 export const actions = {
-    createTodo: async event => {
-        const formData = await event.request.formData()
+    createTodo: async ({ request, locals }) => {
+        const formData = await request.formData()
         const task = (formData.get('task') as string).trim()
 
         if (!task.length) {
             return { success: false, message: 'Task cannot be empty' }
         }
 
-        client.createTodo.query({ task })
+        if (!locals?.user.id) {
+            return { success: false, message: 'User ID cannot be empty' }
+        }
+
+        client.createTodo.query({ userId: locals.user.id, task })
 
         return { success: true }
     },

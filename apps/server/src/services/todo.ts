@@ -1,13 +1,18 @@
 import { db } from '../../database'
 
-export async function getTodos() {
-    return await db.selectFrom('todo').selectAll().orderBy('created_at').execute()
+export async function getTodos(userId: string) {
+    return await db
+        .selectFrom('todo')
+        .selectAll()
+        .where('user_id', '=', userId)
+        .orderBy('created_at')
+        .execute()
 }
 
-export async function createTodo(todo: { task: string }) {
+export async function createTodo(todo: { userId: string; task: string }) {
     const { id } = await db
         .insertInto('todo')
-        .values({ task: todo.task, completed: false })
+        .values({ task: todo.task, user_id: todo.userId, completed: false })
         .returning('id')
         .executeTakeFirstOrThrow()
 

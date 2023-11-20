@@ -6,6 +6,7 @@ const { DB_CONNECTION, DB_NAME } = process.env
 interface Todo {
     id: Generated<string>
     task: string
+    user_id: string
     completed: boolean
     created_at: ColumnType<Date, string | undefined, never>
 }
