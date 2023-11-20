@@ -1,11 +1,12 @@
 import client from '$lib/trpc'
 import { json } from '@sveltejs/kit'
+import type { RequestHandler } from './$types'
 
-export async function POST({ request, cookies }: { request: Request; cookies: any }) {
+export const POST: RequestHandler = async ({ request, cookies }) => {
     const { email, data } = await request.json()
 
     try {
-        const response = await client.WebAuthnVerifyLogin.query({
+        const response = await client.webAuthnVerifyLogin.query({
             email,
             registrationDataParsed: data,
         })
@@ -30,6 +31,6 @@ export async function POST({ request, cookies }: { request: Request; cookies: an
             redirectTo: '/dashboard',
         })
     } catch (err) {
-        console.error('Webauthn verification failed', err)
+        throw new Error('Webauthn verification failed.')
     }
 }

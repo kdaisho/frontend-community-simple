@@ -35,6 +35,7 @@
                     }),
                 })
                 const { success, redirectTo } = await response.json()
+
                 if (success) {
                     await goto(redirectTo)
                 }

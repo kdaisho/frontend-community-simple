@@ -59,7 +59,7 @@ export const actions = {
             })
         }
 
-        return { email, loginOptions: await client.WebAuthnGetLoginOptions.query({ email }) }
+        return { email, loginOptions: await client.webAuthnGetLoginOptions.query({ email }) }
     },
     signInWithEmail: async ({ request }) => {
         const formData = await request.formData()

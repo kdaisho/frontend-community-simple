@@ -124,10 +124,7 @@ export const authRouter = router({
              */
             excludeCredentials: user.devices
                 ? user.devices.map(
-                      (device: {
-                          credentialID: { [s: string]: number } | ArrayLike<number>
-                          transports: any
-                      }) => ({
+                      (device: { credentialID: { [s: string]: number }; transports: unknown }) => ({
                           id: Uint8Array.from(Object.values(device?.credentialID)),
                           type: 'public-key',
                           transports: device?.transports,
@@ -180,8 +177,8 @@ export const authRouter = router({
                           (
                               acc: unknown[],
                               cur: {
-                                  credentialPublicKey: ArrayLike<number> | { [s: string]: number }
-                                  credentialID: ArrayLike<number> | { [s: string]: number }
+                                  credentialPublicKey: { [s: string]: number }
+                                  credentialID: { [s: string]: number }
                                   counter: number | undefined
                               }
                           ) => {
@@ -227,7 +224,7 @@ export const authRouter = router({
             }
         }),
     // webauthn login step 1 (3 of 4 total)
-    WebAuthnGetLoginOptions: publicProcedure
+    webAuthnGetLoginOptions: publicProcedure
         .input(z.object({ email: z.string() }))
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)
@@ -238,7 +235,7 @@ export const authRouter = router({
                 allowCredentials: user.devices
                     ? user.devices.map(
                           (authenticator: {
-                              credentialID: ArrayLike<number> | { [s: string]: number }
+                              credentialID: { [k: string]: number }
                               transports: unknown
                           }) => {
                               return {
@@ -257,7 +254,7 @@ export const authRouter = router({
             return response
         }),
     // webauthn login step 2 (4 of 4 total)
-    WebAuthnVerifyLogin: publicProcedure
+    webAuthnVerifyLogin: publicProcedure
         .input(z.object({ email: z.string().email(), registrationDataParsed: z.any() }))
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)
