@@ -13,6 +13,7 @@
     }
 
     let dialog: HTMLDialogElement
+    let input: HTMLInputElement
 
     function showDialog() {
         dialog.showModal()
@@ -73,10 +74,25 @@
     </header>
 
     <dialog bind:this={dialog} on:click={clickOutside} on:keydown>
-        <form method="POST" action="todo?/createTodo" use:enhance>
+        <form
+            method="POST"
+            action="todo?/createTodo"
+            use:enhance={() => {
+                return async ({ update }) => {
+                    update()
+                    setTimeout(() => input.focus(), 100)
+                }
+            }}
+        >
             <label for="task"
                 >Task
-                <input class="neumorphism-input" id="task" type="text" name="task" />
+                <input
+                    class="neumorphism-input"
+                    id="task"
+                    type="text"
+                    name="task"
+                    bind:this={input}
+                />
             </label>
 
             <div class="control">
