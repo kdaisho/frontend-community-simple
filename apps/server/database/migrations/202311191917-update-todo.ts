@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // migration 2023-11-19, 19:17
 import { Kysely } from 'kysely'
 

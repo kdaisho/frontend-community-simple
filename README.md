@@ -128,3 +128,9 @@ pm2 start npm --name fc -- run prod --watch
 In the past, you created account with daishokomiyama+10@gmail.com and registered the passkey but with a different phone (pixel).
 You want to register the passkey for this device (samsung). You click the button "Login with email", and you'll get the email to login. You click the link and you're now logged in.
 But, the problem is there's no button for you to register a passkey for the current device. I should bring this back.
+
+**the feature has been brought (June 15, 2024)**
+
+After bringing back the button "Register biometric ID for next login" (actually, this should be passkey, not "biometric ID" as it can be a passcode of your device), you can register the passkey for the current device. I was able to register samsung device with the same user account (daishokomiyama+10@gmail.com). Great. Now, in the user table db, the devices column got updated with the new device information. But there still be the button after registering the passkey. It seems problematic, but it actually not, because the button is idempotent. You can click it as many times as you want, and it won't do anything. If your device has already been registered, it won't be registered again. So, it's safe to keep the button there.
+
+But, ideally, I should check if the current device is in the 'devices' db list, and if it is, I should hide the button.
