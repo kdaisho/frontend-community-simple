@@ -121,3 +121,10 @@ docker exec -u postgres -it fc_db psql -d frontend_community
 ```sh
 pm2 start npm --name fc -- run prod --watch
 ```
+
+## Need the feature back (June 15, 2024)
+
+(mobile) When you sign in with daishokomiyma+10@gmail.com, you're prompted to "Log in with Touch ID / Passkey" (as you're in the users' table), and you click it. But then you'll be prompted to "No passkeys available for this device". This is expected.
+In the past, you created account with daishokomiyama+10@gmail.com and registered the passkey but with a different phone (pixel).
+You want to register the passkey for this device (samsung). You click the button "Login with email", and you'll get the email to login. You click the link and you're now logged in.
+But, the problem is there's no button for you to register a passkey for the current device. I should bring this back.

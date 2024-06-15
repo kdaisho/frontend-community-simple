@@ -53,9 +53,7 @@
             }
         }}
     >
-        {#if !data.webauthn}
-            <Button type="submit" bg="yellow">Register biometric ID for next login</Button>
-        {/if}
+        <Button type="submit" bg="yellow">Register biometric ID for next login</Button>
 
         <input type="hidden" name="email" value={data.email} />
     </form>
