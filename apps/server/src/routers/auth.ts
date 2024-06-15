@@ -5,6 +5,7 @@ import {
     verifyRegistrationResponse,
     type VerifiedRegistrationResponse,
 } from '@simplewebauthn/server'
+import type { AuthenticatorDevice } from '@simplewebauthn/typescript-types'
 import { TRPCError } from '@trpc/server'
 import base64url from 'base64url'
 import { z } from 'zod'
@@ -124,7 +125,10 @@ export const authRouter = router({
              */
             excludeCredentials: user.devices
                 ? user.devices.map(
-                      (device: { credentialID: { [s: string]: number }; transports: unknown }) => ({
+                      (device: {
+                          credentialID: AuthenticatorDevice['credentialID']
+                          transports?: AuthenticatorDevice['transports']
+                      }) => ({
                           id: Uint8Array.from(Object.values(device?.credentialID)),
                           type: 'public-key',
                           transports: device?.transports,
@@ -173,33 +177,23 @@ export const authRouter = router({
             if (verified && registrationInfo) {
                 const { credentialPublicKey, credentialID, counter } = registrationInfo
                 const uint8ArrayDevices = user.devices
-                    ? user.devices.reduce(
-                          (
-                              acc: unknown[],
-                              cur: {
-                                  credentialPublicKey: { [s: string]: number }
-                                  credentialID: { [s: string]: number }
-                                  counter: number | undefined
-                              }
-                          ) => {
-                              const obj: Partial<typeof registrationInfo> = {
-                                  credentialPublicKey,
-                                  credentialID,
-                                  counter,
-                              }
-                              obj.credentialPublicKey = Uint8Array.from(
-                                  Object.values(cur.credentialPublicKey)
-                              )
-                              obj.credentialID = Uint8Array.from(Object.values(cur.credentialID))
-                              obj.counter = cur.counter
-                              acc.push(obj)
-                              return acc
-                          },
-                          []
-                      )
+                    ? user.devices.reduce((acc, cur) => {
+                          const obj: AuthenticatorDevice = {
+                              credentialPublicKey,
+                              credentialID,
+                              counter,
+                          }
+                          obj.credentialPublicKey = Uint8Array.from(
+                              Object.values(cur.credentialPublicKey)
+                          )
+                          obj.credentialID = Uint8Array.from(Object.values(cur.credentialID))
+                          obj.counter = cur.counter
+                          acc.push(obj)
+                          return acc
+                      }, [] as AuthenticatorDevice[])
                     : []
                 const existingDevice = user.devices
-                    ? user.devices.find((device: Record<string, Uint8Array>) => {
+                    ? user.devices.find((device: AuthenticatorDevice) => {
                           return device.credentialID === credentialID
                       })
                     : false
@@ -235,8 +229,8 @@ export const authRouter = router({
                 allowCredentials: user.devices
                     ? user.devices.map(
                           (authenticator: {
-                              credentialID: { [k: string]: number }
-                              transports: unknown
+                              credentialID: AuthenticatorDevice['credentialID']
+                              transports?: AuthenticatorDevice['transports']
                           }) => {
                               return {
                                   id: getUint8ArrayFromArrayLikeObject(authenticator.credentialID),
@@ -259,7 +253,13 @@ export const authRouter = router({
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)
 
-            if (!user) return null // throw tPRC error here
+            if (!user) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+            }
+
+            if (!user.devices) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'User device not found' })
+            }
 
             let dbAuthenticator
             const bodyCredIDBuffer = base64url.toBuffer(input.registrationDataParsed.rawId)
@@ -274,23 +274,23 @@ export const authRouter = router({
                 }
             }
 
-            if (!dbAuthenticator) {
+            if (dbAuthenticator) {
+                const verification = await verifyAuthenticationResponse({
+                    response: input.registrationDataParsed,
+                    expectedChallenge: challenge,
+                    expectedOrigin,
+                    expectedRPID: rpId,
+                    authenticator: {
+                        ...dbAuthenticator,
+                        credentialPublicKey: Buffer.from(
+                            getUint8ArrayFromArrayLikeObject(dbAuthenticator.credentialPublicKey)
+                        ),
+                    },
+                })
+
+                return { userId: user.id, verified: verification.verified }
+            } else {
                 console.error('NO dbAuthenticator found')
             }
-
-            const verification = await verifyAuthenticationResponse({
-                response: input.registrationDataParsed,
-                expectedChallenge: challenge,
-                expectedOrigin,
-                expectedRPID: rpId,
-                authenticator: {
-                    ...dbAuthenticator,
-                    credentialPublicKey: Buffer.from(
-                        getUint8ArrayFromArrayLikeObject(dbAuthenticator.credentialPublicKey)
-                    ),
-                },
-            })
-
-            return { userId: user.id, verified: verification.verified }
         }),
 })

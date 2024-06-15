@@ -16,7 +16,6 @@ interface User {
     name: string
     email: string
     current_challenge: string | null
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     devices: any | null
     webauthn: boolean

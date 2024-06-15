@@ -1,3 +1,4 @@
+import type { AuthenticatorDevice } from '@simplewebauthn/typescript-types'
 import jwt from 'jsonwebtoken'
 import { db } from '../../database'
 import { sendEmail } from '../utils'
@@ -138,12 +139,21 @@ export async function findUserByEmail(email: string) {
         .executeTakeFirst()
 }
 
-export async function findUserWithWebAuthnByEmail(email: string) {
-    return await db
+type UserWithWebAuthn = {
+    id: string
+    name: string
+    email: string
+    current_challenge: string
+    devices?: AuthenticatorDevice[]
+    webauthn: boolean
+}
+
+export async function findUserWithWebAuthnByEmail(email: string): Promise<UserWithWebAuthn> {
+    return (await db
         .selectFrom('user')
         .select(['id', 'name', 'email', 'current_challenge', 'devices', 'webauthn'])
         .where('email', '=', email)
-        .executeTakeFirst()
+        .executeTakeFirst()) as UserWithWebAuthn
 }
 
 export async function saveUser({ name, email }: HandleRegisterProps) {
