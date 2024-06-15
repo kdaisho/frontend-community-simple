@@ -12,10 +12,12 @@
             data: { registrationOptions: PublicKeyCredentialCreationOptionsJSON; email: string }
         }
 
-        const registrationResponse = await startRegistration(data.registrationOptions)
-        const stringifiedRegistrationResponse = JSON.stringify(registrationResponse)
+        try {
+            const registrationResponse = await startRegistration(data.registrationOptions)
+            const stringifiedRegistrationResponse = JSON.stringify(registrationResponse)
 
-        if (stringifiedRegistrationResponse) {
+            if (!stringifiedRegistrationResponse) return
+
             try {
                 const response = await fetch('api/webauthn/verifyRegistration', {
                     method: 'POST',
@@ -32,8 +34,11 @@
                     }
                 }
             } catch (err) {
-                console.error('webauthn registration verification failed', err)
+                console.error(err)
             }
+        } catch (err) {
+            // the passkey has been registered already (most likely)
+            console.info(err)
         }
     }
 </script>
