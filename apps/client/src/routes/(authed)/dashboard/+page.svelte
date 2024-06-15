@@ -38,6 +38,7 @@
             }
         } catch (err) {
             // the passkey has been registered already (most likely)
+            // dialog for the user is rendered by the authn library (only desktop somehow..) so no need to do anything here
             console.info(err)
         }
     }
