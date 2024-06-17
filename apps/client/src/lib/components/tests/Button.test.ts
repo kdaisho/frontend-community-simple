@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/svelte'
 import Button from '$lib/components/Button.svelte'
-import _WithSlot from '$lib/components/tests/_WithSlot.svelte'
+import { render, screen, within } from '@testing-library/svelte'
+import ButtonTest from './Button.test.svelte'
 
 it('should render Button without slot', () => {
     render(Button)
@@ -9,12 +9,10 @@ it('should render Button without slot', () => {
 })
 
 it('should render Button with slot', () => {
-    render(_WithSlot, {
-        props: {
-            component: Button,
-            slot: 'Send',
-        },
-    })
+    render(ButtonTest)
 
-    expect(screen.getByText('Send')).toBeInTheDocument()
+    const button = screen.getByRole('button')
+    const slot = within(button).getByTestId('child')
+
+    expect(slot).toHaveTextContent('Hello')
 })
