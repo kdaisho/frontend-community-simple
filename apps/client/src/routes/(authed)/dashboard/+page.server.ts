@@ -2,11 +2,12 @@ import client from '$lib/trpc'
 import type { Actions } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
-export const load = (async ({ locals }) => {
+export const load = (({ locals, url }) => {
     return {
         userName: locals.user?.name,
         email: locals.user?.email,
         webauthn: locals.user?.webauthn,
+        shouldOfferWebauthn: Boolean(url.searchParams.get('shouldOfferWebauthn')),
     }
 }) satisfies PageServerLoad
 

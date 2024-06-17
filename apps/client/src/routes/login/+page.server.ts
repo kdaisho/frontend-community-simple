@@ -54,5 +54,5 @@ export const load = (async ({ url, cookies }) => {
         console.error(err)
     }
 
-    throw redirect(307, '/dashboard')
+    throw redirect(307, '/dashboard?shouldOfferWebauthn=true')
 }) satisfies PageServerLoad
