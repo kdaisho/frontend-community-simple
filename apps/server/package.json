@@ -6,8 +6,9 @@
     "scripts": {
         "dev": "nodemon index.ts",
         "prod": "ts-node index.ts",
-        "migrate": "ts-node --files ./database/migrate.ts",
-        "create-migration": "ts-node ./database/create-migration.ts $NAME",
+        "migrate:up": "ts-node --files ./database/migrate-up.ts",
+        "migrate:down": "ts-node --files ./database/migrate-down.ts",
+        "migrate:create": "ts-node ./database/create-migration.ts $NAME",
         "create-todo": "ts-node ./services/todo/index.ts"
     },
     "keywords": [],

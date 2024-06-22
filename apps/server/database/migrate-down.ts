@@ -9,7 +9,7 @@ dotenv.config()
 
 const { DB_CONNECTION, DB_NAME } = process.env
 
-async function migrateToLatest() {
+async function migrateDown() {
     const db = new Kysely<Database>({
         dialect: new PostgresDialect({
             pool: new Pool({
@@ -27,18 +27,18 @@ async function migrateToLatest() {
         }),
     })
 
-    const { error, results } = await migrator.migrateToLatest()
+    const { error, results } = await migrator.migrateDown()
 
     results?.forEach(it => {
         if (it.status === 'Success') {
-            console.info(`migration "${it.migrationName}" was executed successfully`)
+            console.info(`migration down "${it.migrationName}" was executed successfully`)
         } else if (it.status === 'Error') {
-            console.error(`failed to execute migration "${it.migrationName}"`)
+            console.error(`failed to execute migration down: "${it.migrationName}"`)
         }
     })
 
     if (error) {
-        console.error('failed to migrate')
+        console.error('failed to migrate down')
         console.error(error)
         process.exit(1)
     }
@@ -46,4 +46,4 @@ async function migrateToLatest() {
     await db.destroy()
 }
 
-migrateToLatest()
+migrateDown()
