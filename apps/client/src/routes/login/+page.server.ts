@@ -8,7 +8,7 @@ export const load = (async ({ url, cookies }) => {
     const authToken = url.searchParams.get('token')
 
     if (!authToken) {
-        throw redirect(307, '/')
+        redirect(307, '/');
     }
 
     try {
@@ -54,5 +54,5 @@ export const load = (async ({ url, cookies }) => {
         console.error(err)
     }
 
-    throw redirect(307, '/dashboard?shouldOfferWebauthn=true')
+    redirect(307, '/dashboard?shouldOfferWebauthn=true');
 }) satisfies PageServerLoad
