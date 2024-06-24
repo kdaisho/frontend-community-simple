@@ -9,6 +9,7 @@ declare global {
                 email: string
                 name: string
                 webauthn: boolean
+                isAdmin: boolean
             }
         }
         // interface PageData {}

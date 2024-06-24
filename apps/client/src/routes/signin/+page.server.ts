@@ -6,7 +6,7 @@ import type { Actions, PageServerLoad } from './$types'
 
 export const load = (({ locals }) => {
     if (locals?.user) {
-        throw redirect(307, '/dashboard')
+        redirect(307, '/dashboard')
     }
 }) satisfies PageServerLoad
 

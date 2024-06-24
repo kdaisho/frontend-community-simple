@@ -14,12 +14,13 @@ export const handle = (async ({ event, resolve }) => {
                 name: user.name,
                 email: user.email,
                 webauthn: user.webauthn,
+                isAdmin: user.isAdmin ?? false,
             }
         }
     }
 
     if (event.route.id?.includes('(authed)') && !user) {
-        throw redirect(307, '/signin')
+        redirect(307, '/signin')
     }
 
     return resolve(event)
