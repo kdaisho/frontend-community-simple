@@ -83,7 +83,7 @@ export const authRouter = router({
         .query(async ({ input }) => {
             return await saveSession({
                 userId: input.userId,
-                durationHours: 3,
+                durationHours: 24,
             })
         }),
     getUserBySessionToken: publicProcedure
