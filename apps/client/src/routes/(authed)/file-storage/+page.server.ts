@@ -40,7 +40,7 @@ export const actions = {
         })
 
         if (response?.success) {
-            redirect(307, response.url);
+            redirect(307, response.url)
         }
     },
 } satisfies Actions

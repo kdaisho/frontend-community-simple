@@ -20,7 +20,7 @@ export const handle = (async ({ event, resolve }) => {
     }
 
     if (event.route.id?.includes('(authed)') && !user) {
-        redirect(307, '/signin');
+        redirect(307, '/signin')
     }
 
     return resolve(event)
