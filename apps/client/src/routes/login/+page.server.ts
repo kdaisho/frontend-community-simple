@@ -1,4 +1,5 @@
 import { JWT_SIGNATURE } from '$env/static/private'
+
 import client from '$lib/trpc'
 import { redirect } from '@sveltejs/kit'
 import jwt from 'jsonwebtoken'

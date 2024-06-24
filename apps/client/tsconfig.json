@@ -9,7 +9,8 @@
         "skipLibCheck": true,
         "sourceMap": true,
         "strict": true
-    }
+    },
+    "include": ["src", "./setupTest.ts"]
     // (June 2023) NOTE: "extends" doesn't accepts array of string, so i can't extend this with packages/tsconfig.base.json
     // whenever i do this `"extends": ["./.svelte-kit/tsconfig.json"]`, i get tons of errors from svelte check
     // it's redundant, but for now, i add compilerOptions here as exactly the same as packages/tsconfig.base.json
