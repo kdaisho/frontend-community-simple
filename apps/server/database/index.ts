@@ -20,6 +20,7 @@ interface User {
     devices: any | null
     webauthn: boolean
     created_at: ColumnType<Date, string | undefined, never>
+    is_admin: boolean | null
 }
 
 interface Session {

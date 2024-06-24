@@ -14,6 +14,7 @@ export const handle = (async ({ event, resolve }) => {
                 name: user.name,
                 email: user.email,
                 webauthn: user.webauthn,
+                isAdmin: user.isAdmin ?? false,
             }
         }
     }

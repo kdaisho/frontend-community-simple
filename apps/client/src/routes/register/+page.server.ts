@@ -1,3 +1,4 @@
+import { ADMIN_EMAIL } from '$env/static/private'
 import client from '$lib/trpc'
 import { fail, redirect } from '@sveltejs/kit'
 import { TRPCClientError } from '@trpc/client'
@@ -41,7 +42,7 @@ export const actions = {
             })
         }
 
-        if (!/(\d|\w)\+\d+@/.test(email)) {
+        if (email !== ADMIN_EMAIL && !/(\d|\w)\+\d+@/.test(email)) {
             return fail(400, {
                 type: 'email',
                 value: email,

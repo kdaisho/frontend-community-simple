@@ -193,7 +193,7 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
 export async function findUserBySessionToken(token: string) {
     return await db
         .selectFrom('user')
-        .select(['id', 'name', 'email', 'webauthn'])
+        .select(['id', 'name', 'email', 'webauthn', 'is_admin as isAdmin'])
         .where(
             'id',
             '=',
