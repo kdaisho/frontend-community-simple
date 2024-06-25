@@ -5,5 +5,6 @@ export const load = (async ({ locals }) => {
         userName: locals.user?.name || '',
         userEmail: locals.user?.email || '',
         webauthn: locals.user?.webauthn || false,
+        isAdmin: locals.user?.isAdmin,
     }
 }) satisfies LayoutServerLoad

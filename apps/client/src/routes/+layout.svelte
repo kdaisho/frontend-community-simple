@@ -55,6 +55,10 @@
         </ul>
 
         <div class="user">
+            {#if data.isAdmin}
+                <a href="/admin">Admin</a>
+            {/if}
+
             {#if data.userName}
                 <a href="/dashboard">You</a>
                 <button on:click={handleLogout}>Log out</button>

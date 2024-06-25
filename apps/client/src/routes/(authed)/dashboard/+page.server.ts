@@ -8,6 +8,7 @@ export const load = (({ locals, url }) => {
         email: locals.user?.email,
         webauthn: locals.user?.webauthn,
         shouldOfferWebauthn: Boolean(url.searchParams.get('shouldOfferWebauthn')),
+        isAdmin: locals.user?.isAdmin,
     }
 }) satisfies PageServerLoad
 

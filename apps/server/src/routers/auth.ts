@@ -16,6 +16,9 @@ import {
     findUserByEmail,
     findUserBySessionToken,
     findUserWithWebAuthnByEmail,
+    getFootprints,
+    getSessions,
+    getUsers,
     handleRegister,
     handleSignIn,
     saveBotAttempt,
@@ -293,4 +296,14 @@ export const authRouter = router({
                 console.error('NO dbAuthenticator found')
             }
         }),
+    // admin routes
+    getUsers: publicProcedure.query(async () => {
+        return await getUsers()
+    }),
+    getFootprints: publicProcedure.query(async () => {
+        return await getFootprints()
+    }),
+    getSessions: publicProcedure.query(async () => {
+        return await getSessions()
+    }),
 })

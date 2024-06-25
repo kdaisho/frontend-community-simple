@@ -257,3 +257,26 @@ export async function saveNewDevices({ userId, devices }: { userId: string; devi
 export async function saveBotAttempt(email: string) {
     await db.insertInto('recaptcha').values({ email }).execute()
 }
+
+export async function getUsers() {
+    return await db
+        .selectFrom('user')
+        .select([
+            'user.id',
+            'user.name',
+            'user.email',
+            'user.webauthn',
+            'user.devices',
+            'created_at as createdAt',
+            'user.is_admin as isAdmin',
+        ])
+        .execute()
+}
+
+export async function getFootprints() {
+    return await db.selectFrom('footprint').selectAll().execute()
+}
+
+export async function getSessions() {
+    return await db.selectFrom('session').selectAll().execute()
+}
