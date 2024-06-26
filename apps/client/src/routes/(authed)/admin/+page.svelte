@@ -35,13 +35,33 @@
             {/each}
         </table>
     </div>
+
+    <div class="table-container">
+        <table>
+            <caption>Footprints</caption>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Pristine</th>
+                <th>Created at</th>
+            </tr>
+            {#each data.footprints as ft}
+                <tr>
+                    <td>{ft.id}</td>
+                    <td>{ft.email}</td>
+                    <td>{ft.pristine}</td>
+                    <td>{formatDateToLocal(ft.created_at)}</td>
+                </tr>
+            {/each}
+        </table>
+    </div>
 </div>
 
 <style>
     .admin {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 2rem;
     }
 
     .table-container {
