@@ -156,16 +156,14 @@ export const authRouter = router({
 
             const user = await findUserWithWebAuthnByEmail(email)
 
-            if (!user) return null // throw tPRC error here
-
-            const expectedChallenge = user?.current_challenge as string // at this point, the value should be here
+            if (!user) return null // TODO: throw PRC error here
 
             let verification: VerifiedRegistrationResponse
 
             try {
                 verification = await verifyRegistrationResponse({
                     response: data,
-                    expectedChallenge,
+                    expectedChallenge: user.current_challenge,
                     expectedOrigin,
                     expectedRPID: rpId,
                 })
