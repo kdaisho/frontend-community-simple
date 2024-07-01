@@ -1,4 +1,5 @@
 import type { AuthenticatorDevice } from '@simplewebauthn/typescript-types'
+import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
 import { db } from '../../database'
 import { sendEmail } from '../utils'
@@ -18,7 +19,10 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
         .executeTakeFirst()
 
     if (foundUser) {
-        throw new Error('User already exists')
+        throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'User already exists',
+        })
     }
 
     const authToken = jwt.sign(

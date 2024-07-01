@@ -1,10 +1,10 @@
 import { ADMIN_EMAIL } from '$env/static/private'
 import client from '$lib/trpc'
-import { fail, redirect } from '@sveltejs/kit'
+import { fail, redirect, type Actions } from '@sveltejs/kit'
 import { TRPCClientError } from '@trpc/client'
 import { z } from 'zod'
 import { validateHumanInteraction } from '../modules'
-import type { Actions, PageServerLoad } from './$types'
+import type { PageServerLoad } from './$types'
 
 export const load = (({ locals }) => {
     if (locals?.user) {
@@ -55,12 +55,11 @@ export const actions = {
             return { success: true }
         } catch (err) {
             if (err instanceof TRPCClientError) {
-                const errors = JSON.parse(err.message)
-                return fail(400, {
-                    name,
-                    email,
-                    error: errors.map((e: { message: string }) => e.message),
-                })
+                return {
+                    success: false,
+                    status: 409,
+                    message: err.message,
+                }
             }
         }
     },
