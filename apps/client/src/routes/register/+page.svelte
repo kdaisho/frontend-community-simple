@@ -13,6 +13,10 @@
     grecaptchaStore.subscribe(value => {
         grecaptchaToken = value ?? ''
     })
+
+    $: if (form && form.status === 409) {
+        alert(form.message)
+    }
 </script>
 
 <div class="register">

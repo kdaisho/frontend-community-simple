@@ -57,10 +57,21 @@ export const authRouter = router({
         await saveBotAttempt(input)
     }),
     register: publicProcedure.input(registerPayload).query(async ({ input }) => {
-        await handleRegister({
-            name: input.name,
-            email: input.email,
-        })
+        try {
+            await handleRegister({
+                name: input.name,
+                email: input.email,
+            })
+        } catch (err) {
+            if (err instanceof TRPCError) {
+                throw err // Directly re-throw the TRPCError
+            }
+            // Optionally, handle other types of errors or throw a generic error
+            throw new TRPCError({
+                code: 'INTERNAL_SERVER_ERROR',
+                message: 'An unexpected error occurred',
+            })
+        }
     }),
     signIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
         return await handleSignIn({ email: input.email })
