@@ -1,7 +1,7 @@
-import { Kysely, PostgresDialect, type ColumnType, type Generated } from 'kysely'
+import { type ColumnType, type Generated, Kysely, PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
 
-const { DB_CONNECTION, DB_NAME } = process.env
+const { DATABASE_URL } = process.env
 
 interface Todo {
     id: Generated<string>
@@ -56,7 +56,7 @@ export interface Database {
 export const db = new Kysely<Database>({
     dialect: new PostgresDialect({
         pool: new Pool({
-            connectionString: `${DB_CONNECTION}/${DB_NAME}`,
+            connectionString: `${DATABASE_URL}`,
         }),
     }),
 })
