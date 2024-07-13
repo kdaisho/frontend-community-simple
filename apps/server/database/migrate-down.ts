@@ -7,13 +7,13 @@ import type { Database } from './index'
 
 dotenv.config()
 
-const { DB_CONNECTION, DB_NAME } = process.env
+const { DATABASE_URL } = process.env
 
 async function migrateDown() {
     const db = new Kysely<Database>({
         dialect: new PostgresDialect({
             pool: new Pool({
-                connectionString: `${DB_CONNECTION}/${DB_NAME}`,
+                connectionString: `${DATABASE_URL}`,
             }),
         }),
     })
