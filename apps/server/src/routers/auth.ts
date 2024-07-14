@@ -49,11 +49,11 @@ const signInPayload = z.object({
 
 const registrationVerificationPayload = z.object({
     email: z.string().email({ message: 'Email is not valid' }),
-    data: z.any(),
+    registrationResponse: z.string(),
 })
 
 export const authRouter = router({
-    recordBotAttempt: publicProcedure.input(z.string()).query(async ({ input }) => {
+    RecordBotAttempt: publicProcedure.input(z.string()).query(async ({ input }) => {
         await saveBotAttempt(input)
     }),
     register: publicProcedure.input(registerPayload).query(async ({ input }) => {
@@ -73,13 +73,13 @@ export const authRouter = router({
             })
         }
     }),
-    signIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
+    SignIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
         return await handleSignIn({ email: input.email })
     }),
-    sendLoginEmail: publicProcedure.input(z.string()).query(async ({ input }) => {
+    SendLoginEmail: publicProcedure.input(z.string()).query(async ({ input }) => {
         await sendLoginEmail(input)
     }),
-    createUser: publicProcedure
+    CreateUser: publicProcedure
         .input(z.object({ name: z.string(), email: z.string().email() }))
         .query(async ({ input }) => {
             return await saveUser({
@@ -87,12 +87,12 @@ export const authRouter = router({
                 email: input.email,
             })
         }),
-    getUser: publicProcedure
+    GetUser: publicProcedure
         .input(z.object({ email: z.string().email() }))
         .query(async ({ input }) => {
             return await findUserByEmail(input.email)
         }),
-    createSession: publicProcedure
+    CreateSession: publicProcedure
         .input(z.object({ userId: z.string() }))
         .query(async ({ input }) => {
             return await saveSession({
@@ -100,12 +100,12 @@ export const authRouter = router({
                 durationHours: 24,
             })
         }),
-    getUserBySessionToken: publicProcedure
+    GetUserBySessionToken: publicProcedure
         .input(z.object({ sessionToken: z.string().uuid() }))
         .query(async ({ input }) => {
             return await findUserBySessionToken(input.sessionToken)
         }),
-    findFootprintByTokenOrThrow: publicProcedure.input(z.string()).query(async ({ input }) => {
+    FindFootprintByTokenOrThrow: publicProcedure.input(z.string()).query(async ({ input }) => {
         const pristineFootprintId = await findPristineFootprint(input)
         if (!pristineFootprintId) {
             throw new TRPCError({ code: 'NOT_FOUND', message: 'Pristine footprint not found' })
@@ -120,7 +120,7 @@ export const authRouter = router({
         }
     }),
     // webauthn registration step 1 (1 of 4 total)
-    getWebAuthnRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
+    GetRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
         const user = await findUserWithWebAuthnByEmail(input)
 
         if (!user) return null // throw tPRC error here
@@ -159,11 +159,11 @@ export const authRouter = router({
         return registrationOptions
     }),
     // webauthn registration step 2 (2 of 4 total)
-    verifyWebAuthnRegistrationResponse: publicProcedure
+    VerifyRegistrationResponse: publicProcedure
         .input(registrationVerificationPayload)
         .query(async ({ input }) => {
-            const { email, data: stringData } = input
-            const data = JSON.parse(stringData)
+            const { email, registrationResponse } = input
+            const data = JSON.parse(registrationResponse)
 
             const user = await findUserWithWebAuthnByEmail(email)
 
@@ -230,7 +230,7 @@ export const authRouter = router({
             }
         }),
     // webauthn login step 1 (3 of 4 total)
-    webAuthnGetLoginOptions: publicProcedure
+    GetLoginOptions: publicProcedure
         .input(z.object({ email: z.string() }))
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)
@@ -260,10 +260,12 @@ export const authRouter = router({
             return response
         }),
     // webauthn login step 2 (4 of 4 total)
-    webAuthnVerifyLogin: publicProcedure
-        .input(z.object({ email: z.string().email(), registrationDataParsed: z.any() }))
+    VerifyLogin: publicProcedure
+        .input(z.object({ email: z.string().email(), registrationDataString: z.string() }))
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)
+
+            const registrationData = JSON.parse(input.registrationDataString)
 
             if (!user) {
                 throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
@@ -274,7 +276,7 @@ export const authRouter = router({
             }
 
             let dbAuthenticator
-            const bodyCredIDBuffer = base64url.toBuffer(input.registrationDataParsed.rawId)
+            const bodyCredIDBuffer = base64url.toBuffer(registrationData.rawId)
 
             for (const device of user.devices) {
                 const currentCredential = Buffer.from(
@@ -288,7 +290,7 @@ export const authRouter = router({
 
             if (dbAuthenticator) {
                 const verification = await verifyAuthenticationResponse({
-                    response: input.registrationDataParsed,
+                    response: registrationData,
                     expectedChallenge: challenge,
                     expectedOrigin,
                     expectedRPID: rpId,

@@ -5,9 +5,10 @@
     import Button from '$lib/components/Button.svelte'
     import { startRegistration } from '@simplewebauthn/browser'
     import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/typescript-types'
-    import type { PageServerData } from './$types'
+    import type { ActionData, PageServerData } from './$types'
 
     export let data: PageServerData
+    export let form: ActionData
 
     function isRegistrationOptionsData(arg: object): arg is {
         data: { email: string; registrationOptions: PublicKeyCredentialCreationOptionsJSON }
@@ -63,7 +64,21 @@
             console.info(err)
         }
     }
+
+    let verifyRegistrationFormElem: HTMLFormElement
 </script>
+
+{#if form?.success}
+    <form
+        method="POST"
+        action="?/verifyRegistration"
+        use:enhance
+        bind:this={verifyRegistrationFormElem}
+    >
+        <input name="email" value={form.email} />
+        <input name="registrationOptions" value={form.registrationOptions} />
+    </form>
+{/if}
 
 <div class="dashboard">
     <h1>Dashboard</h1>
@@ -92,7 +107,7 @@
     {#if data.shouldOfferWebauthn}
         <form
             method="POST"
-            action="?/webauthnGetRegistrationOptions"
+            action="?/getRegistrationOptions"
             use:enhance={() => {
                 return async ({ result, update }) => {
                     if (result.status === 200 && isRegistrationOptionsData(result)) {

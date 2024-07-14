@@ -1,5 +1,5 @@
-import client from '$lib/trpc'
-import type { Actions } from '@sveltejs/kit'
+import { GetRegistrationOptions, VerifyRegistrationResponse } from '$lib/trpc'
+import { type Actions, error } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
 export const load = (({ locals, url }) => {
@@ -13,20 +13,42 @@ export const load = (({ locals, url }) => {
 }) satisfies PageServerLoad
 
 export const actions = {
-    webauthnGetRegistrationOptions: async ({ request }) => {
+    getRegistrationOptions: async ({ request }) => {
         const formData = await request.formData()
         const email = formData.get('email') as string
 
         if (!email) {
-            return { success: false, message: 'Email not submitted' }
+            error(400, { message: 'Email not submitted' })
         }
 
         try {
-            const registrationOptions = await client.getWebAuthnRegistrationOptions.query(email)
-
-            return { registrationOptions, email }
+            return {
+                success: true,
+                registrationOptions: await GetRegistrationOptions.query(email),
+                email,
+            }
         } catch (err) {
-            console.error(err)
+            error(500, { message: 'Failed to get registration options' })
+        }
+    },
+
+    verifyRegistration: async ({ request }) => {
+        const formData = await request.formData()
+        const email = formData.get('email') as string
+        const registrationResponse = formData.get('registrationResponse') as string
+
+        if (!email || !registrationResponse) {
+            error(400, { message: 'Invalid inputs' })
+        }
+
+        try {
+            // TODO return response
+            await VerifyRegistrationResponse.query({
+                email,
+                registrationResponse,
+            })
+        } catch (err) {
+            console.error('Webauthn verification failed', err)
         }
     },
 } satisfies Actions
