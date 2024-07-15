@@ -11,6 +11,7 @@ export const {
     GetUser,
     GetUserBySessionToken,
     RecordBotAttempt,
+    Register,
     SendLoginEmail,
     SignIn,
     VerifyLogin,

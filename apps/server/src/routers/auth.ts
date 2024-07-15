@@ -56,7 +56,7 @@ export const authRouter = router({
     RecordBotAttempt: publicProcedure.input(z.string()).query(async ({ input }) => {
         await saveBotAttempt(input)
     }),
-    register: publicProcedure.input(registerPayload).query(async ({ input }) => {
+    Register: publicProcedure.input(registerPayload).query(async ({ input }) => {
         try {
             await handleRegister({
                 name: input.name,

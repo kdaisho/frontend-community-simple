@@ -1,5 +1,8 @@
 import { GetRegistrationOptions, VerifyRegistrationResponse } from '$lib/trpc'
-import { type Actions, error } from '@sveltejs/kit'
+import { type Actions, error, fail } from '@sveltejs/kit'
+import { superValidate } from 'sveltekit-superforms'
+import { zod } from 'sveltekit-superforms/adapters'
+import { z } from 'zod'
 import type { PageServerLoad } from './$types'
 
 export const load = (({ locals, url }) => {
@@ -13,17 +16,21 @@ export const load = (({ locals, url }) => {
 }) satisfies PageServerLoad
 
 export const actions = {
-    getRegistrationOptions: async ({ request }) => {
-        const formData = await request.formData()
-        const email = formData.get('email') as string
+    registerPasskey: async ({ request }) => {
+        const form = await superValidate(
+            request,
+            zod(z.object({ email: z.string().trim().email() }))
+        )
 
-        if (!email) {
-            error(400, { message: 'Email not submitted' })
+        if (!form.valid) {
+            return fail(400, { form })
         }
+
+        const email = form.data.email
 
         try {
             return {
-                success: true,
+                form,
                 registrationOptions: await GetRegistrationOptions.query(email),
                 email,
             }
@@ -33,20 +40,25 @@ export const actions = {
     },
 
     verifyRegistration: async ({ request }) => {
-        const formData = await request.formData()
-        const email = formData.get('email') as string
-        const registrationResponse = formData.get('registrationResponse') as string
+        const form = await superValidate(
+            request,
+            zod(z.object({ email: z.string().trim().email(), registrationResponse: z.string() }))
+        )
 
-        if (!email || !registrationResponse) {
-            error(400, { message: 'Invalid inputs' })
+        if (!form.valid) {
+            return fail(400, { form })
         }
 
         try {
-            // TODO return response
             await VerifyRegistrationResponse.query({
-                email,
-                registrationResponse,
+                email: form.data.email,
+                registrationResponse: form.data.registrationResponse,
             })
+
+            return {
+                form,
+                message: 'Verification success',
+            }
         } catch (err) {
             console.error('Webauthn verification failed', err)
         }

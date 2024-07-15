@@ -37,7 +37,7 @@
         {
             id: 'signin-with-passkey-form',
             async onResult({ result }) {
-                if (result.type === 'success' && result?.data?.loginOptions) {
+                if (result.type === 'success' && result.data?.loginOptions) {
                     const response = await startAuthentication(result.data.loginOptions)
 
                     if (response) {
@@ -58,7 +58,7 @@
         {
             id: 'verify-login-form',
             async onResult({ result }) {
-                if (result.type === 'success' && result?.data?.redirectTo) {
+                if (result.type === 'success' && result.data?.redirectTo) {
                     await goto(result.data.redirectTo)
                 }
             },
