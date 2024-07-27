@@ -1,10 +1,10 @@
 import {
+    AuthGetLoginOptions,
+    AuthVerifyLogin,
     CreateSession,
-    GetLoginOptions,
     RecordBotAttempt,
     SendLoginEmail,
     SignIn,
-    VerifyLogin,
 } from '$lib/trpc'
 import { fail, redirect } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms'
@@ -83,7 +83,7 @@ export const actions = {
         return {
             form,
             email: form.data.email,
-            loginOptions: await GetLoginOptions.query({ email: form.data.email }),
+            loginOptions: await AuthGetLoginOptions.query({ email: form.data.email }),
         }
     },
 
@@ -113,7 +113,7 @@ export const actions = {
         }
 
         try {
-            const response = await VerifyLogin.query({
+            const response = await AuthVerifyLogin.query({
                 email: form.data.email,
                 registrationDataString: form.data.authenticationResponse,
             })

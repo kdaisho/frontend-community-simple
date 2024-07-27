@@ -1,4 +1,4 @@
-import { GetRegistrationOptions, VerifyRegistrationResponse } from '$lib/trpc'
+import { AuthGetRegistrationOptions, AuthVerifyRegistrationResponse } from '$lib/trpc'
 import { type Actions, error, fail } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms'
 import { zod } from 'sveltekit-superforms/adapters'
@@ -31,7 +31,7 @@ export const actions = {
         try {
             return {
                 form,
-                registrationOptions: await GetRegistrationOptions.query(email),
+                registrationOptions: await AuthGetRegistrationOptions.query(email),
                 email,
             }
         } catch (err) {
@@ -50,7 +50,7 @@ export const actions = {
         }
 
         try {
-            await VerifyRegistrationResponse.query({
+            await AuthVerifyRegistrationResponse.query({
                 email: form.data.email,
                 registrationResponse: form.data.registrationResponse,
             })

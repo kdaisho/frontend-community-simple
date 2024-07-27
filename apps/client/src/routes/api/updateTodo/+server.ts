@@ -1,6 +1,6 @@
-import type { RequestHandler } from './$types'
-import client from '$lib/trpc'
+import { UpdateTodo } from '$lib/trpc'
 import { json } from '@sveltejs/kit'
+import type { RequestHandler } from './$types'
 
 export const POST = (async ({ request }) => {
     const data = await request.json()
@@ -19,7 +19,7 @@ export const POST = (async ({ request }) => {
         ...(completed !== undefined && { completed }),
     }
 
-    const response = await client.updateTodo.query(query)
+    const response = await UpdateTodo.query(query)
 
     return json({ todoId: response })
 }) satisfies RequestHandler

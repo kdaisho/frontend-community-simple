@@ -1,4 +1,4 @@
-import client from '$lib/trpc'
+import { Download, Upload } from '$lib/trpc'
 import { redirect, type Actions } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
@@ -20,7 +20,7 @@ export const actions = {
         const buffer = Buffer.from(arrayBuffer)
 
         try {
-            client.upload.query({
+            Upload.query({
                 file: buffer,
                 name: file.name,
                 mimetype: file.type,
@@ -35,7 +35,7 @@ export const actions = {
         const formData = await event.request.formData()
         const filename = formData.get('filename') as string
 
-        const response = await client.download.query({
+        const response = await Download.query({
             filename,
         })
 

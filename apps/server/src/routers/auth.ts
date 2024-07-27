@@ -120,7 +120,7 @@ export const authRouter = router({
         }
     }),
     // webauthn registration step 1 (1 of 4 total)
-    GetRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
+    AuthGetRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
         const user = await findUserWithWebAuthnByEmail(input)
 
         if (!user) return null // throw tPRC error here
@@ -159,7 +159,7 @@ export const authRouter = router({
         return registrationOptions
     }),
     // webauthn registration step 2 (2 of 4 total)
-    VerifyRegistrationResponse: publicProcedure
+    AuthVerifyRegistrationResponse: publicProcedure
         .input(registrationVerificationPayload)
         .query(async ({ input }) => {
             const { email, registrationResponse } = input
@@ -230,7 +230,7 @@ export const authRouter = router({
             }
         }),
     // webauthn login step 1 (3 of 4 total)
-    GetLoginOptions: publicProcedure
+    AuthGetLoginOptions: publicProcedure
         .input(z.object({ email: z.string() }))
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)
@@ -260,7 +260,7 @@ export const authRouter = router({
             return response
         }),
     // webauthn login step 2 (4 of 4 total)
-    VerifyLogin: publicProcedure
+    AuthVerifyLogin: publicProcedure
         .input(z.object({ email: z.string().email(), registrationDataString: z.string() }))
         .query(async ({ input }) => {
             const user = await findUserWithWebAuthnByEmail(input.email)
@@ -308,13 +308,13 @@ export const authRouter = router({
             }
         }),
     // admin routes
-    getUsers: publicProcedure.query(async () => {
+    GetUsers: publicProcedure.query(async () => {
         return await getUsers()
     }),
-    getFootprints: publicProcedure.query(async () => {
+    GetFootprints: publicProcedure.query(async () => {
         return await getFootprints()
     }),
-    getSessions: publicProcedure.query(async () => {
+    GetSessions: publicProcedure.query(async () => {
         return await getSessions()
     }),
 })
