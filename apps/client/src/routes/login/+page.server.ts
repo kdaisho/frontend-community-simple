@@ -1,6 +1,6 @@
 import { JWT_SIGNATURE } from '$env/static/private'
 
-import client from '$lib/trpc'
+import { CreateSession, CreateUser, FindFootprintByTokenOrThrow, GetUser } from '$lib/trpc'
 import { redirect } from '@sveltejs/kit'
 import jwt from 'jsonwebtoken'
 import type { PageServerLoad } from './$types'
@@ -13,7 +13,7 @@ export const load = (async ({ url, cookies }) => {
     }
 
     try {
-        await client.findFootprintByTokenOrThrow.query(authToken)
+        await FindFootprintByTokenOrThrow.query(authToken)
 
         const parsed = jwt.verify(authToken, JWT_SIGNATURE) as {
             email: string
@@ -24,7 +24,7 @@ export const load = (async ({ url, cookies }) => {
         let user
 
         if (parsed.register && parsed.name) {
-            user = await client.createUser.query({
+            user = await CreateUser.query({
                 name: parsed.name,
                 email: parsed.email,
             })
@@ -33,7 +33,7 @@ export const load = (async ({ url, cookies }) => {
                 throw new Error('Creating user failed.')
             }
         } else {
-            user = await client.getUser.query({
+            user = await GetUser.query({
                 email: parsed.email,
             })
 
@@ -42,7 +42,7 @@ export const load = (async ({ url, cookies }) => {
             }
         }
 
-        const session = await client.createSession.query({
+        const session = await CreateSession.query({
             userId: user.id,
         })
 

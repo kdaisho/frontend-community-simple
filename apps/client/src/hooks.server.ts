@@ -1,4 +1,4 @@
-import client from '$lib/trpc'
+import { GetUserBySessionToken } from '$lib/trpc'
 import { redirect, type Handle } from '@sveltejs/kit'
 
 export const handle = (async ({ event, resolve }) => {
@@ -6,7 +6,7 @@ export const handle = (async ({ event, resolve }) => {
     let user
 
     if (sessionToken) {
-        user = await client.getUserBySessionToken.query({ sessionToken })
+        user = await GetUserBySessionToken.query({ sessionToken })
 
         if (user) {
             event.locals.user = {

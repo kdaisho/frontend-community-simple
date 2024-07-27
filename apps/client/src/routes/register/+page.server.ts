@@ -1,5 +1,5 @@
 import { ADMIN_EMAIL } from '$env/static/private'
-import client from '$lib/trpc'
+import { RecordBotAttempt, Register } from '$lib/trpc'
 import { fail, redirect, type Actions } from '@sveltejs/kit'
 import { TRPCClientError } from '@trpc/client'
 import { z } from 'zod'
@@ -23,7 +23,7 @@ export const actions = {
         if (!recaptchaResult.success) {
             // recaptcha is too aggressive and blocks real users. let's see how many we get (nov, 19 2023)
             console.error('register: request from a bot')
-            await client.recordBotAttempt.query(email)
+            await RecordBotAttempt.query(email)
         }
 
         if (!name.length) {
@@ -51,7 +51,7 @@ export const actions = {
         }
 
         try {
-            await client.register.query({ name, email })
+            await Register.query({ name, email })
             return { success: true }
         } catch (err) {
             if (err instanceof TRPCClientError) {

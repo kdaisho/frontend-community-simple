@@ -14,16 +14,16 @@ const updateTodoPayload = z.object({
 })
 
 export const todoRouter = router({
-    createTodo: publicProcedure.input(createTodoPayload).query(async ({ input }) => {
+    CreateTodo: publicProcedure.input(createTodoPayload).query(async ({ input }) => {
         await createTodo(input)
     }),
-    updateTodo: publicProcedure
+    UpdateTodo: publicProcedure
         .input(updateTodoPayload)
         .query(async ({ input }) => await updateTodo(input)),
-    deleteTodo: publicProcedure.input(z.string()).query(async ({ input }) => {
+    DeleteTodo: publicProcedure.input(z.string()).query(async ({ input }) => {
         await deleteTodo(input)
     }),
-    getTodos: publicProcedure.input(z.string()).query(async ({ input }) => {
+    GetTodos: publicProcedure.input(z.string()).query(async ({ input }) => {
         return await getTodos(input)
     }),
 })

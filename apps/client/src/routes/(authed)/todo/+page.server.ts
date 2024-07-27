@@ -1,9 +1,9 @@
-import client from '$lib/trpc'
+import { CreateTodo, GetTodos } from '$lib/trpc'
 import type { Actions } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
 export const load = (async ({ locals }) => {
-    const todos = await client.getTodos.query(locals?.user.id)
+    const todos = await GetTodos.query(locals?.user.id)
     return { todos }
 }) satisfies PageServerLoad
 
@@ -20,7 +20,7 @@ export const actions = {
             return { success: false, message: 'User ID cannot be empty' }
         }
 
-        client.createTodo.query({ userId: locals.user.id, task })
+        CreateTodo.query({ userId: locals.user.id, task })
 
         return { success: true }
     },
