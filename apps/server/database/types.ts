@@ -19,48 +19,55 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Footprint {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   email: string;
-  id: Generated<string>;
-  pristine: Generated<boolean>;
+  is_pristine: Generated<boolean>;
   token: string;
+  uuid: Generated<string>;
+}
+
+export interface Passkey {
+  created_at: Generated<Timestamp>;
+  current_challenge: string | null;
+  devices: Json | null;
+  id: Generated<number>;
+  user_uuid: string | null;
 }
 
 export interface Recaptcha {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   email: string;
   id: Generated<number>;
 }
 
 export interface Session {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   expires_at: Timestamp;
-  id: Generated<string>;
-  token: Generated<string | null>;
-  user_id: string | null;
+  token: Generated<string>;
+  user_uuid: string | null;
+  uuid: Generated<string>;
 }
 
 export interface Todo {
-  completed: Generated<boolean>;
-  created_at: Generated<Timestamp | null>;
-  id: Generated<string>;
+  created_at: Generated<Timestamp>;
+  is_completed: Generated<boolean>;
   task: string;
-  user_id: string | null;
+  user_uuid: string | null;
+  uuid: Generated<string>;
 }
 
 export interface User {
-  created_at: Generated<Timestamp | null>;
-  current_challenge: string | null;
-  devices: Json | null;
+  created_at: Generated<Timestamp>;
   email: string;
-  id: Generated<string>;
   is_admin: Generated<boolean>;
+  is_passkeys_enabled: Generated<boolean>;
   name: string;
-  webauthn: Generated<boolean>;
+  uuid: Generated<string>;
 }
 
 export interface DB {
   footprint: Footprint;
+  passkey: Passkey;
   recaptcha: Recaptcha;
   session: Session;
   todo: Todo;

@@ -110,20 +110,20 @@
 
     {#if data.todos.length}
         <div class="todo-list">
-            {#each data.todos as { id, task, completed }, i}
+            {#each data.todos as { uuid, task, isCompleted }, i}
                 <fieldset class="todo">
                     <input
                         class="completed"
                         type="checkbox"
-                        data-id={id}
+                        data-id={uuid}
                         name="completed"
-                        checked={completed}
+                        checked={isCompleted}
                         on:change={handleOnChange}
                     />
                     <input
                         class="task"
                         type="text"
-                        data-id={id}
+                        data-id={uuid}
                         data-index={i}
                         name="task"
                         value={task}
@@ -191,7 +191,8 @@
         background: var(--app-white);
         border: none;
         border-radius: var(--border-radius-large);
-        box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
+        box-shadow:
+            rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
             rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
         padding: 1rem;
         width: 280px;
@@ -211,7 +212,9 @@
         border: none;
         background: var(--light-grey);
         border-radius: var(--border-radius);
-        box-shadow: inset 2px 2px 6px #cbcbcb, inset -2px -2px 6px #fff;
+        box-shadow:
+            inset 2px 2px 6px #cbcbcb,
+            inset -2px -2px 6px #fff;
         color: var(--app-black);
         outline: none;
         padding: 0.5rem 0.75rem;

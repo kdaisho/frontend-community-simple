@@ -1,4 +1,4 @@
-import { JWT_SIGNATURE } from '$env/static/private'
+import { ADMIN_EMAIL, JWT_SIGNATURE } from '$env/static/private'
 
 import { CreateSession, CreateUser, FindFootprintByTokenOrThrow, GetUser } from '$lib/trpc'
 import { redirect } from '@sveltejs/kit'
@@ -27,6 +27,7 @@ export const load = (async ({ url, cookies }) => {
             user = await CreateUser.query({
                 name: parsed.name,
                 email: parsed.email,
+                isAdmin: parsed.email === ADMIN_EMAIL,
             })
 
             if (!user) {
@@ -43,7 +44,7 @@ export const load = (async ({ url, cookies }) => {
         }
 
         const session = await CreateSession.query({
-            userId: user.id,
+            userUuid: user.uuid,
         })
 
         if (!session) {

@@ -12,13 +12,14 @@ import { z } from 'zod'
 import { publicProcedure, router } from '../../trpc'
 import {
     consumeFootprint,
+    createPasskey,
     findPristineFootprint,
     findUserByEmail,
     findUserBySessionToken,
     findUserWithWebAuthnByEmail,
     getFootprints,
     getSessions,
-    getUsers,
+    getUsersWithDevices,
     handleRegister,
     handleSignIn,
     saveBotAttempt,
@@ -26,7 +27,7 @@ import {
     saveSession,
     saveUser,
     sendLoginEmail,
-    updateUserWithCurrentChallenge,
+    updatePasskeyWithCurrentChallenge,
     updateUserWithWebauthn,
 } from '../services/auth'
 import { getUint8ArrayFromArrayLikeObject } from '../utils'
@@ -80,11 +81,12 @@ export const authRouter = router({
         await sendLoginEmail(input)
     }),
     CreateUser: publicProcedure
-        .input(z.object({ name: z.string(), email: z.string().email() }))
+        .input(z.object({ name: z.string(), email: z.string().email(), isAdmin: z.boolean() }))
         .query(async ({ input }) => {
             return await saveUser({
                 name: input.name,
                 email: input.email,
+                isAdmin: input.isAdmin,
             })
         }),
     GetUser: publicProcedure
@@ -93,10 +95,10 @@ export const authRouter = router({
             return await findUserByEmail(input.email)
         }),
     CreateSession: publicProcedure
-        .input(z.object({ userId: z.string() }))
+        .input(z.object({ userUuid: z.string() }))
         .query(async ({ input }) => {
             return await saveSession({
-                userId: input.userId,
+                userUuid: input.userUuid,
                 durationHours: 24,
             })
         }),
@@ -125,7 +127,7 @@ export const authRouter = router({
 
         if (!user) return null // throw tPRC error here
 
-        const registrationOptions = generateRegistrationOptions({
+        const registrationOptions = await generateRegistrationOptions({
             rpName: 'frontend-community',
             rpID: rpId,
             userID: user.email,
@@ -151,10 +153,17 @@ export const authRouter = router({
                 : [],
         })
 
-        await updateUserWithCurrentChallenge({
-            userId: user.id,
-            currentChallenge: (await registrationOptions).challenge,
-        })
+        if (!user.isPasskeysEnabled) {
+            await createPasskey({
+                userUuid: user.uuid,
+                currentChallenge: registrationOptions.challenge,
+            })
+        } else {
+            await updatePasskeyWithCurrentChallenge({
+                userUuid: user.uuid,
+                currentChallenge: registrationOptions.challenge,
+            })
+        }
 
         return registrationOptions
     }),
@@ -219,9 +228,9 @@ export const authRouter = router({
                     }
                     uint8ArrayDevices.push(newDevice)
 
-                    await updateUserWithWebauthn(user.id)
+                    await updateUserWithWebauthn(user.uuid)
                     await saveNewDevices({
-                        userId: user.id,
+                        userUuid: user.uuid,
                         devices: JSON.stringify(uint8ArrayDevices),
                     })
                 }
@@ -302,14 +311,14 @@ export const authRouter = router({
                     },
                 })
 
-                return { userId: user.id, verified: verification.verified }
+                return { userUuid: user.uuid, verified: verification.verified }
             } else {
                 console.error('NO dbAuthenticator found')
             }
         }),
     // admin routes
-    GetUsers: publicProcedure.query(async () => {
-        return await getUsers()
+    GetUsersWithDevices: publicProcedure.query(async () => {
+        return await getUsersWithDevices()
     }),
     GetFootprints: publicProcedure.query(async () => {
         return await getFootprints()

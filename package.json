@@ -14,9 +14,10 @@
         "check": "pnpm --filter client check",
         "lint": "eslint --ext .ts,.svelte .",
         "prepare": "husky install",
-        "migrate:up": "pnpm --filter server migrate:up",
-        "migrate:down": "pnpm --filter server migrate:down",
+        "migrate:up": "pnpm --filter server migrate:up && pnpm --filter server typegen",
+        "migrate:down": "pnpm --filter server migrate:down && pnpm --filter server typegen",
         "migrate:create": "pnpm --filter server migrate:create",
+        "typegen": "pnpm --filter server typegen",
         "bootstrap": "rm -rf node_modules apps/client/node_modules apps/server/node_modules && pnpm install && docker compose down --volumes && docker compose up -d --force-recreate && pnpm -F server migrate:up"
     },
     "keywords": [],

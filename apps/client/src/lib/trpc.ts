@@ -15,7 +15,7 @@ export const {
     Download,
     FindFootprintByTokenOrThrow,
     GetUser,
-    GetUsers,
+    GetUsersWithDevices,
     GetFootprints,
     GetSessions,
     GetUserBySessionToken,
