@@ -66,7 +66,7 @@ export async function handleSignIn({ email }: { email: string }) {
     if (user?.isPasskeysEnabled) {
         return {
             success: true,
-            userId: user.uuid,
+            userUuid: user.uuid,
             email: user.email,
             webauthn: user.isPasskeysEnabled,
         }
@@ -100,7 +100,7 @@ export async function handleSignIn({ email }: { email: string }) {
         // show a message to user that an email has been sent
         return {
             success: true,
-            userId: user.uuid,
+            userUuid: user.uuid,
             email: user.email,
             webauthn: false,
         }
@@ -110,7 +110,7 @@ export async function handleSignIn({ email }: { email: string }) {
     // as we should not to give user a hint that the email is not registered
     return {
         success: false,
-        userId: null,
+        userUuid: null,
         email: '',
         webauthn: false,
     }
@@ -183,18 +183,18 @@ export async function saveUser({ name, email, isAdmin }: HandleRegisterProps) {
 }
 
 type SaveSessionProps = {
-    userId: string
+    userUuid: string
     durationHours: number
 }
 
-export async function saveSession({ userId, durationHours }: SaveSessionProps) {
+export async function saveSession({ userUuid, durationHours }: SaveSessionProps) {
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + durationHours)
 
     const sessionToken = await db
         .insertInto('session')
         .values({
-            user_uuid: userId,
+            user_uuid: userUuid,
             expires_at: expiresAt,
         })
         .returning('token')
@@ -248,46 +248,46 @@ export async function consumeFootprint(id: string) {
 }
 
 export async function createPasskey({
-    userId,
+    userUuid,
     currentChallenge,
 }: {
-    userId: string
+    userUuid: string
     currentChallenge: string
 }) {
     return await db
         .insertInto('passkey')
         .values({
-            user_uuid: userId,
+            user_uuid: userUuid,
             current_challenge: currentChallenge,
         })
         .execute()
 }
 
 export async function updatePasskeyWithCurrentChallenge({
-    userId,
+    userUuid,
     currentChallenge,
 }: {
-    userId: string
+    userUuid: string
     currentChallenge: string
 }) {
     return await db
         .updateTable('passkey')
         .set({ current_challenge: currentChallenge })
-        .where('user_uuid', '=', userId)
+        .where('user_uuid', '=', userUuid)
         .execute()
 }
 
-export async function updateUserWithWebauthn(userId: string) {
+export async function updateUserWithWebauthn(userUuid: string) {
     return await db
         .updateTable('user')
         .set({ is_passkeys_enabled: true })
-        .where('uuid', '=', userId)
+        .where('uuid', '=', userUuid)
         .execute()
 }
 
-export async function saveNewDevices({ userId, devices }: { userId: string; devices: string }) {
+export async function saveNewDevices({ userUuid, devices }: { userUuid: string; devices: string }) {
     try {
-        await db.updateTable('passkey').set({ devices }).where('user_uuid', '=', userId).execute()
+        await db.updateTable('passkey').set({ devices }).where('user_uuid', '=', userUuid).execute()
     } catch (err) {
         console.error('==> Saving DEVICES FAILED', err)
     }

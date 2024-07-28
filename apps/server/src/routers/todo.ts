@@ -3,7 +3,7 @@ import { publicProcedure, router } from '../../trpc'
 import { createTodo, deleteTodo, getTodos, updateTodo } from '../services/todo'
 
 const createTodoPayload = z.object({
-    userId: z.string(),
+    userUuid: z.string(),
     task: z.string(),
 })
 

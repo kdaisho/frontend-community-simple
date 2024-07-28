@@ -95,10 +95,10 @@ export const authRouter = router({
             return await findUserByEmail(input.email)
         }),
     CreateSession: publicProcedure
-        .input(z.object({ userId: z.string() }))
+        .input(z.object({ userUuid: z.string() }))
         .query(async ({ input }) => {
             return await saveSession({
-                userId: input.userId,
+                userUuid: input.userUuid,
                 durationHours: 24,
             })
         }),
@@ -155,12 +155,12 @@ export const authRouter = router({
 
         if (!user.isPasskeysEnabled) {
             await createPasskey({
-                userId: user.uuid,
+                userUuid: user.uuid,
                 currentChallenge: registrationOptions.challenge,
             })
         } else {
             await updatePasskeyWithCurrentChallenge({
-                userId: user.uuid,
+                userUuid: user.uuid,
                 currentChallenge: registrationOptions.challenge,
             })
         }
@@ -230,7 +230,7 @@ export const authRouter = router({
 
                     await updateUserWithWebauthn(user.uuid)
                     await saveNewDevices({
-                        userId: user.uuid,
+                        userUuid: user.uuid,
                         devices: JSON.stringify(uint8ArrayDevices),
                     })
                 }
@@ -311,7 +311,7 @@ export const authRouter = router({
                     },
                 })
 
-                return { userId: user.uuid, verified: verification.verified }
+                return { userUuid: user.uuid, verified: verification.verified }
             } else {
                 console.error('NO dbAuthenticator found')
             }

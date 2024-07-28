@@ -1,18 +1,18 @@
 import { db } from '../../database'
 
-export async function getTodos(userId: string) {
+export async function getTodos(userUuid: string) {
     return await db
         .selectFrom('todo')
         .select(['uuid', 'task', 'is_completed as isCompleted'])
-        .where('user_uuid', '=', userId)
+        .where('user_uuid', '=', userUuid)
         .orderBy('created_at')
         .execute()
 }
 
-export async function createTodo(todo: { userId: string; task: string }) {
+export async function createTodo(todo: { userUuid: string; task: string }) {
     const { uuid } = await db
         .insertInto('todo')
-        .values({ task: todo.task, user_uuid: todo.userId, is_completed: false })
+        .values({ task: todo.task, user_uuid: todo.userUuid, is_completed: false })
         .returning('uuid')
         .executeTakeFirstOrThrow()
 

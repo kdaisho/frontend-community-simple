@@ -44,7 +44,7 @@ export const load = (async ({ url, cookies }) => {
         }
 
         const session = await CreateSession.query({
-            userId: user.uuid,
+            userUuid: user.uuid,
         })
 
         if (!session) {

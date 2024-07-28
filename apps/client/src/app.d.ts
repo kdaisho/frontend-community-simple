@@ -5,7 +5,7 @@ declare global {
         // interface Error {}
         interface Locals {
             user: {
-                id: string
+                uuid: string
                 email: string
                 name: string
                 webauthn: boolean

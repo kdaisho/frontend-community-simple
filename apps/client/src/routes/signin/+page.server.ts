@@ -57,7 +57,7 @@ export const actions = {
             const res = await SignIn.query({ email })
             return {
                 form,
-                userId: res.userId,
+                userUuid: res.userUuid,
                 email: res.email,
                 webauthn: res.webauthn,
             }
@@ -118,12 +118,12 @@ export const actions = {
                 registrationDataString: form.data.authenticationResponse,
             })
 
-            if (!response?.userId || !response?.verified) {
+            if (!response?.userUuid || !response?.verified) {
                 return fail(404, { message: 'Failed to verify auth' })
             }
 
             const session = await CreateSession.query({
-                userId: response.userId,
+                userUuid: response.userUuid,
             })
 
             if (!session) {
