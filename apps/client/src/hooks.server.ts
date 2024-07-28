@@ -10,10 +10,10 @@ export const handle = (async ({ event, resolve }) => {
 
         if (user) {
             event.locals.user = {
-                id: user.id,
+                id: user.uuid,
                 name: user.name,
                 email: user.email,
-                webauthn: user.webauthn,
+                webauthn: user.is_passkeys_enabled,
                 isAdmin: user.isAdmin ?? false,
             }
         }

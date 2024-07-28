@@ -3,14 +3,14 @@ import { promises as fs } from 'fs'
 import { FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely'
 import * as path from 'path'
 import { Pool } from 'pg'
-import type { Database } from './index'
+import type { DB } from './types'
 
 dotenv.config()
 
 const { DATABASE_URL } = process.env
 
 async function migrateToLatest() {
-    const db = new Kysely<Database>({
+    const db = new Kysely<DB>({
         dialect: new PostgresDialect({
             pool: new Pool({
                 connectionString: `${DATABASE_URL}`,

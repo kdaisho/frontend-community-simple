@@ -19,7 +19,7 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Footprint {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   email: string;
   is_pristine: Generated<boolean>;
   token: string;
@@ -27,6 +27,7 @@ export interface Footprint {
 }
 
 export interface Passkey {
+  created_at: Generated<Timestamp>;
   current_challenge: string | null;
   devices: Json | null;
   id: Generated<number>;
@@ -34,21 +35,21 @@ export interface Passkey {
 }
 
 export interface Recaptcha {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   email: string;
   id: Generated<number>;
 }
 
 export interface Session {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   expires_at: Timestamp;
-  token: Generated<string | null>;
+  token: Generated<string>;
   user_uuid: string | null;
   uuid: Generated<string>;
 }
 
 export interface Todo {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   is_completed: Generated<boolean>;
   task: string;
   user_uuid: string | null;
@@ -56,7 +57,7 @@ export interface Todo {
 }
 
 export interface User {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   email: string;
   is_admin: Generated<boolean>;
   is_passkeys_enabled: Generated<boolean>;

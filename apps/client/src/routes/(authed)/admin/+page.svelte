@@ -7,6 +7,11 @@
         const date = new Date(utcDateString)
         return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
     }
+
+    function getDeviceCount(user: PageData['users'][0]) {
+        // @ts-expect-error - TS thinks devices is possibly infinite, it never be.
+        return user.devices?.length
+    }
 </script>
 
 <div class="admin">
@@ -27,9 +32,9 @@
                 <tr>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
-                    <td>{user.webauthn}</td>
+                    <td>{user.is_passkeys_enabled}</td>
                     <td>{user.isAdmin}</td>
-                    <td>{user.devices.length}</td>
+                    <td>{getDeviceCount(user)} </td>
                     <td>{formatDateToLocal(user.createdAt)}</td>
                 </tr>
             {/each}
@@ -45,12 +50,12 @@
                 <th>Pristine</th>
                 <th>Created at</th>
             </tr>
-            {#each data.footprints as ft}
+            {#each data.footprints as fp}
                 <tr>
-                    <td>{ft.id}</td>
-                    <td>{ft.email}</td>
-                    <td>{ft.pristine}</td>
-                    <td>{formatDateToLocal(ft.created_at)}</td>
+                    <td>{fp.uuid}</td>
+                    <td>{fp.email}</td>
+                    <td>{fp.is_pristine}</td>
+                    <td>{formatDateToLocal(fp.created_at)}</td>
                 </tr>
             {/each}
         </table>

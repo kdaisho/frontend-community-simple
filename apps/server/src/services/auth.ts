@@ -7,6 +7,7 @@ import { sendEmail } from '../utils'
 type HandleRegisterProps = {
     name: string
     email: string
+    isAdmin?: boolean
 }
 
 const { BASE_URL, JWT_SIGNATURE } = process.env
@@ -14,7 +15,7 @@ const { BASE_URL, JWT_SIGNATURE } = process.env
 export async function handleRegister({ name, email }: HandleRegisterProps) {
     const foundUser = await db
         .selectFrom('user')
-        .select('id')
+        .select('uuid')
         .where('email', '=', email)
         .executeTakeFirst()
 
@@ -40,7 +41,7 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
         .values({
             email,
             token: authToken,
-            pristine: true,
+            is_pristine: true,
         })
         .execute()
 
@@ -54,7 +55,7 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
 export async function handleSignIn({ email }: { email: string }) {
     const user = await db
         .selectFrom('user')
-        .select(['id', 'email', 'webauthn'])
+        .select(['uuid', 'email', 'is_passkeys_enabled as isPasskeysEnabled'])
         .where('email', '=', email)
         .executeTakeFirst()
 
@@ -62,8 +63,13 @@ export async function handleSignIn({ email }: { email: string }) {
         throw new Error("User not found, don't tell")
     }
 
-    if (user?.webauthn) {
-        return { success: true, userId: user.id, email: user.email, webauthn: user.webauthn }
+    if (user?.isPasskeysEnabled) {
+        return {
+            success: true,
+            userId: user.uuid,
+            email: user.email,
+            webauthn: user.isPasskeysEnabled,
+        }
     }
 
     // may not need this check for user as user is guaranteed to be here. there's a check `if (!user)` above
@@ -81,7 +87,7 @@ export async function handleSignIn({ email }: { email: string }) {
             .values({
                 email,
                 token: authToken,
-                pristine: true,
+                is_pristine: true,
             })
             .execute()
 
@@ -94,7 +100,7 @@ export async function handleSignIn({ email }: { email: string }) {
         // show a message to user that an email has been sent
         return {
             success: true,
-            userId: user.id,
+            userId: user.uuid,
             email: user.email,
             webauthn: false,
         }
@@ -124,7 +130,7 @@ export async function sendLoginEmail(email: string) {
         .values({
             email,
             token: authToken,
-            pristine: true,
+            is_pristine: true,
         })
         .execute()
 
@@ -138,38 +144,41 @@ export async function sendLoginEmail(email: string) {
 export async function findUserByEmail(email: string) {
     return await db
         .selectFrom('user')
-        .select(['id', 'name', 'email'])
+        .select(['uuid', 'name', 'email'])
         .where('email', '=', email)
         .executeTakeFirst()
 }
 
 type UserWithWebAuthn = {
-    id: string
+    uuid: string
     name: string
     email: string
     current_challenge: string
     devices?: AuthenticatorDevice[]
-    webauthn: boolean
+    isPasskeysEnabled: boolean
 }
 
 export async function findUserWithWebAuthnByEmail(email: string): Promise<UserWithWebAuthn> {
     return (await db
         .selectFrom('user')
-        .select(['id', 'name', 'email', 'current_challenge', 'devices', 'webauthn'])
+        .select(['uuid', 'name', 'email', 'is_passkeys_enabled as isPasskeysEnabled'])
         .where('email', '=', email)
-        .executeTakeFirst()) as UserWithWebAuthn
+        .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
+        .select(['current_challenge', 'devices'])
+        .executeTakeFirst()) as unknown as UserWithWebAuthn
 }
 
-export async function saveUser({ name, email }: HandleRegisterProps) {
+export async function saveUser({ name, email, isAdmin }: HandleRegisterProps) {
     return await db
         .insertInto('user')
         .values({
             name,
             email,
-            webauthn: false,
+            is_passkeys_enabled: false,
+            is_admin: isAdmin,
         })
         .onConflict(oc => oc.column('email').doNothing())
-        .returning(['id', 'name', 'email'])
+        .returning(['uuid', 'name', 'email'])
         .executeTakeFirst()
 }
 
@@ -185,7 +194,7 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
     const sessionToken = await db
         .insertInto('session')
         .values({
-            user_id: userId,
+            user_uuid: userId,
             expires_at: expiresAt,
         })
         .returning('token')
@@ -197,13 +206,13 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
 export async function findUserBySessionToken(token: string) {
     return await db
         .selectFrom('user')
-        .select(['id', 'name', 'email', 'webauthn', 'is_admin as isAdmin'])
+        .select(['uuid', 'name', 'email', 'is_passkeys_enabled', 'is_admin as isAdmin'])
         .where(
-            'id',
+            'uuid',
             '=',
             db
                 .selectFrom('session')
-                .select('user_id')
+                .select('user_uuid')
                 .where('token', '=', token)
                 .where('expires_at', '>', new Date())
         )
@@ -213,26 +222,26 @@ export async function findUserBySessionToken(token: string) {
 export async function findPristineFootprint(token: string) {
     const fp = await db
         .selectFrom('footprint')
-        .select('id')
+        .select('uuid')
         .where('token', '=', token)
-        .where('pristine', '=', true)
+        .where('is_pristine', '=', true)
         .executeTakeFirst()
 
-    return fp?.id
+    return fp?.uuid
 }
 
 export async function consumeFootprint(id: string) {
     const fp = await db
         .updateTable('footprint')
-        .set({ pristine: false })
-        .where('id', '=', id)
-        .returning('id')
+        .set({ is_pristine: false })
+        .where('uuid', '=', id)
+        .returning('uuid')
         .executeTakeFirst()
 
-    return fp?.id
+    return fp?.uuid
 }
 
-export async function updateUserWithCurrentChallenge({
+export async function createPasskey({
     userId,
     currentChallenge,
 }: {
@@ -240,19 +249,39 @@ export async function updateUserWithCurrentChallenge({
     currentChallenge: string
 }) {
     return await db
-        .updateTable('user')
+        .insertInto('passkey')
+        .values({
+            user_uuid: userId,
+            current_challenge: currentChallenge,
+        })
+        .execute()
+}
+
+export async function updatePasskeyWithCurrentChallenge({
+    userId,
+    currentChallenge,
+}: {
+    userId: string
+    currentChallenge: string
+}) {
+    return await db
+        .updateTable('passkey')
         .set({ current_challenge: currentChallenge })
-        .where('id', '=', userId)
+        .where('user_uuid', '=', userId)
         .execute()
 }
 
 export async function updateUserWithWebauthn(userId: string) {
-    return await db.updateTable('user').set({ webauthn: true }).where('id', '=', userId).execute()
+    return await db
+        .updateTable('user')
+        .set({ is_passkeys_enabled: true })
+        .where('uuid', '=', userId)
+        .execute()
 }
 
 export async function saveNewDevices({ userId, devices }: { userId: string; devices: string }) {
     try {
-        await db.updateTable('user').set({ devices }).where('id', '=', userId).execute()
+        await db.updateTable('passkey').set({ devices }).where('user_uuid', '=', userId).execute()
     } catch (err) {
         console.error('==> Saving DEVICES FAILED', err)
     }
@@ -262,18 +291,19 @@ export async function saveBotAttempt(email: string) {
     await db.insertInto('recaptcha').values({ email }).execute()
 }
 
-export async function getUsers() {
+export async function getUsersWithDevices() {
     return await db
         .selectFrom('user')
         .select([
-            'user.id',
+            'user.uuid',
             'user.name',
             'user.email',
-            'user.webauthn',
-            'user.devices',
+            'user.is_passkeys_enabled',
             'created_at as createdAt',
             'user.is_admin as isAdmin',
         ])
+        .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
+        .select('devices')
         .execute()
 }
 
