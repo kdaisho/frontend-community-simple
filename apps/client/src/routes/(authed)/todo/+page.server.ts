@@ -17,7 +17,7 @@ export const actions = {
         }
 
         if (!locals?.user.uuid) {
-            return { success: false, message: 'User ID cannot be empty' }
+            return { success: false, message: 'User UUID cannot be empty' }
         }
 
         CreateTodo.query({ userUuid: locals.user.uuid, task })

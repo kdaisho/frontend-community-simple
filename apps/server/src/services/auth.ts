@@ -305,7 +305,7 @@ export async function getUsersWithDevices() {
             'user.name',
             'user.email',
             'user.is_passkeys_enabled as isPasskeysEnabled',
-            'created_at as createdAt',
+            'user.created_at as createdAt',
             'user.is_admin as isAdmin',
         ])
         .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
