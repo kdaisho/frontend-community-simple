@@ -206,7 +206,13 @@ export async function saveSession({ userId, durationHours }: SaveSessionProps) {
 export async function findUserBySessionToken(token: string) {
     return await db
         .selectFrom('user')
-        .select(['uuid', 'name', 'email', 'is_passkeys_enabled', 'is_admin as isAdmin'])
+        .select([
+            'uuid',
+            'name',
+            'email',
+            'is_passkeys_enabled as isPasskeyEnabled',
+            'is_admin as isAdmin',
+        ])
         .where(
             'uuid',
             '=',
@@ -298,7 +304,7 @@ export async function getUsersWithDevices() {
             'user.uuid',
             'user.name',
             'user.email',
-            'user.is_passkeys_enabled',
+            'user.is_passkeys_enabled as isPasskeysEnabled',
             'created_at as createdAt',
             'user.is_admin as isAdmin',
         ])
@@ -308,7 +314,10 @@ export async function getUsersWithDevices() {
 }
 
 export async function getFootprints() {
-    return await db.selectFrom('footprint').selectAll().execute()
+    return await db
+        .selectFrom('footprint')
+        .select(['uuid', 'email', 'token', 'is_pristine as isPristine', 'created_at as createdAt'])
+        .execute()
 }
 
 export async function getSessions() {

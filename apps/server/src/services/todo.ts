@@ -3,7 +3,7 @@ import { db } from '../../database'
 export async function getTodos(userId: string) {
     return await db
         .selectFrom('todo')
-        .selectAll()
+        .select(['uuid', 'task', 'is_completed as isCompleted'])
         .where('user_uuid', '=', userId)
         .orderBy('created_at')
         .execute()

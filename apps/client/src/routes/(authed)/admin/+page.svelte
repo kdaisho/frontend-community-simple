@@ -32,7 +32,7 @@
                 <tr>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
-                    <td>{user.is_passkeys_enabled}</td>
+                    <td>{user.isPasskeysEnabled}</td>
                     <td>{user.isAdmin}</td>
                     <td>{getDeviceCount(user)} </td>
                     <td>{formatDateToLocal(user.createdAt)}</td>
@@ -54,8 +54,8 @@
                 <tr>
                     <td>{fp.uuid}</td>
                     <td>{fp.email}</td>
-                    <td>{fp.is_pristine}</td>
-                    <td>{formatDateToLocal(fp.created_at)}</td>
+                    <td>{fp.isPristine}</td>
+                    <td>{formatDateToLocal(fp.createdAt)}</td>
                 </tr>
             {/each}
         </table>

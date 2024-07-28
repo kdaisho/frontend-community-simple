@@ -110,14 +110,14 @@
 
     {#if data.todos.length}
         <div class="todo-list">
-            {#each data.todos as { uuid, task, is_completed }, i}
+            {#each data.todos as { uuid, task, isCompleted }, i}
                 <fieldset class="todo">
                     <input
                         class="completed"
                         type="checkbox"
                         data-id={uuid}
                         name="completed"
-                        checked={is_completed}
+                        checked={isCompleted}
                         on:change={handleOnChange}
                     />
                     <input

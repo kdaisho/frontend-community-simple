@@ -13,7 +13,7 @@ export const handle = (async ({ event, resolve }) => {
                 id: user.uuid,
                 name: user.name,
                 email: user.email,
-                webauthn: user.is_passkeys_enabled,
+                webauthn: user.isPasskeyEnabled,
                 isAdmin: user.isAdmin ?? false,
             }
         }
