@@ -43,9 +43,13 @@ export async function up(db: Kysely<any>): Promise<void> {
 
     await db.schema.alterTable('footprint').renameColumn('id', 'uuid').execute()
 
+    await db.schema.alterTable('footprint').renameColumn('pristine', 'is_pristine').execute()
+
     await db.schema.alterTable('todo').renameColumn('id', 'uuid').execute()
 
     await db.schema.alterTable('todo').renameColumn('user_id', 'user_uuid').execute()
+
+    await db.schema.alterTable('todo').renameColumn('completed', 'is_completed').execute()
 
     await db.schema.alterTable('session').renameColumn('id', 'uuid').execute()
 
@@ -70,9 +74,13 @@ export async function down(db: Kysely<any>): Promise<void> {
 
     await db.schema.alterTable('footprint').renameColumn('uuid', 'id').execute()
 
+    await db.schema.alterTable('footprint').renameColumn('is_pristine', 'pristine').execute()
+
     await db.schema.alterTable('todo').renameColumn('uuid', 'id').execute()
 
     await db.schema.alterTable('todo').renameColumn('user_uuid', 'user_id').execute()
+
+    await db.schema.alterTable('todo').renameColumn('is_completed', 'completed').execute()
 
     await db.schema.alterTable('session').renameColumn('uuid', 'id').execute()
 

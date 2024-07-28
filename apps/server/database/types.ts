@@ -21,7 +21,7 @@ export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 export interface Footprint {
   created_at: Generated<Timestamp | null>;
   email: string;
-  pristine: Generated<boolean>;
+  is_pristine: Generated<boolean>;
   token: string;
   uuid: Generated<string>;
 }
@@ -48,8 +48,8 @@ export interface Session {
 }
 
 export interface Todo {
-  completed: Generated<boolean>;
   created_at: Generated<Timestamp | null>;
+  is_completed: Generated<boolean>;
   task: string;
   user_uuid: string | null;
   uuid: Generated<string>;
