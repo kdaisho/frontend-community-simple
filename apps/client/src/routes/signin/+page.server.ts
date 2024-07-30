@@ -1,6 +1,6 @@
 import {
     AuthGetLoginOptions,
-    // AuthVerifyLogin,
+    AuthVerifyLogin,
     CreateSession,
     RecordBotAttempt,
     SendLoginEmail,
@@ -117,6 +117,7 @@ export const actions = {
         }
 
         try {
+            console.log('==>', '======================== STEP 4 of 4')
             const response = await AuthVerifyLogin.query({
                 email: form.data.email,
                 registrationDataString: form.data.authenticationResponse,

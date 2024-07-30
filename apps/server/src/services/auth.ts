@@ -1,4 +1,7 @@
-import { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/types'
+import {
+    PublicKeyCredentialCreationOptionsJSON,
+    PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
 import { db } from '../../database'
@@ -280,6 +283,7 @@ export async function createPasskey({
     await db
         .insertInto('passkey')
         .values({
+            id: '',
             user_uuid: userUuid,
             backed_up: false,
             counter: 0,
@@ -290,6 +294,42 @@ export async function createPasskey({
         })
         .execute()
     // }
+}
+
+export async function setCurrentRegistrationOptions(
+    user: User,
+    options: PublicKeyCredentialCreationOptionsJSON
+) {
+    if (!user.uuid || typeof user.uuid !== 'string') return
+    console.log('==> step1 dao1', { options })
+
+    const found = await db
+        .selectFrom('passkey')
+        .select('user_uuid')
+        .where('user_uuid', '=', user.uuid)
+        .execute()
+
+    if (found.length) {
+        await db
+            .updateTable('passkey')
+            .set({ current_challenge_id: options.challenge })
+            .where('user_uuid', '=', user.uuid)
+            .execute()
+    } else {
+        await db
+            .insertInto('passkey')
+            .values({
+                id: '',
+                user_uuid: user.uuid,
+                backed_up: false,
+                counter: 0,
+                device_type: '', // im gonna insert real value later
+                current_challenge_id: options.challenge,
+                public_key: Buffer.from(''), // im gonna insert real value later
+                webauthn_user_id: options.user.id, //  im not sure if im saving the right value
+            })
+            .execute()
+    }
 }
 
 export async function updatePasskeyWithCurrentChallenge({
@@ -330,20 +370,21 @@ export async function saveNewPasskeyInDB(newPasskey: {
     counter: number
     deviceType: string
     backedUp: boolean
-    transports?: any
+    transports?: string[]
 }) {
     console.log('==>', '======================== saving new passkey in db', newPasskey)
 
     await db
         .updateTable('passkey')
         .set({
-            current_challenge_id: newPasskey.id,
+            id: newPasskey.id,
+            // current_challenge_id: newPasskey.id,
             webauthn_user_id: newPasskey.webAuthnUserID,
             public_key: Buffer.from(newPasskey.publicKey),
             counter: newPasskey.counter,
             device_type: newPasskey.deviceType,
             backed_up: newPasskey.backedUp,
-            transports: newPasskey.transports,
+            transports: JSON.stringify(newPasskey.transports),
         })
         .where('user_uuid', '=', newPasskey.user.uuid)
         .execute()
@@ -393,15 +434,28 @@ export async function getUserPasskeys(user: User) {
         .execute()
     return passkeys
 }
+export async function getSpecificUserPasskeys(user: User, currentChallengeId: string) {
+    console.log('==>', { user, currentChallengeId })
+    const passkey = await db
+        .selectFrom('passkey')
+        .selectAll()
+        .where('user_uuid', '=', user.uuid.toString())
+        .where('id', '=', currentChallengeId)
+        .executeTakeFirst()
+    console.log('==> dao 100', { passkey })
+    return passkey
+}
 
 export async function setCurrentAuthenticationOptions(
-    options: PublicKeyCredentialRequestOptionsJSON
+    options: PublicKeyCredentialRequestOptionsJSON,
+    userUuid: string
 ) {
     console.log('==> dao 2', { options })
     const re = await db
         .updateTable('passkey')
         .set({ current_challenge_id: options.challenge })
-        .where('current_challenge_id', '=', options.allowCredentials?.[0].id || '')
+        // .where('current_challenge_id', '=', options.allowCredentials?.[0].id || '')
+        .where('user_uuid', '=', userUuid)
         .returning('current_challenge_id')
         .execute()
 

@@ -2,10 +2,13 @@ import {
     generateAuthenticationOptions,
     generateRegistrationOptions,
     VerifiedRegistrationResponse,
+    verifyAuthenticationResponse,
     verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import type {
+    AuthenticationResponseJSON,
     AuthenticatorTransportFuture,
+    PublicKeyCredentialCreationOptionsJSON,
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
@@ -14,12 +17,12 @@ import { Passkey, User } from '../../database/types'
 import { publicProcedure, router } from '../../trpc'
 import {
     consumeFootprint,
-    createPasskey,
     findPristineFootprint,
     findUserByEmail,
     findUserBySessionToken,
     getFootprints,
     getSessions,
+    getSpecificUserPasskeys,
     getUserPasskeys,
     getUsersWithDevices,
     handleRegister,
@@ -30,6 +33,7 @@ import {
     saveUser,
     sendLoginEmail,
     setCurrentAuthenticationOptions,
+    setCurrentRegistrationOptions,
 } from '../services/auth'
 
 const { BASE_URL, RP_ID } = process.env
@@ -37,6 +41,8 @@ const { BASE_URL, RP_ID } = process.env
 // rp: relying party
 const rpId = RP_ID || 'localhost'
 const expectedOrigin = BASE_URL || ''
+const origin = `http://${rpId}:5173` // TODO: enable https for local development so that i can use this in production
+
 let challenge: string
 
 const registerPayload = z.object({
@@ -142,9 +148,9 @@ export const authRouter = router({
         // @ts-expect-error // TODO: fix this
         const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
 
-        console.log('==>', { userPasskeys })
+        console.log('==> step1', { userPasskeys })
 
-        const options = await generateRegistrationOptions({
+        const options: PublicKeyCredentialCreationOptionsJSON = await generateRegistrationOptions({
             rpName: 'frontend-community',
             rpID: rpId,
             userName: user.name,
@@ -169,12 +175,14 @@ export const authRouter = router({
         console.log('==> YES2', options.pubKeyCredParams)
 
         // remember these options for the user
-        await createPasskey({
-            currentChallengeId: options.challenge,
-            webauthnUserId: options.user.id,
-            userUuid: user.uuid,
-            pubKeyCredParams: options.pubKeyCredParams,
-        })
+        await setCurrentRegistrationOptions(user as unknown as User, options)
+
+        // await createPasskey({
+        //     currentChallengeId: options.challenge,
+        //     webauthnUserId: options.user.id,
+        //     userUuid: user.uuid,
+        //     pubKeyCredParams: options.pubKeyCredParams,
+        // })
 
         return options
     }),
@@ -185,7 +193,7 @@ export const authRouter = router({
             const { email, registrationResponse } = input
             const data = JSON.parse(registrationResponse)
 
-            console.log('==>', { data })
+            console.log('==> step2', { data })
 
             // const user = await findUserWithWebAuthnByEmail(email)
             const user = await findUserByEmail(email)
@@ -196,6 +204,8 @@ export const authRouter = router({
 
             // @ts-expect-error // TODO: fix the created_at type
             const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
+
+            console.log('==> step2', { userPasskeys }) // user & passkey info both included
 
             let verification: VerifiedRegistrationResponse
 
@@ -230,7 +240,8 @@ export const authRouter = router({
                     // `user` here is from Step 2
                     user,
                     // Created by `generateRegistrationOptions()` in Step 1
-                    webAuthnUserID: userPasskeys[0].current_challenge_id,
+                    // webAuthnUserID: userPasskeys[0].current_challenge_id,
+                    webAuthnUserID: userPasskeys[0].webauthn_user_id, // ywbj0zm...
                     // A unique identifier for the credential
                     id: credentialID,
                     // The public key bytes, used for subsequent authentication signature verification
@@ -269,17 +280,20 @@ export const authRouter = router({
             // @ts-expect-error // TODO: fix this
             const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
 
-            console.log('==>', { userPasskeys })
+            console.log('==> step3', { userPasskeys })
 
             if (!userPasskeys) return null // throw tPRC error here
 
             const options: PublicKeyCredentialRequestOptionsJSON =
                 await generateAuthenticationOptions({
                     rpID: rpId,
+
+                    // Require users to use a previously-registered authenticator (what do you mean by "previously-registered"?)
                     allowCredentials: userPasskeys.map(passkey => {
                         console.log('==> EACH', passkey)
                         return {
-                            id: passkey.current_challenge_id,
+                            // id: passkey.current_challenge_id,
+                            id: passkey.id,
                             // id: passkey.webauthn_user_id,
                             // type: 'public-key',
                             // transports:
@@ -305,62 +319,97 @@ export const authRouter = router({
                 })
 
             console.log('==> PASS THE OPTIONS', { options })
+            console.log('==> PASS THE ALLOW CREDENTIALS', options.allowCredentials)
 
             // remember this challenge for this user
-            await setCurrentAuthenticationOptions(options)
+            await setCurrentAuthenticationOptions(options, user.uuid)
 
             // challenge = (await response).challenge
 
             return options
         }),
     // webauthn login step 2 (4 of 4 total)
-    // AuthVerifyLogin: publicProcedure
-    //     .input(z.object({ email: z.string().email(), registrationDataString: z.string() }))
-    //     .query(async ({ input }) => {
-    //         const user = await findUserWithWebAuthnByEmail(input.email)
+    AuthVerifyLogin: publicProcedure
+        .input(z.object({ email: z.string().email(), registrationDataString: z.string() }))
+        .query(async ({ input }) => {
+            const user = await findUserByEmail(input.email)
 
-    //         const registrationData = JSON.parse(input.registrationDataString)
+            if (!user) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+            }
 
-    //         if (!user) {
-    //             throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
-    //         }
+            console.log('can i read?', input.registrationDataString) // string, need to parse
 
-    //         if (!user.devices) {
-    //             throw new TRPCError({ code: 'NOT_FOUND', message: 'User device not found' })
-    //         }
+            const registrationResponseJSON: AuthenticationResponseJSON = JSON.parse(
+                input.registrationDataString
+            )
 
-    //         let dbAuthenticator
-    //         const bodyCredIDBuffer = base64url.toBuffer(registrationData.rawId)
+            // @ts-expect-error // TODO: fix this
+            const userPasskey: Passkey = await getSpecificUserPasskeys(
+                user as unknown as User,
+                registrationResponseJSON.id
+            )
 
-    //         for (const device of user.devices) {
-    //             const currentCredential = Buffer.from(
-    //                 getUint8ArrayFromArrayLikeObject(device.credentialID)
-    //             )
-    //             if (bodyCredIDBuffer.equals(currentCredential)) {
-    //                 dbAuthenticator = device
-    //                 break
-    //             }
-    //         }
+            console.log('==> step4', { userPasskey })
 
-    //         if (dbAuthenticator) {
-    //             const verification = await verifyAuthenticationResponse({
-    //                 response: registrationData,
-    //                 expectedChallenge: challenge,
-    //                 expectedOrigin,
-    //                 expectedRPID: rpId,
-    //                 authenticator: {
-    //                     ...dbAuthenticator,
-    //                     credentialPublicKey: Buffer.from(
-    //                         getUint8ArrayFromArrayLikeObject(dbAuthenticator.credentialPublicKey)
-    //                     ),
-    //                 },
-    //             })
+            if (!userPasskey) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'Passkeys not found' })
+            }
 
-    //             return { userUuid: user.uuid, verified: verification.verified }
-    //         } else {
-    //             console.error('NO dbAuthenticator found')
-    //         }
-    //     }),
+            let verification
+            try {
+                verification = await verifyAuthenticationResponse({
+                    response: registrationResponseJSON,
+                    expectedChallenge: userPasskey.current_challenge_id,
+                    expectedOrigin: origin,
+                    expectedRPID: rpId,
+                    authenticator: {
+                        credentialID: userPasskey.current_challenge_id,
+                        credentialPublicKey: new Uint8Array(userPasskey.public_key),
+                        counter: userPasskey.counter,
+                        transports: ['internal'],
+                    },
+                })
+            } catch (err) {
+                console.error('==> BOOM', err)
+            }
+
+            console.log('==> DONE', { verification })
+
+            // const registrationData = JSON.parse(input.registrationDataString)
+
+            // let dbAuthenticator
+            // const bodyCredIDBuffer = base64url.toBuffer(registrationData.rawId)
+
+            // for (const device of user.devices) {
+            //     const currentCredential = Buffer.from(
+            //         getUint8ArrayFromArrayLikeObject(device.credentialID)
+            //     )
+            //     if (bodyCredIDBuffer.equals(currentCredential)) {
+            //         dbAuthenticator = device
+            //         break
+            //     }
+            // }
+
+            // if (dbAuthenticator) {
+            //     const verification = await verifyAuthenticationResponse({
+            //         response: registrationData,
+            //         expectedChallenge: challenge,
+            //         expectedOrigin,
+            //         expectedRPID: rpId,
+            //         authenticator: {
+            //             ...dbAuthenticator,
+            //             credentialPublicKey: Buffer.from(
+            //                 getUint8ArrayFromArrayLikeObject(dbAuthenticator.credentialPublicKey)
+            //             ),
+            //         },
+            //     })
+
+            //     return { userUuid: user.uuid, verified: verification.verified }
+            // } else {
+            //     console.error('NO dbAuthenticator found')
+            // }
+        }),
 
     // admin routes
     GetUsersWithDevices: publicProcedure.query(async () => {

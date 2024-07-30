@@ -5,7 +5,7 @@ import type { AppRouter } from '../../../server/src/routers'
 export const {
     AuthGetLoginOptions,
     AuthGetRegistrationOptions,
-    // AuthVerifyLogin,
+    AuthVerifyLogin,
     AuthVerifyRegistrationResponse,
     CreateSession,
     CreateUser,

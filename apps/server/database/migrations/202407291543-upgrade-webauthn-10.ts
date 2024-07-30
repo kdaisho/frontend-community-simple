@@ -13,6 +13,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     await db.schema
         .alterTable('passkey')
         .dropColumn('id')
+        .addColumn('id', 'text', col => col.primaryKey())
         .addColumn('current_challenge_id', 'text', col => col.notNull())
         .addColumn('public_key', 'bytea', col => col.notNull())
         .addColumn('webauthn_user_id', 'text', col => col.notNull())
@@ -51,6 +52,7 @@ export async function down(db: Kysely<any>): Promise<void> {
         .dropColumn('device_type')
         .dropColumn('backed_up')
         .dropColumn('last_used')
+        .dropColumn('id')
         .addColumn('id', 'serial', col => col.primaryKey())
         .addColumn('current_challenge', 'text')
         .addColumn('devices', 'json')

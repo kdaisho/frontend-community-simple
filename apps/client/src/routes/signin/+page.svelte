@@ -5,6 +5,7 @@
     import TextInput from '$lib/components/TextInput.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import { startAuthentication } from '@simplewebauthn/browser'
+    import { tick } from 'svelte'
     import { zod } from 'sveltekit-superforms/adapters'
     import { defaults, superForm } from 'sveltekit-superforms/client'
     import { z } from 'zod'
@@ -35,6 +36,9 @@
         defaults(zod(z.object({ email: z.string().trim().email() }))),
         {
             id: 'signin-with-passkey-form',
+            onSubmit() {
+                console.log('==> SUBMITTING', { $signinWithPasskeyForm })
+            },
             async onResult({ result }) {
                 if (result.type === 'success' && result.data?.loginOptions) {
                     console.log('==> UI', { result })
@@ -54,12 +58,12 @@
 
                     console.log('==> UI3', { response })
 
-                    // if (response) {
-                    //     $verifyLoginForm.email = result.data.email
-                    //     $verifyLoginForm.authenticationResponse = JSON.stringify(response)
-                    //     await tick()
-                    //     verifyLoginFormElem.requestSubmit()
-                    // }
+                    if (response) {
+                        $verifyLoginForm.email = result.data.email
+                        $verifyLoginForm.authenticationResponse = JSON.stringify(response)
+                        await tick()
+                        verifyLoginFormElem.requestSubmit()
+                    }
                 }
             },
         }

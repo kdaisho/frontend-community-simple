@@ -20,6 +20,7 @@ export interface Passkey {
   created_at: Generated<Timestamp>;
   current_challenge_id: string;
   device_type: string;
+  id: string;
   last_used: Timestamp | null;
   public_key: Buffer;
   transports: string | null;
