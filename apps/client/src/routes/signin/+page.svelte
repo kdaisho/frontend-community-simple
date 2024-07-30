@@ -5,7 +5,6 @@
     import TextInput from '$lib/components/TextInput.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import { startAuthentication } from '@simplewebauthn/browser'
-    import { tick } from 'svelte'
     import { zod } from 'sveltekit-superforms/adapters'
     import { defaults, superForm } from 'sveltekit-superforms/client'
     import { z } from 'zod'
@@ -38,14 +37,29 @@
             id: 'signin-with-passkey-form',
             async onResult({ result }) {
                 if (result.type === 'success' && result.data?.loginOptions) {
+                    console.log('==> UI', { result })
+                    console.log('==>', '======================== ')
+                    const myLoginOptions = result.data.loginOptions.allowCredentials.map(
+                        (cred: any) => {
+                            return {
+                                ...cred,
+                                transports: ['internal'],
+                                // transports: '{"internal"}',
+                            }
+                        }
+                    )
+                    console.log('==> UI2', { myLoginOptions })
+                    result.data.loginOptions.allowCredentials = myLoginOptions
                     const response = await startAuthentication(result.data.loginOptions)
 
-                    if (response) {
-                        $verifyLoginForm.email = result.data.email
-                        $verifyLoginForm.authenticationResponse = JSON.stringify(response)
-                        await tick()
-                        verifyLoginFormElem.requestSubmit()
-                    }
+                    console.log('==> UI3', { response })
+
+                    // if (response) {
+                    //     $verifyLoginForm.email = result.data.email
+                    //     $verifyLoginForm.authenticationResponse = JSON.stringify(response)
+                    //     await tick()
+                    //     verifyLoginFormElem.requestSubmit()
+                    // }
                 }
             },
         }

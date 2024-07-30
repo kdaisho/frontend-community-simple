@@ -1,7 +1,8 @@
-import type { AuthenticatorDevice } from '@simplewebauthn/typescript-types'
+import { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
 import { db } from '../../database'
+import { Passkey, User } from '../../database/types'
 import { sendEmail } from '../utils'
 
 type HandleRegisterProps = {
@@ -55,20 +56,24 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
 export async function handleSignIn({ email }: { email: string }) {
     const user = await db
         .selectFrom('user')
-        .select(['uuid', 'email', 'is_passkeys_enabled as isPasskeysEnabled'])
+        .select(['uuid', 'email'])
+        .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
+        .select('passkey.user_uuid as passkeyUserUuid')
         .where('email', '=', email)
         .executeTakeFirst()
+
+    console.log('==> HANDLE_SIGN_IN', { user })
 
     if (!user) {
         throw new Error("User not found, don't tell")
     }
 
-    if (user?.isPasskeysEnabled) {
+    if (user?.passkeyUserUuid) {
         return {
             success: true,
             userUuid: user.uuid,
             email: user.email,
-            webauthn: user.isPasskeysEnabled,
+            webauthn: true,
         }
     }
 
@@ -144,7 +149,8 @@ export async function sendLoginEmail(email: string) {
 export async function findUserByEmail(email: string) {
     return await db
         .selectFrom('user')
-        .select(['uuid', 'name', 'email'])
+        // .select(['uuid', 'name', 'email'])
+        .selectAll()
         .where('email', '=', email)
         .executeTakeFirst()
 }
@@ -153,10 +159,8 @@ type UserWithWebAuthn = {
     uuid: string
     name: string
     email: string
-    current_challenge: string
-    devices?: AuthenticatorDevice[]
     isPasskeysEnabled: boolean
-}
+} & Passkey
 
 export async function findUserWithWebAuthnByEmail(email: string): Promise<UserWithWebAuthn> {
     return (await db
@@ -164,7 +168,7 @@ export async function findUserWithWebAuthnByEmail(email: string): Promise<UserWi
         .select(['uuid', 'name', 'email', 'is_passkeys_enabled as isPasskeysEnabled'])
         .where('email', '=', email)
         .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
-        .select(['current_challenge', 'devices'])
+        .selectAll()
         .executeTakeFirst()) as unknown as UserWithWebAuthn
 }
 
@@ -248,19 +252,44 @@ export async function consumeFootprint(id: string) {
 }
 
 export async function createPasskey({
+    currentChallengeId,
+    webauthnUserId,
     userUuid,
-    currentChallenge,
+    pubKeyCredParams,
 }: {
+    currentChallengeId: string
+    webauthnUserId: string
     userUuid: string
-    currentChallenge: string
+    pubKeyCredParams: {
+        alg: number
+        type: string
+    }[]
 }) {
-    return await db
+    // const found = await db
+    //     .selectFrom('passkey')
+    //     .where('user_uuid', '=', userUuid)
+    //     .executeTakeFirst()
+
+    // if (found) {
+    //     await db
+    //         .updateTable('passkey')
+    //         .set({ current_challenge_id: currentChallengeId })
+    //         .where('user_uuid', '=', userUuid)
+    //         .execute()
+    // } else {
+    await db
         .insertInto('passkey')
         .values({
             user_uuid: userUuid,
-            current_challenge: currentChallenge,
+            backed_up: false,
+            counter: 0,
+            device_type: '',
+            current_challenge_id: currentChallengeId,
+            public_key: Buffer.from('pubKeyCredParams'), // todo: figure out
+            webauthn_user_id: webauthnUserId,
         })
         .execute()
+    // }
 }
 
 export async function updatePasskeyWithCurrentChallenge({
@@ -272,7 +301,7 @@ export async function updatePasskeyWithCurrentChallenge({
 }) {
     return await db
         .updateTable('passkey')
-        .set({ current_challenge: currentChallenge })
+        // .set({ current_challenge: currentChallenge })
         .where('user_uuid', '=', userUuid)
         .execute()
 }
@@ -287,10 +316,39 @@ export async function updateUserWithWebauthn(userUuid: string) {
 
 export async function saveNewDevices({ userUuid, devices }: { userUuid: string; devices: string }) {
     try {
-        await db.updateTable('passkey').set({ devices }).where('user_uuid', '=', userUuid).execute()
+        // await db.updateTable('passkey').set({ devices }).where('user_uuid', '=', userUuid).execute()
     } catch (err) {
         console.error('==> Saving DEVICES FAILED', err)
     }
+}
+
+export async function saveNewPasskeyInDB(newPasskey: {
+    user: { uuid: string }
+    id: string
+    webAuthnUserID: string
+    publicKey: Uint8Array
+    counter: number
+    deviceType: string
+    backedUp: boolean
+    transports?: any
+}) {
+    console.log('==>', '======================== saving new passkey in db', newPasskey)
+
+    await db
+        .updateTable('passkey')
+        .set({
+            current_challenge_id: newPasskey.id,
+            webauthn_user_id: newPasskey.webAuthnUserID,
+            public_key: Buffer.from(newPasskey.publicKey),
+            counter: newPasskey.counter,
+            device_type: newPasskey.deviceType,
+            backed_up: newPasskey.backedUp,
+            transports: newPasskey.transports,
+        })
+        .where('user_uuid', '=', newPasskey.user.uuid)
+        .execute()
+
+    console.log('==>', '======================== saving new passkey in db DONE')
 }
 
 export async function saveBotAttempt(email: string) {
@@ -309,7 +367,7 @@ export async function getUsersWithDevices() {
             'user.is_admin as isAdmin',
         ])
         .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
-        .select('devices')
+        // .select('devices')
         .execute()
 }
 
@@ -322,4 +380,30 @@ export async function getFootprints() {
 
 export async function getSessions() {
     return await db.selectFrom('session').selectAll().execute()
+}
+
+// export async function getUserPasskeys(user: UserWithWebAuthn) {
+export async function getUserPasskeys(user: User) {
+    console.log('==> dao 1', { user })
+    const passkeys = await db
+        .selectFrom('passkey')
+        .selectAll()
+        .where('user_uuid', '=', user.uuid.toString())
+        .orderBy('created_at', 'desc')
+        .execute()
+    return passkeys
+}
+
+export async function setCurrentAuthenticationOptions(
+    options: PublicKeyCredentialRequestOptionsJSON
+) {
+    console.log('==> dao 2', { options })
+    const re = await db
+        .updateTable('passkey')
+        .set({ current_challenge_id: options.challenge })
+        .where('current_challenge_id', '=', options.allowCredentials?.[0].id || '')
+        .returning('current_challenge_id')
+        .execute()
+
+    console.log('==> dao 3', { re })
 }

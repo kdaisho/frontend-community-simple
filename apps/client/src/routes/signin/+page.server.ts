@@ -1,6 +1,6 @@
 import {
     AuthGetLoginOptions,
-    AuthVerifyLogin,
+    // AuthVerifyLogin,
     CreateSession,
     RecordBotAttempt,
     SendLoginEmail,
@@ -54,7 +54,10 @@ export const actions = {
         }
 
         try {
-            const res = await SignIn.query({ email })
+            console.log('==> HA START', email)
+            // const res = await SignIn.query({ email })
+            const res = await SignIn.query(email)
+            console.log('==> HA?', res)
             return {
                 form,
                 userUuid: res.userUuid,
@@ -62,6 +65,7 @@ export const actions = {
                 webauthn: res.webauthn,
             }
         } catch (err) {
+            console.log('==> HA? ERROR', err)
             return fail(400, {
                 type: 'email',
                 value: email,

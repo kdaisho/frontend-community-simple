@@ -23,6 +23,9 @@
                     const registrationResponse = await startRegistration(
                         result.data.registrationOptions
                     )
+
+                    console.log('==> RESPONSE', { registrationResponse })
+
                     $verifyRegistrationForm.registrationResponse =
                         JSON.stringify(registrationResponse)
                     await tick()
