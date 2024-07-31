@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { publicProcedure, router } from '../../trpc'
-import { createTodo, deleteTodo, getTodos, updateTodo } from '../services/todo'
+import { publicProcedure, router } from '../../../trpc'
+import { createTodo, deleteTodo, getTodos, updateTodo } from './dao'
 
 const createTodoPayload = z.object({
     userUuid: z.string(),

@@ -1,4 +1,4 @@
-import { db } from '../../database'
+import { db } from '../../../database'
 
 export async function getTodos(userUuid: string) {
     return await db

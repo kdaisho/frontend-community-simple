@@ -4,9 +4,9 @@ import {
 } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
-import { db } from '../../database'
-import { Passkey, User } from '../../database/types'
-import { sendEmail } from '../utils'
+import { db } from '../../../database'
+import { Passkey, User } from '../../../database/types'
+import { sendEmail } from '../../utils'
 
 type HandleRegisterProps = {
     name: string

@@ -13,8 +13,8 @@ import type {
 } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { Passkey, User } from '../../database/types'
-import { publicProcedure, router } from '../../trpc'
+import { Passkey, User } from '../../../database/types'
+import { publicProcedure, router } from '../../../trpc'
 import {
     consumeFootprint,
     findPristineFootprint,
@@ -35,7 +35,7 @@ import {
     sendLoginEmail,
     setCurrentAuthenticationOptions,
     setCurrentRegistrationOptions,
-} from '../services/auth'
+} from './dao'
 
 const { BASE_URL, RP_ID } = process.env
 

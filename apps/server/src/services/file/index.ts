@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { publicProcedure, router } from '../../trpc'
-import { handleDownload, handleUpload } from '../services/file'
+import { publicProcedure, router } from '../../../trpc'
+import { handleDownload, handleUpload } from './dao'
 
 const uploadPayload = z.object({
     file: z.any(),

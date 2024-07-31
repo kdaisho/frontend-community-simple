@@ -6,7 +6,7 @@ import { createExpressMiddleware } from '@trpc/server/adapters/express'
 import { getHTTPStatusCodeFromError } from '@trpc/server/http'
 import cors from 'cors'
 import express from 'express'
-import { appRouter } from './src/routers'
+import { appRouter } from './src/services'
 
 async function server() {
     const app = express()
