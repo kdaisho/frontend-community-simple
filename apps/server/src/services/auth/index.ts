@@ -13,7 +13,7 @@ import type {
 } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { Passkey, User } from '../../../database/types'
+import { Passkey, User } from '../../../database/db-types'
 import { publicProcedure, router } from '../../../trpc'
 import {
     consumeFootprint,
@@ -40,11 +40,8 @@ import {
 const { BASE_URL, RP_ID } = process.env
 
 // rp: relying party
-const rpId = RP_ID || 'localhost'
-const expectedOrigin = BASE_URL || ''
-const origin = `http://${rpId}:5173` // TODO: enable https for local development so that i can use this in production
-
-let challenge: string
+const rpId = RP_ID || ''
+const origin = BASE_URL || ''
 
 const registerPayload = z.object({
     name: z.string().min(1, { message: 'Name is required' }),
@@ -196,7 +193,7 @@ export const authRouter = router({
                 verification = await verifyRegistrationResponse({
                     response: data,
                     expectedChallenge: userPasskeys[0].current_challenge_id,
-                    expectedOrigin,
+                    expectedOrigin: origin,
                     expectedRPID: rpId,
                 })
             } catch (_) {

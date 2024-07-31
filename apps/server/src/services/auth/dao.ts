@@ -5,7 +5,7 @@ import {
 import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
 import { db } from '../../../database'
-import { Passkey, User } from '../../../database/types'
+import { Passkey, User } from '../../../database/db-types'
 import { sendEmail } from '../../utils'
 
 type HandleRegisterProps = {
