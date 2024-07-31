@@ -65,6 +65,7 @@ export const authRouter = router({
     RecordBotAttempt: publicProcedure.input(z.string()).query(async ({ input }) => {
         await saveBotAttempt(input)
     }),
+
     Register: publicProcedure.input(registerPayload).query(async ({ input }) => {
         try {
             await handleRegister({
@@ -82,12 +83,15 @@ export const authRouter = router({
             })
         }
     }),
+
     SignIn: publicProcedure.input(z.string()).query(async ({ input }) => {
         return await handleSignIn({ email: input })
     }),
+
     SendLoginEmail: publicProcedure.input(z.string()).query(async ({ input }) => {
         await sendLoginEmail(input)
     }),
+
     CreateUser: publicProcedure
         .input(z.object({ name: z.string(), email: z.string().email(), isAdmin: z.boolean() }))
         .query(async ({ input }) => {
@@ -97,11 +101,13 @@ export const authRouter = router({
                 isAdmin: input.isAdmin,
             })
         }),
+
     GetUser: publicProcedure
         .input(z.object({ email: z.string().email() }))
         .query(async ({ input }) => {
             return await findUserByEmail(input.email)
         }),
+
     CreateSession: publicProcedure
         .input(z.object({ userUuid: z.string() }))
         .query(async ({ input }) => {
@@ -110,11 +116,13 @@ export const authRouter = router({
                 durationHours: 24,
             })
         }),
+
     GetUserBySessionToken: publicProcedure
         .input(z.object({ sessionToken: z.string().uuid() }))
         .query(async ({ input }) => {
             return await findUserBySessionToken(input.sessionToken)
         }),
+
     FindFootprintByTokenOrThrow: publicProcedure.input(z.string()).query(async ({ input }) => {
         const pristineFootprintId = await findPristineFootprint(input)
         if (!pristineFootprintId) {
@@ -129,6 +137,7 @@ export const authRouter = router({
             })
         }
     }),
+
     // webauthn registration step 1 (1 of 4 total)
     AuthGetRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
         // const user = await findUserWithWebAuthnByEmail(input)
@@ -172,6 +181,7 @@ export const authRouter = router({
 
         return options
     }),
+
     // webauthn registration step 2 (2 of 4 total)
     AuthVerifyRegistrationResponse: publicProcedure
         .input(registrationVerificationPayload)
@@ -245,7 +255,8 @@ export const authRouter = router({
                 return { ok: true }
             }
         }),
-    // // webauthn login step 1 (3 of 4 total)
+
+    // webauthn login step 1 (3 of 4 total)
     AuthGetLoginOptions: publicProcedure
         .input(z.object({ email: z.string() }))
         .query(async ({ input }) => {
@@ -279,6 +290,7 @@ export const authRouter = router({
 
             return options
         }),
+
     // webauthn login step 2 (4 of 4 total)
     AuthVerifyLogin: publicProcedure
         .input(z.object({ email: z.string().email(), registrationDataString: z.string() }))

@@ -17,12 +17,15 @@ export const todoRouter = router({
     CreateTodo: publicProcedure.input(createTodoPayload).query(async ({ input }) => {
         await createTodo(input)
     }),
+
     UpdateTodo: publicProcedure
         .input(updateTodoPayload)
         .query(async ({ input }) => await updateTodo(input)),
+
     DeleteTodo: publicProcedure.input(z.string()).query(async ({ input }) => {
         await deleteTodo(input)
     }),
+
     GetTodos: publicProcedure.input(z.string()).query(async ({ input }) => {
         return await getTodos(input)
     }),
