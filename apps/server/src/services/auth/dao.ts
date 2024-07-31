@@ -1,8 +1,10 @@
-import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/types'
+import type {
+    PublicKeyCredentialCreationOptionsJSON,
+    PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
 import { db } from '../../../database'
-import type { User } from '../../../database/db-types'
 import { sendEmail } from '../../utils'
 
 type HandleRegisterProps = {
@@ -252,6 +254,7 @@ export async function _setCurrentRegistrationOptions(
         .execute()
 }
 
+// probably i should overwrite the record if exists on the same session rather than creating a new one
 export async function setCurrentOptions(
     userUuid: string,
     options: PublicKeyCredentialCreationOptionsJSON
@@ -277,7 +280,28 @@ export async function setCurrentOptions(
         .execute()
 }
 
-export async function getCurrentOptions(userUuid: string) {
+// export async function getCurrentOptions(userUuid: string, registrationOptionUserId: string) {
+//     const session = await db
+//         .selectFrom('session')
+//         .select('uuid')
+//         .where('user_uuid', '=', userUuid)
+//         .where('expires_at', '>', new Date())
+//         .executeTakeFirst()
+
+//     if (!session) {
+//         throw new Error('Session not found')
+//     }
+
+//     return await db
+//         .selectFrom('current_challenge')
+//         .select(['challenge', 'registration_options_user_id as registrationOptionsUserId'])
+//         .where('session_uuid', '=', session.uuid)
+//         .where('registration_options_user_id', '=', registrationOptionUserId)
+//         .executeTakeFirst()
+// }
+
+// probably i can get only one per session by letting the
+export async function getCurrentOptions2(userUuid: string) {
     const session = await db
         .selectFrom('session')
         .select('uuid')
@@ -293,6 +317,7 @@ export async function getCurrentOptions(userUuid: string) {
         .selectFrom('current_challenge')
         .select(['challenge', 'registration_options_user_id as registrationOptionsUserId'])
         .where('session_uuid', '=', session.uuid)
+        .orderBy('created_at', 'desc')
         .executeTakeFirst()
 }
 
@@ -367,27 +392,49 @@ export async function getUserPasskeys(user: { uuid: string }) {
         .orderBy('created_at', 'desc')
         .execute()
 }
-export async function getSpecificUserPasskeys(user: User, currentChallengeId: string) {
+
+export async function getUserPasskeyByCredentialId(user: { uuid: string }, id: string) {
     return await db
         .selectFrom('passkey')
         .selectAll()
-        .where('user_uuid', '=', user.uuid.toString())
-        .where('id', '=', currentChallengeId)
+        .where('user_uuid', '=', user.uuid)
+        .where('id', '=', id)
         .executeTakeFirst()
 }
 
-// export async function setCurrentAuthenticationOptions(
-//     options: PublicKeyCredentialRequestOptionsJSON,
-//     userUuid: string
-// ) {
-//     await db
-//         .updateTable('passkey')
-//         .set({ current_challenge_id: options.challenge })
-//         // .where('current_challenge_id', '=', options.allowCredentials?.[0].id || '')
-//         .where('user_uuid', '=', userUuid)
-//         .returning('current_challenge_id')
-//         .execute()
+// export async function getSpecificUserPasskeys(user: { uuid: string }, currentChallengeId: string) {
+//     return await db
+//         .selectFrom('passkey')
+//         .selectAll()
+//         .where('user_uuid', '=', user.uuid)
+//         .where('id', '=', currentChallengeId)
+//         .executeTakeFirst()
 // }
+
+export async function setCurrentAuthenticationOptions(
+    options: PublicKeyCredentialRequestOptionsJSON,
+    userUuid: string
+) {
+    const session = await db
+        .selectFrom('session')
+        .select('uuid')
+        .where('user_uuid', '=', userUuid)
+        .where('expires_at', '>', new Date())
+        .executeTakeFirst()
+
+    if (!session) {
+        throw new Error('Session not found')
+    }
+
+    await db
+        .insertInto('current_challenge')
+        .values({
+            challenge: options.challenge,
+            registration_options_user_id: '',
+            session_uuid: session.uuid,
+        })
+        .execute()
+}
 
 export async function saveUpdatedCounter(passkeyId: string, newCounter: number) {
     await db

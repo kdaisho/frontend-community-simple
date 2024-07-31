@@ -1,6 +1,7 @@
 import {
     generateAuthenticationOptions,
     generateRegistrationOptions,
+    verifyAuthenticationResponse,
     verifyRegistrationResponse,
     type VerifiedRegistrationResponse,
 } from '@simplewebauthn/server'
@@ -12,17 +13,16 @@ import type {
 } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import type { User } from '../../../database/db-types'
 import { publicProcedure, router } from '../../../trpc'
 import {
     consumeFootprint,
     findPristineFootprint,
     findUserByEmail,
     findUserBySessionToken,
-    getCurrentOptions,
+    getCurrentOptions2,
     getFootprints,
     getSessions,
-    getSpecificUserPasskeys,
+    getUserPasskeyByCredentialId,
     getUserPasskeys,
     getUsersWithDevices,
     handleRegister,
@@ -30,8 +30,10 @@ import {
     saveBotAttempt,
     saveNewPasskeyInDB,
     saveSession,
+    saveUpdatedCounter,
     saveUser,
     sendLoginEmail,
+    setCurrentAuthenticationOptions,
     setCurrentOptions,
 } from './dao'
 
@@ -184,7 +186,10 @@ export const authRouter = router({
                 throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
             }
 
-            const options = await getCurrentOptions(user.uuid)
+            console.log('==> step2-0', { data })
+
+            // const options = await getCurrentOptions(user.uuid)
+            const options = await getCurrentOptions2(user.uuid)
 
             const userPasskeys = await getUserPasskeys(user)
 
@@ -271,6 +276,8 @@ export const authRouter = router({
 
             const userPasskeys = await getUserPasskeys(user)
 
+            console.log('==> step3-1', { userPasskeys })
+
             if (!userPasskeys) return null // throw tPRC error here
 
             const options: PublicKeyCredentialRequestOptionsJSON =
@@ -281,13 +288,18 @@ export const authRouter = router({
                     allowCredentials: userPasskeys.map(passkey => {
                         return {
                             id: passkey.id,
-                            transports: ['internal'],
+                            ...(passkey.transports && {
+                                transports: JSON.parse(passkey.transports),
+                            }),
                         }
                     }),
                 })
 
+            console.log('==> step3-2', { options }) // includes 'ZVCSPt24dDz4PFPIal8ZzfgNwls0iQabSuW86MbHzSg'
+            console.log('==> step3-2', { allowCredentials: options.allowCredentials })
+
             // remember this challenge for this user
-            // await setCurrentAuthenticationOptions(options, user.uuid)
+            await setCurrentAuthenticationOptions(options, user.uuid)
 
             // challenge = (await response).challenge
 
@@ -308,40 +320,66 @@ export const authRouter = router({
                 input.registrationDataString
             )
 
-            const userPasskey = await getSpecificUserPasskeys(
-                user as unknown as User,
+            if (!registrationResponseJSON.response.userHandle) {
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: 'Registration options user id not found',
+                })
+            }
+
+            console.log('==> step4-0', { registrationResponseJSON })
+
+            const options = await getCurrentOptions2(
+                user.uuid
+                // registrationResponseJSON.response.userHandle
+            )
+
+            if (!options) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'Current challenge not found' })
+            }
+
+            console.log('==> step4-1', { registrationResponseJSON })
+
+            const userPasskey = await getUserPasskeyByCredentialId(
+                user,
                 registrationResponseJSON.id
             )
+
+            console.log('==> step4-2', { userPasskey })
 
             if (!userPasskey) {
                 throw new TRPCError({ code: 'NOT_FOUND', message: 'Passkeys not found' })
             }
 
+            console.log('==> step4-3', { options })
+
             let verification
             try {
                 // TODO
-                // verification = await verifyAuthenticationResponse({
-                //     response: registrationResponseJSON,
-                //     // expectedChallenge: userPasskey.current_challenge_id,
-                //     expectedOrigin: origin,
-                //     expectedRPID: rpId,
-                //     authenticator: {
-                //         // credentialID: userPasskey.current_challenge_id,
-                //         credentialPublicKey: new Uint8Array(userPasskey.public_key),
-                //         counter: userPasskey.counter,
-                //         transports: ['internal'],
-                //     },
-                // })
+                verification = await verifyAuthenticationResponse({
+                    response: registrationResponseJSON,
+                    expectedChallenge: options.challenge,
+                    expectedOrigin: origin,
+                    expectedRPID: rpId,
+                    authenticator: {
+                        credentialID: userPasskey.id,
+                        credentialPublicKey: new Uint8Array(userPasskey.public_key),
+                        counter: userPasskey.counter,
+                        ...(userPasskey.transports && {
+                            transports: JSON.parse(userPasskey.transports),
+                        }),
+                    },
+                })
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'Verification failed'
                 throw new TRPCError({ code: 'NOT_FOUND', message })
             }
 
-            // const { authenticationInfo, verified } = verification
+            const { authenticationInfo, verified } = verification
 
-            // saveUpdatedCounter(userPasskey.id, authenticationInfo.newCounter)
+            saveUpdatedCounter(userPasskey.id, authenticationInfo.newCounter)
 
-            // return { verified, userUuid: user.uuid }
+            return { verified, userUuid: user.uuid }
         }),
 
     // admin routes
