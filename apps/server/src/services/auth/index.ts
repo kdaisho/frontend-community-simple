@@ -1,9 +1,9 @@
 import {
     generateAuthenticationOptions,
     generateRegistrationOptions,
-    VerifiedRegistrationResponse,
     verifyAuthenticationResponse,
     verifyRegistrationResponse,
+    type VerifiedRegistrationResponse,
 } from '@simplewebauthn/server'
 import type {
     AuthenticationResponseJSON,
@@ -13,7 +13,7 @@ import type {
 } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
-import { Passkey, User } from '../../../database/db-types'
+import type { User } from '../../../database/db-types'
 import { publicProcedure, router } from '../../../trpc'
 import {
     consumeFootprint,
@@ -45,10 +45,6 @@ const origin = BASE_URL || ''
 
 const registerPayload = z.object({
     name: z.string().min(1, { message: 'Name is required' }),
-    email: z.string().email({ message: 'Email is not valid' }),
-})
-
-const signInPayload = z.object({
     email: z.string().email({ message: 'Email is not valid' }),
 })
 
@@ -145,8 +141,7 @@ export const authRouter = router({
 
         if (!user) return null // throw tPRC error here
 
-        // @ts-expect-error // TODO: fix this
-        const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
+        const userPasskeys = await getUserPasskeys(user as unknown as User)
 
         const options: PublicKeyCredentialCreationOptionsJSON = await generateRegistrationOptions({
             rpName: 'frontend-community',
@@ -172,13 +167,6 @@ export const authRouter = router({
         // remember these options for the user
         await setCurrentRegistrationOptions(user as unknown as User, options)
 
-        // await createPasskey({
-        //     currentChallengeId: options.challenge,
-        //     webauthnUserId: options.user.id,
-        //     userUuid: user.uuid,
-        //     pubKeyCredParams: options.pubKeyCredParams,
-        // })
-
         return options
     }),
 
@@ -194,8 +182,7 @@ export const authRouter = router({
 
             if (!user) return // TODO: throw PRC error here
 
-            // @ts-expect-error // TODO: fix the created_at type
-            const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
+            const userPasskeys = await getUserPasskeys(user as unknown as User)
 
             let verification: VerifiedRegistrationResponse
 
@@ -247,11 +234,6 @@ export const authRouter = router({
                 // get it by user ID later
                 await saveNewPasskeyInDB(newPasskey)
 
-                //   await saveNewDevices({
-                //       userUuid: user.uuid,
-                //       devices: JSON.stringify(uint8ArrayDevices),
-                //   })
-
                 return { ok: true }
             }
         }),
@@ -265,8 +247,7 @@ export const authRouter = router({
 
             if (!user) return // throw tPRC error here
 
-            // @ts-expect-error // TODO: fix this
-            const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
+            const userPasskeys = await getUserPasskeys(user as unknown as User)
 
             if (!userPasskeys) return null // throw tPRC error here
 
@@ -305,8 +286,7 @@ export const authRouter = router({
                 input.registrationDataString
             )
 
-            // @ts-expect-error // TODO: fix this
-            const userPasskey: Passkey = await getSpecificUserPasskeys(
+            const userPasskey = await getSpecificUserPasskeys(
                 user as unknown as User,
                 registrationResponseJSON.id
             )

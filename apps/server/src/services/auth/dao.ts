@@ -1,11 +1,11 @@
-import {
+import type {
     PublicKeyCredentialCreationOptionsJSON,
     PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
 import { db } from '../../../database'
-import { Passkey, User } from '../../../database/db-types'
+import type { Passkey, User } from '../../../database/db-types'
 import { sendEmail } from '../../utils'
 
 type HandleRegisterProps = {
@@ -252,48 +252,6 @@ export async function consumeFootprint(id: string) {
     return fp?.uuid
 }
 
-export async function createPasskey({
-    currentChallengeId,
-    webauthnUserId,
-    userUuid,
-    pubKeyCredParams,
-}: {
-    currentChallengeId: string
-    webauthnUserId: string
-    userUuid: string
-    pubKeyCredParams: {
-        alg: number
-        type: string
-    }[]
-}) {
-    // const found = await db
-    //     .selectFrom('passkey')
-    //     .where('user_uuid', '=', userUuid)
-    //     .executeTakeFirst()
-
-    // if (found) {
-    //     await db
-    //         .updateTable('passkey')
-    //         .set({ current_challenge_id: currentChallengeId })
-    //         .where('user_uuid', '=', userUuid)
-    //         .execute()
-    // } else {
-    await db
-        .insertInto('passkey')
-        .values({
-            id: '',
-            user_uuid: userUuid,
-            backed_up: false,
-            counter: 0,
-            device_type: '',
-            current_challenge_id: currentChallengeId,
-            public_key: Buffer.from('pubKeyCredParams'), // todo: figure out
-            webauthn_user_id: webauthnUserId,
-        })
-        .execute()
-    // }
-}
-
 export async function setCurrentRegistrationOptions(
     user: User,
     options: PublicKeyCredentialCreationOptionsJSON
@@ -329,34 +287,12 @@ export async function setCurrentRegistrationOptions(
     }
 }
 
-export async function updatePasskeyWithCurrentChallenge({
-    userUuid,
-    currentChallenge,
-}: {
-    userUuid: string
-    currentChallenge: string
-}) {
-    return await db
-        .updateTable('passkey')
-        // .set({ current_challenge: currentChallenge })
-        .where('user_uuid', '=', userUuid)
-        .execute()
-}
-
 export async function updateUserWithWebauthn(userUuid: string) {
     return await db
         .updateTable('user')
         .set({ is_passkeys_enabled: true })
         .where('uuid', '=', userUuid)
         .execute()
-}
-
-export async function saveNewDevices({ userUuid, devices }: { userUuid: string; devices: string }) {
-    try {
-        // await db.updateTable('passkey').set({ devices }).where('user_uuid', '=', userUuid).execute()
-    } catch (err) {
-        console.error('==> Saving DEVICES FAILED', err)
-    }
 }
 
 export async function saveNewPasskeyInDB(newPasskey: {

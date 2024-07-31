@@ -39,6 +39,7 @@
             async onResult({ result }) {
                 if (result.type === 'success' && result.data?.loginOptions) {
                     const myLoginOptions = result.data.loginOptions.allowCredentials.map(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (cred: any) => {
                             return {
                                 ...cred,
