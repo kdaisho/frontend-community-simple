@@ -1,7 +1,6 @@
 import {
     generateAuthenticationOptions,
     generateRegistrationOptions,
-    verifyAuthenticationResponse,
     verifyRegistrationResponse,
     type VerifiedRegistrationResponse,
 } from '@simplewebauthn/server'
@@ -20,6 +19,7 @@ import {
     findPristineFootprint,
     findUserByEmail,
     findUserBySessionToken,
+    getCurrentOptions,
     getFootprints,
     getSessions,
     getSpecificUserPasskeys,
@@ -30,11 +30,9 @@ import {
     saveBotAttempt,
     saveNewPasskeyInDB,
     saveSession,
-    saveUpdatedCounter,
     saveUser,
     sendLoginEmail,
-    setCurrentAuthenticationOptions,
-    setCurrentRegistrationOptions,
+    setCurrentOptions,
 } from './dao'
 
 const { BASE_URL, RP_ID } = process.env
@@ -136,12 +134,13 @@ export const authRouter = router({
 
     // webauthn registration step 1 (1 of 4 total)
     AuthGetRegistrationOptions: publicProcedure.input(z.string()).query(async ({ input }) => {
-        // const user = await findUserWithWebAuthnByEmail(input)
         const user = await findUserByEmail(input)
 
-        if (!user) return null // throw tPRC error here
+        if (!user) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+        }
 
-        const userPasskeys = await getUserPasskeys(user as unknown as User)
+        const userPasskeys = await getUserPasskeys(user)
 
         const options: PublicKeyCredentialCreationOptionsJSON = await generateRegistrationOptions({
             rpName: 'frontend-community',
@@ -150,7 +149,8 @@ export const authRouter = router({
             attestationType: 'none',
             excludeCredentials: userPasskeys.map(passkey => {
                 return {
-                    id: passkey.current_challenge_id,
+                    // id: passkey.current_challenge_id,
+                    id: passkey.id,
                     ...(isAuthenticatorTransportFuture(passkey.transports) && {
                         transports: passkey.transports,
                     }),
@@ -164,8 +164,10 @@ export const authRouter = router({
             },
         })
 
+        console.log('==> step1', { options })
+
         // remember these options for the user
-        await setCurrentRegistrationOptions(user as unknown as User, options)
+        await setCurrentOptions(user.uuid, options)
 
         return options
     }),
@@ -176,20 +178,29 @@ export const authRouter = router({
         .query(async ({ input }) => {
             const { email, registrationResponse } = input
             const data = JSON.parse(registrationResponse)
-
-            // const user = await findUserWithWebAuthnByEmail(email)
             const user = await findUserByEmail(email)
 
-            if (!user) return // TODO: throw PRC error here
+            if (!user) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+            }
 
-            const userPasskeys = await getUserPasskeys(user as unknown as User)
+            const options = await getCurrentOptions(user.uuid)
+
+            const userPasskeys = await getUserPasskeys(user)
+
+            console.log('==> step2', { options, userPasskeys })
+
+            if (!options) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'Current challenge not found' })
+            }
 
             let verification: VerifiedRegistrationResponse
 
             try {
                 verification = await verifyRegistrationResponse({
                     response: data,
-                    expectedChallenge: userPasskeys[0].current_challenge_id,
+                    // expectedChallenge: userPasskeys[0].current_challenge_id,
+                    expectedChallenge: options.challenge,
                     expectedOrigin: origin,
                     expectedRPID: rpId,
                 })
@@ -210,29 +221,39 @@ export const authRouter = router({
                     credentialBackedUp,
                 } = registrationInfo
 
-                const newPasskey = {
-                    // `user` here is from Step 2
-                    user,
-                    // Created by `generateRegistrationOptions()` in Step 1
-                    // webAuthnUserID: userPasskeys[0].current_challenge_id,
-                    webAuthnUserID: userPasskeys[0].webauthn_user_id, // ywbj0zm...
-                    // A unique identifier for the credential
-                    id: credentialID,
-                    // The public key bytes, used for subsequent authentication signature verification
-                    publicKey: credentialPublicKey,
-                    // The number of times the authenticator has been used on this site so far
-                    counter,
-                    // Whether the passkey is single-device or multi-device
-                    deviceType: credentialDeviceType,
-                    // Whether the passkey has been backed up in some way
-                    backedUp: credentialBackedUp,
-                    // `body` here is from Step 2
-                    transports: data.response.transports,
-                }
+                console.log('==> step2-2', { registrationInfo })
 
-                // Save the authenticator info so that we can
-                // get it by user ID later
-                await saveNewPasskeyInDB(newPasskey)
+                const existingDevice = userPasskeys.find(passkey => passkey.id === credentialID)
+
+                console.log('==> step2-3', { existingDevice })
+
+                if (!existingDevice) {
+                    const newPasskey = {
+                        // `user` here is from Step 2
+                        user,
+                        // Created by `generateRegistrationOptions()` in Step 1
+                        // webAuthnUserID: userPasskeys[0].current_challenge_id,
+                        webAuthnUserID: options.registrationOptionsUserId, // ywbj0zm...
+                        // A unique identifier for the credential
+                        id: credentialID,
+                        // The public key bytes, used for subsequent authentication signature verification
+                        publicKey: credentialPublicKey,
+                        // The number of times the authenticator has been used on this site so far
+                        counter,
+                        // Whether the passkey is single-device or multi-device
+                        deviceType: credentialDeviceType,
+                        // Whether the passkey has been backed up in some way
+                        backedUp: credentialBackedUp,
+                        // `body` here is from Step 2
+                        transports: data.response.transports,
+                    }
+
+                    console.log('==> step2-4', { newPasskey })
+
+                    // Save the authenticator info so that we can
+                    // get it by user ID later
+                    await saveNewPasskeyInDB(newPasskey)
+                }
 
                 return { ok: true }
             }
@@ -243,11 +264,12 @@ export const authRouter = router({
         .input(z.object({ email: z.string() }))
         .query(async ({ input }) => {
             const user = await findUserByEmail(input.email)
-            // const userPasskeys = await findUserWithWebAuthnByEmail(input.email)
 
-            if (!user) return // throw tPRC error here
+            if (!user) {
+                throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
+            }
 
-            const userPasskeys = await getUserPasskeys(user as unknown as User)
+            const userPasskeys = await getUserPasskeys(user)
 
             if (!userPasskeys) return null // throw tPRC error here
 
@@ -265,7 +287,7 @@ export const authRouter = router({
                 })
 
             // remember this challenge for this user
-            await setCurrentAuthenticationOptions(options, user.uuid)
+            // await setCurrentAuthenticationOptions(options, user.uuid)
 
             // challenge = (await response).challenge
 
@@ -297,28 +319,29 @@ export const authRouter = router({
 
             let verification
             try {
-                verification = await verifyAuthenticationResponse({
-                    response: registrationResponseJSON,
-                    expectedChallenge: userPasskey.current_challenge_id,
-                    expectedOrigin: origin,
-                    expectedRPID: rpId,
-                    authenticator: {
-                        credentialID: userPasskey.current_challenge_id,
-                        credentialPublicKey: new Uint8Array(userPasskey.public_key),
-                        counter: userPasskey.counter,
-                        transports: ['internal'],
-                    },
-                })
+                // TODO
+                // verification = await verifyAuthenticationResponse({
+                //     response: registrationResponseJSON,
+                //     // expectedChallenge: userPasskey.current_challenge_id,
+                //     expectedOrigin: origin,
+                //     expectedRPID: rpId,
+                //     authenticator: {
+                //         // credentialID: userPasskey.current_challenge_id,
+                //         credentialPublicKey: new Uint8Array(userPasskey.public_key),
+                //         counter: userPasskey.counter,
+                //         transports: ['internal'],
+                //     },
+                // })
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'Verification failed'
                 throw new TRPCError({ code: 'NOT_FOUND', message })
             }
 
-            const { authenticationInfo, verified } = verification
+            // const { authenticationInfo, verified } = verification
 
-            saveUpdatedCounter(userPasskey.id, authenticationInfo.newCounter)
+            // saveUpdatedCounter(userPasskey.id, authenticationInfo.newCounter)
 
-            return { verified, userUuid: user.uuid }
+            // return { verified, userUuid: user.uuid }
         }),
 
     // admin routes

@@ -1,11 +1,8 @@
-import type {
-    PublicKeyCredentialCreationOptionsJSON,
-    PublicKeyCredentialRequestOptionsJSON,
-} from '@simplewebauthn/types'
+import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
 import { db } from '../../../database'
-import type { Passkey, User } from '../../../database/db-types'
+import type { User } from '../../../database/db-types'
 import { sendEmail } from '../../utils'
 
 type HandleRegisterProps = {
@@ -156,23 +153,6 @@ export async function findUserByEmail(email: string) {
         .executeTakeFirst()
 }
 
-type UserWithWebAuthn = {
-    uuid: string
-    name: string
-    email: string
-    isPasskeysEnabled: boolean
-} & Passkey
-
-export async function findUserWithWebAuthnByEmail(email: string): Promise<UserWithWebAuthn> {
-    return (await db
-        .selectFrom('user')
-        .select(['uuid', 'name', 'email', 'is_passkeys_enabled as isPasskeysEnabled'])
-        .where('email', '=', email)
-        .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
-        .selectAll()
-        .executeTakeFirst()) as unknown as UserWithWebAuthn
-}
-
 export async function saveUser({ name, email, isAdmin }: HandleRegisterProps) {
     return await db
         .insertInto('user')
@@ -252,39 +232,68 @@ export async function consumeFootprint(id: string) {
     return fp?.uuid
 }
 
-export async function setCurrentRegistrationOptions(
-    user: User,
+export async function _setCurrentRegistrationOptions(
+    user: { uuid: string },
     options: PublicKeyCredentialCreationOptionsJSON
 ) {
-    if (!user.uuid || typeof user.uuid !== 'string') return
+    console.log('==>', { user })
 
-    const found = await db
-        .selectFrom('passkey')
-        .select('user_uuid')
-        .where('user_uuid', '=', user.uuid)
+    await db
+        .insertInto('passkey')
+        .values({
+            id: options.challenge,
+            user_uuid: user.uuid,
+            backed_up: false,
+            counter: 0,
+            device_type: '', // im gonna insert real value later
+            public_key: Buffer.from(''), // im gonna insert real value later
+            webauthn_user_id: options.user.id, //  im not sure if im saving the right value
+        })
         .execute()
+}
 
-    if (found.length) {
-        await db
-            .updateTable('passkey')
-            .set({ current_challenge_id: options.challenge })
-            .where('user_uuid', '=', user.uuid)
-            .execute()
-    } else {
-        await db
-            .insertInto('passkey')
-            .values({
-                id: '',
-                user_uuid: user.uuid,
-                backed_up: false,
-                counter: 0,
-                device_type: '', // im gonna insert real value later
-                current_challenge_id: options.challenge,
-                public_key: Buffer.from(''), // im gonna insert real value later
-                webauthn_user_id: options.user.id, //  im not sure if im saving the right value
-            })
-            .execute()
+export async function setCurrentOptions(
+    userUuid: string,
+    options: PublicKeyCredentialCreationOptionsJSON
+) {
+    const session = await db
+        .selectFrom('session')
+        .select('uuid')
+        .where('user_uuid', '=', userUuid)
+        .where('expires_at', '>', new Date())
+        .executeTakeFirst()
+
+    if (!session) {
+        throw new Error('Session not found')
     }
+
+    await db
+        .insertInto('current_challenge')
+        .values({
+            challenge: options.challenge,
+            registration_options_user_id: options.user.id,
+            session_uuid: session.uuid,
+        })
+        .execute()
+}
+
+export async function getCurrentOptions(userUuid: string) {
+    const session = await db
+        .selectFrom('session')
+        .select('uuid')
+        .where('user_uuid', '=', userUuid)
+        .where('expires_at', '>', new Date())
+        .executeTakeFirst()
+
+    if (!session) {
+        throw new Error('Session not found')
+    }
+
+    return await db
+        .selectFrom('current_challenge')
+        .select(['challenge', 'registration_options_user_id as registrationOptionsUserId'])
+        .where('session_uuid', '=', session.uuid)
+        .executeTakeFirst()
 }
 
 export async function updateUserWithWebauthn(userUuid: string) {
@@ -306,18 +315,17 @@ export async function saveNewPasskeyInDB(newPasskey: {
     transports?: string[]
 }) {
     await db
-        .updateTable('passkey')
-        .set({
+        .insertInto('passkey')
+        .values({
             id: newPasskey.id,
-            // current_challenge_id: newPasskey.id,
             webauthn_user_id: newPasskey.webAuthnUserID,
             public_key: Buffer.from(newPasskey.publicKey),
             counter: newPasskey.counter,
             device_type: newPasskey.deviceType,
             backed_up: newPasskey.backedUp,
             transports: JSON.stringify(newPasskey.transports),
+            user_uuid: newPasskey.user.uuid,
         })
-        .where('user_uuid', '=', newPasskey.user.uuid)
         .execute()
 }
 
@@ -351,11 +359,11 @@ export async function getSessions() {
     return await db.selectFrom('session').selectAll().execute()
 }
 
-export async function getUserPasskeys(user: User) {
+export async function getUserPasskeys(user: { uuid: string }) {
     return await db
         .selectFrom('passkey')
         .selectAll()
-        .where('user_uuid', '=', user.uuid.toString())
+        .where('user_uuid', '=', user.uuid)
         .orderBy('created_at', 'desc')
         .execute()
 }
@@ -368,18 +376,18 @@ export async function getSpecificUserPasskeys(user: User, currentChallengeId: st
         .executeTakeFirst()
 }
 
-export async function setCurrentAuthenticationOptions(
-    options: PublicKeyCredentialRequestOptionsJSON,
-    userUuid: string
-) {
-    await db
-        .updateTable('passkey')
-        .set({ current_challenge_id: options.challenge })
-        // .where('current_challenge_id', '=', options.allowCredentials?.[0].id || '')
-        .where('user_uuid', '=', userUuid)
-        .returning('current_challenge_id')
-        .execute()
-}
+// export async function setCurrentAuthenticationOptions(
+//     options: PublicKeyCredentialRequestOptionsJSON,
+//     userUuid: string
+// ) {
+//     await db
+//         .updateTable('passkey')
+//         .set({ current_challenge_id: options.challenge })
+//         // .where('current_challenge_id', '=', options.allowCredentials?.[0].id || '')
+//         .where('user_uuid', '=', userUuid)
+//         .returning('current_challenge_id')
+//         .execute()
+// }
 
 export async function saveUpdatedCounter(passkeyId: string, newCounter: number) {
     await db

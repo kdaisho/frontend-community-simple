@@ -6,6 +6,14 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface CurrentChallenge {
+  challenge: string;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  registration_options_user_id: string;
+  session_uuid: string | null;
+}
+
 export interface Footprint {
   created_at: Generated<Timestamp>;
   email: string;
@@ -18,7 +26,6 @@ export interface Passkey {
   backed_up: boolean;
   counter: number;
   created_at: Generated<Timestamp>;
-  current_challenge_id: string;
   device_type: string;
   id: string;
   last_used: Timestamp | null;
@@ -60,6 +67,7 @@ export interface User {
 }
 
 export interface DB {
+  current_challenge: CurrentChallenge;
   footprint: Footprint;
   passkey: Passkey;
   recaptcha: Recaptcha;
