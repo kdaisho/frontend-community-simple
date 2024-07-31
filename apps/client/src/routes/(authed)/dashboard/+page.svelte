@@ -9,8 +9,6 @@
     import { z } from 'zod'
     import type { PageServerData } from './$types'
 
-    console.log('==> PAGE', { page })
-
     export let data: PageServerData
 
     let verifyRegistrationFormElem: HTMLFormElement
@@ -20,25 +18,17 @@
         {
             id: 'register-passkey-form',
             async onResult({ result }) {
-                console.log('==>', '======================== HAAAAAAA? 100')
                 if (result.type === 'success' && result.data?.email) {
-                    console.log('==>', '======================== HAAAAAAA? 200')
-
                     $verifyRegistrationForm.email = result.data.email
                     const registrationResponse = await startRegistration(
                         result.data.registrationOptions
                     )
-
-                    console.log('==> RESPONSE', { registrationResponse }) // includes publicKey as string
 
                     $verifyRegistrationForm.registrationResponse =
                         JSON.stringify(registrationResponse)
                     await tick()
                     verifyRegistrationFormElem.requestSubmit()
                 }
-            },
-            onError({ error }) {
-                console.error('==>', '======================== HAAAAAAA? 300', { error })
             },
         }
     )

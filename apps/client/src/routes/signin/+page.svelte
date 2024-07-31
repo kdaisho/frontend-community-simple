@@ -36,13 +36,8 @@
         defaults(zod(z.object({ email: z.string().trim().email() }))),
         {
             id: 'signin-with-passkey-form',
-            onSubmit() {
-                console.log('==> SUBMITTING', { $signinWithPasskeyForm })
-            },
             async onResult({ result }) {
                 if (result.type === 'success' && result.data?.loginOptions) {
-                    console.log('==> UI', { result })
-                    console.log('==>', '======================== ')
                     const myLoginOptions = result.data.loginOptions.allowCredentials.map(
                         (cred: any) => {
                             return {
@@ -52,11 +47,9 @@
                             }
                         }
                     )
-                    console.log('==> UI2', { myLoginOptions })
+
                     result.data.loginOptions.allowCredentials = myLoginOptions
                     const response = await startAuthentication(result.data.loginOptions)
-
-                    console.log('==> UI3', { response })
 
                     if (response) {
                         $verifyLoginForm.email = result.data.email

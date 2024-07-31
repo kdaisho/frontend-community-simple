@@ -30,6 +30,7 @@ import {
     saveBotAttempt,
     saveNewPasskeyInDB,
     saveSession,
+    saveUpdatedCounter,
     saveUser,
     sendLoginEmail,
     setCurrentAuthenticationOptions,
@@ -60,7 +61,6 @@ const registrationVerificationPayload = z.object({
 })
 
 function isAuthenticatorTransportFuture(arg: unknown): arg is AuthenticatorTransportFuture[] {
-    console.log('==> TRANSPORTS', arg)
     return Array.isArray(arg)
 }
 
@@ -85,13 +85,7 @@ export const authRouter = router({
             })
         }
     }),
-    // .input(z.object({ email: z.string() }))
-    // SignIn: publicProcedure.input(signInPayload).query(async ({ input }) => {
-    //     console.log('==>', '======================== boom', input)
-    //     return await handleSignIn({ email: input.email })
-    // }),
     SignIn: publicProcedure.input(z.string()).query(async ({ input }) => {
-        console.log('==>', '======================== boom', input)
         return await handleSignIn({ email: input })
     }),
     SendLoginEmail: publicProcedure.input(z.string()).query(async ({ input }) => {
@@ -148,8 +142,6 @@ export const authRouter = router({
         // @ts-expect-error // TODO: fix this
         const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
 
-        console.log('==> step1', { userPasskeys })
-
         const options: PublicKeyCredentialCreationOptionsJSON = await generateRegistrationOptions({
             rpName: 'frontend-community',
             rpID: rpId,
@@ -171,9 +163,6 @@ export const authRouter = router({
             },
         })
 
-        console.log('==> YES1', { options })
-        console.log('==> YES2', options.pubKeyCredParams)
-
         // remember these options for the user
         await setCurrentRegistrationOptions(user as unknown as User, options)
 
@@ -193,19 +182,13 @@ export const authRouter = router({
             const { email, registrationResponse } = input
             const data = JSON.parse(registrationResponse)
 
-            console.log('==> step2', { data })
-
             // const user = await findUserWithWebAuthnByEmail(email)
             const user = await findUserByEmail(email)
-
-            console.log('==>', { user }) // user & passkey info both included
 
             if (!user) return // TODO: throw PRC error here
 
             // @ts-expect-error // TODO: fix the created_at type
             const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
-
-            console.log('==> step2', { userPasskeys }) // user & passkey info both included
 
             let verification: VerifiedRegistrationResponse
 
@@ -225,9 +208,6 @@ export const authRouter = router({
             const { verified, registrationInfo } = verification
 
             if (verified && registrationInfo) {
-                console.log('==>', { verified })
-                console.log('==>', { registrationInfo })
-
                 const {
                     credentialID,
                     credentialPublicKey,
@@ -280,8 +260,6 @@ export const authRouter = router({
             // @ts-expect-error // TODO: fix this
             const userPasskeys: Passkey[] = await getUserPasskeys(user as unknown as User)
 
-            console.log('==> step3', { userPasskeys })
-
             if (!userPasskeys) return null // throw tPRC error here
 
             const options: PublicKeyCredentialRequestOptionsJSON =
@@ -290,36 +268,12 @@ export const authRouter = router({
 
                     // Require users to use a previously-registered authenticator (what do you mean by "previously-registered"?)
                     allowCredentials: userPasskeys.map(passkey => {
-                        console.log('==> EACH', passkey)
                         return {
-                            // id: passkey.current_challenge_id,
                             id: passkey.id,
-                            // id: passkey.webauthn_user_id,
-                            // type: 'public-key',
-                            // transports:
-                            //     passkey.transports as unknown as AuthenticatorTransportFuture[],
                             transports: ['internal'],
                         }
                     }),
-                    // allowCredentials: user.devices
-                    //     ? user.devices.map(
-                    //           (authenticator: {
-                    //               credentialID: AuthenticatorDevice['credentialID']
-                    //               transports?: AuthenticatorDevice['transports']
-                    //           }) => {
-                    //               return {
-                    //                   id: getUint8ArrayFromArrayLikeObject(authenticator.credentialID),
-                    //                   type: 'public-key',
-                    //                   transports: authenticator?.transports, // Optional
-                    //               }
-                    //           }
-                    //       )
-                    //     : [],
-                    // userVerification: 'preferred',
                 })
-
-            console.log('==> PASS THE OPTIONS', { options })
-            console.log('==> PASS THE ALLOW CREDENTIALS', options.allowCredentials)
 
             // remember this challenge for this user
             await setCurrentAuthenticationOptions(options, user.uuid)
@@ -338,8 +292,6 @@ export const authRouter = router({
                 throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
             }
 
-            console.log('can i read?', input.registrationDataString) // string, need to parse
-
             const registrationResponseJSON: AuthenticationResponseJSON = JSON.parse(
                 input.registrationDataString
             )
@@ -349,8 +301,6 @@ export const authRouter = router({
                 user as unknown as User,
                 registrationResponseJSON.id
             )
-
-            console.log('==> step4', { userPasskey })
 
             if (!userPasskey) {
                 throw new TRPCError({ code: 'NOT_FOUND', message: 'Passkeys not found' })
@@ -371,44 +321,15 @@ export const authRouter = router({
                     },
                 })
             } catch (err) {
-                console.error('==> BOOM', err)
+                const message = err instanceof Error ? err.message : 'Verification failed'
+                throw new TRPCError({ code: 'NOT_FOUND', message })
             }
 
-            console.log('==> DONE', { verification })
+            const { authenticationInfo, verified } = verification
 
-            // const registrationData = JSON.parse(input.registrationDataString)
+            saveUpdatedCounter(userPasskey.id, authenticationInfo.newCounter)
 
-            // let dbAuthenticator
-            // const bodyCredIDBuffer = base64url.toBuffer(registrationData.rawId)
-
-            // for (const device of user.devices) {
-            //     const currentCredential = Buffer.from(
-            //         getUint8ArrayFromArrayLikeObject(device.credentialID)
-            //     )
-            //     if (bodyCredIDBuffer.equals(currentCredential)) {
-            //         dbAuthenticator = device
-            //         break
-            //     }
-            // }
-
-            // if (dbAuthenticator) {
-            //     const verification = await verifyAuthenticationResponse({
-            //         response: registrationData,
-            //         expectedChallenge: challenge,
-            //         expectedOrigin,
-            //         expectedRPID: rpId,
-            //         authenticator: {
-            //             ...dbAuthenticator,
-            //             credentialPublicKey: Buffer.from(
-            //                 getUint8ArrayFromArrayLikeObject(dbAuthenticator.credentialPublicKey)
-            //             ),
-            //         },
-            //     })
-
-            //     return { userUuid: user.uuid, verified: verification.verified }
-            // } else {
-            //     console.error('NO dbAuthenticator found')
-            // }
+            return { verified, userUuid: user.uuid }
         }),
 
     // admin routes

@@ -54,10 +54,7 @@ export const actions = {
         }
 
         try {
-            console.log('==> HA START', email)
-            // const res = await SignIn.query({ email })
             const res = await SignIn.query(email)
-            console.log('==> HA?', res)
             return {
                 form,
                 userUuid: res.userUuid,
@@ -65,7 +62,6 @@ export const actions = {
                 webauthn: res.webauthn,
             }
         } catch (err) {
-            console.log('==> HA? ERROR', err)
             return fail(400, {
                 type: 'email',
                 value: email,
@@ -117,7 +113,6 @@ export const actions = {
         }
 
         try {
-            console.log('==>', '======================== STEP 4 of 4')
             const response = await AuthVerifyLogin.query({
                 email: form.data.email,
                 registrationDataString: form.data.authenticationResponse,

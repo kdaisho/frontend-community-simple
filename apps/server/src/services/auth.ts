@@ -65,8 +65,6 @@ export async function handleSignIn({ email }: { email: string }) {
         .where('email', '=', email)
         .executeTakeFirst()
 
-    console.log('==> HANDLE_SIGN_IN', { user })
-
     if (!user) {
         throw new Error("User not found, don't tell")
     }
@@ -301,7 +299,6 @@ export async function setCurrentRegistrationOptions(
     options: PublicKeyCredentialCreationOptionsJSON
 ) {
     if (!user.uuid || typeof user.uuid !== 'string') return
-    console.log('==> step1 dao1', { options })
 
     const found = await db
         .selectFrom('passkey')
@@ -372,8 +369,6 @@ export async function saveNewPasskeyInDB(newPasskey: {
     backedUp: boolean
     transports?: string[]
 }) {
-    console.log('==>', '======================== saving new passkey in db', newPasskey)
-
     await db
         .updateTable('passkey')
         .set({
@@ -388,8 +383,6 @@ export async function saveNewPasskeyInDB(newPasskey: {
         })
         .where('user_uuid', '=', newPasskey.user.uuid)
         .execute()
-
-    console.log('==>', '======================== saving new passkey in db DONE')
 }
 
 export async function saveBotAttempt(email: string) {
@@ -408,7 +401,6 @@ export async function getUsersWithDevices() {
             'user.is_admin as isAdmin',
         ])
         .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
-        // .select('devices')
         .execute()
 }
 
@@ -423,41 +415,40 @@ export async function getSessions() {
     return await db.selectFrom('session').selectAll().execute()
 }
 
-// export async function getUserPasskeys(user: UserWithWebAuthn) {
 export async function getUserPasskeys(user: User) {
-    console.log('==> dao 1', { user })
-    const passkeys = await db
+    return await db
         .selectFrom('passkey')
         .selectAll()
         .where('user_uuid', '=', user.uuid.toString())
         .orderBy('created_at', 'desc')
         .execute()
-    return passkeys
 }
 export async function getSpecificUserPasskeys(user: User, currentChallengeId: string) {
-    console.log('==>', { user, currentChallengeId })
-    const passkey = await db
+    return await db
         .selectFrom('passkey')
         .selectAll()
         .where('user_uuid', '=', user.uuid.toString())
         .where('id', '=', currentChallengeId)
         .executeTakeFirst()
-    console.log('==> dao 100', { passkey })
-    return passkey
 }
 
 export async function setCurrentAuthenticationOptions(
     options: PublicKeyCredentialRequestOptionsJSON,
     userUuid: string
 ) {
-    console.log('==> dao 2', { options })
-    const re = await db
+    await db
         .updateTable('passkey')
         .set({ current_challenge_id: options.challenge })
         // .where('current_challenge_id', '=', options.allowCredentials?.[0].id || '')
         .where('user_uuid', '=', userUuid)
         .returning('current_challenge_id')
         .execute()
+}
 
-    console.log('==> dao 3', { re })
+export async function saveUpdatedCounter(passkeyId: string, newCounter: number) {
+    await db
+        .updateTable('passkey')
+        .set({ counter: newCounter })
+        .where('id', '=', passkeyId)
+        .execute()
 }
