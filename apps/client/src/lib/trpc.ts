@@ -1,6 +1,6 @@
 import { createTRPCProxyClient } from '@trpc/client'
 import { httpBatchLink } from '@trpc/client/links/httpBatchLink'
-import type { AppRouter } from '../../../server/src/routers'
+import type { AppRouter } from '../../../server/src/services'
 
 export const {
     AuthGetLoginOptions,

@@ -3,7 +3,7 @@ import { promises as fs } from 'fs'
 import { FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely'
 import * as path from 'path'
 import { Pool } from 'pg'
-import type { DB } from './types'
+import type { DB } from './db-types'
 
 dotenv.config()
 

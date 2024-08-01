@@ -54,7 +54,7 @@ export const actions = {
         }
 
         try {
-            const res = await SignIn.query({ email })
+            const res = await SignIn.query(email)
             return {
                 form,
                 userUuid: res.userUuid,

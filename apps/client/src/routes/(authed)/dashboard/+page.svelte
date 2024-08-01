@@ -20,13 +20,25 @@
             async onResult({ result }) {
                 if (result.type === 'success' && result.data?.email) {
                     $verifyRegistrationForm.email = result.data.email
-                    const registrationResponse = await startRegistration(
-                        result.data.registrationOptions
-                    )
-                    $verifyRegistrationForm.registrationResponse =
-                        JSON.stringify(registrationResponse)
-                    await tick()
-                    verifyRegistrationFormElem.requestSubmit()
+
+                    try {
+                        const registrationResponse = await startRegistration(
+                            result.data.registrationOptions
+                        )
+
+                        $verifyRegistrationForm.registrationResponse =
+                            JSON.stringify(registrationResponse)
+                        await tick()
+                        verifyRegistrationFormElem.requestSubmit()
+                    } catch (err) {
+                        if (!(err instanceof Error)) return
+                        // Some basic error handling
+                        if (err.name === 'InvalidStateError') {
+                            console.error('Authenticator was probably already registered by user')
+                        } else {
+                            console.error(err.message)
+                        }
+                    }
                 }
             },
         }

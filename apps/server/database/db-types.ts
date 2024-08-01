@@ -4,19 +4,15 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
-export type Json = JsonValue;
-
-export type JsonArray = JsonValue[];
-
-export type JsonObject = {
-  [K in string]?: JsonValue;
-};
-
-export type JsonPrimitive = boolean | number | string | null;
-
-export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
-
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
+
+export interface CurrentChallenge {
+  challenge: string;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  registration_options_user_id: string | null;
+  user_uuid: string | null;
+}
 
 export interface Footprint {
   created_at: Generated<Timestamp>;
@@ -27,11 +23,16 @@ export interface Footprint {
 }
 
 export interface Passkey {
+  backed_up: boolean;
+  counter: number;
   created_at: Generated<Timestamp>;
-  current_challenge: string | null;
-  devices: Json | null;
-  id: Generated<number>;
-  user_uuid: string | null;
+  device_type: string;
+  id: string;
+  last_used: Timestamp | null;
+  public_key: Buffer;
+  transports: string | null;
+  user_uuid: string;
+  webauthn_user_id: string;
 }
 
 export interface Recaptcha {
@@ -66,6 +67,7 @@ export interface User {
 }
 
 export interface DB {
+  current_challenge: CurrentChallenge;
   footprint: Footprint;
   passkey: Passkey;
   recaptcha: Recaptcha;

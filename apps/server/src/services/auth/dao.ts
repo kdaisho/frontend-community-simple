@@ -1,8 +1,11 @@
-import type { AuthenticatorDevice } from '@simplewebauthn/typescript-types'
+import type {
+    PublicKeyCredentialCreationOptionsJSON,
+    PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/types'
 import { TRPCError } from '@trpc/server'
 import jwt from 'jsonwebtoken'
-import { db } from '../../database'
-import { sendEmail } from '../utils'
+import { db } from '../../../database'
+import { sendEmail } from '../../utils'
 
 type HandleRegisterProps = {
     name: string
@@ -55,7 +58,9 @@ export async function handleRegister({ name, email }: HandleRegisterProps) {
 export async function handleSignIn({ email }: { email: string }) {
     const user = await db
         .selectFrom('user')
-        .select(['uuid', 'email', 'is_passkeys_enabled as isPasskeysEnabled'])
+        .select(['uuid', 'email'])
+        .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
+        .select('passkey.user_uuid as passkeyUserUuid')
         .where('email', '=', email)
         .executeTakeFirst()
 
@@ -63,12 +68,12 @@ export async function handleSignIn({ email }: { email: string }) {
         throw new Error("User not found, don't tell")
     }
 
-    if (user?.isPasskeysEnabled) {
+    if (user?.passkeyUserUuid) {
         return {
             success: true,
             userUuid: user.uuid,
             email: user.email,
-            webauthn: user.isPasskeysEnabled,
+            webauthn: true,
         }
     }
 
@@ -144,28 +149,10 @@ export async function sendLoginEmail(email: string) {
 export async function findUserByEmail(email: string) {
     return await db
         .selectFrom('user')
-        .select(['uuid', 'name', 'email'])
+        // .select(['uuid', 'name', 'email'])
+        .selectAll()
         .where('email', '=', email)
         .executeTakeFirst()
-}
-
-type UserWithWebAuthn = {
-    uuid: string
-    name: string
-    email: string
-    current_challenge: string
-    devices?: AuthenticatorDevice[]
-    isPasskeysEnabled: boolean
-}
-
-export async function findUserWithWebAuthnByEmail(email: string): Promise<UserWithWebAuthn> {
-    return (await db
-        .selectFrom('user')
-        .select(['uuid', 'name', 'email', 'is_passkeys_enabled as isPasskeysEnabled'])
-        .where('email', '=', email)
-        .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
-        .select(['current_challenge', 'devices'])
-        .executeTakeFirst()) as unknown as UserWithWebAuthn
 }
 
 export async function saveUser({ name, email, isAdmin }: HandleRegisterProps) {
@@ -247,36 +234,6 @@ export async function consumeFootprint(id: string) {
     return fp?.uuid
 }
 
-export async function createPasskey({
-    userUuid,
-    currentChallenge,
-}: {
-    userUuid: string
-    currentChallenge: string
-}) {
-    return await db
-        .insertInto('passkey')
-        .values({
-            user_uuid: userUuid,
-            current_challenge: currentChallenge,
-        })
-        .execute()
-}
-
-export async function updatePasskeyWithCurrentChallenge({
-    userUuid,
-    currentChallenge,
-}: {
-    userUuid: string
-    currentChallenge: string
-}) {
-    return await db
-        .updateTable('passkey')
-        .set({ current_challenge: currentChallenge })
-        .where('user_uuid', '=', userUuid)
-        .execute()
-}
-
 export async function updateUserWithWebauthn(userUuid: string) {
     return await db
         .updateTable('user')
@@ -285,12 +242,29 @@ export async function updateUserWithWebauthn(userUuid: string) {
         .execute()
 }
 
-export async function saveNewDevices({ userUuid, devices }: { userUuid: string; devices: string }) {
-    try {
-        await db.updateTable('passkey').set({ devices }).where('user_uuid', '=', userUuid).execute()
-    } catch (err) {
-        console.error('==> Saving DEVICES FAILED', err)
-    }
+export async function saveNewPasskey(newPasskey: {
+    user: { uuid: string }
+    id: string
+    webAuthnUserID: string
+    publicKey: Uint8Array
+    counter: number
+    deviceType: string
+    backedUp: boolean
+    transports?: string[]
+}) {
+    await db
+        .insertInto('passkey')
+        .values({
+            id: newPasskey.id,
+            webauthn_user_id: newPasskey.webAuthnUserID,
+            public_key: Buffer.from(newPasskey.publicKey),
+            counter: newPasskey.counter,
+            device_type: newPasskey.deviceType,
+            backed_up: newPasskey.backedUp,
+            transports: JSON.stringify(newPasskey.transports),
+            user_uuid: newPasskey.user.uuid,
+        })
+        .execute()
 }
 
 export async function saveBotAttempt(email: string) {
@@ -309,7 +283,6 @@ export async function getUsersWithDevices() {
             'user.is_admin as isAdmin',
         ])
         .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
-        .select('devices')
         .execute()
 }
 
@@ -322,4 +295,80 @@ export async function getFootprints() {
 
 export async function getSessions() {
     return await db.selectFrom('session').selectAll().execute()
+}
+
+export async function getUserPasskeys(user: { uuid: string }) {
+    return await db
+        .selectFrom('passkey')
+        .selectAll()
+        .where('user_uuid', '=', user.uuid)
+        .orderBy('created_at', 'desc')
+        .execute()
+}
+
+export async function getUserPasskeyByCredentialId(user: { uuid: string }, id: string) {
+    return await db
+        .selectFrom('passkey')
+        .selectAll()
+        .where('user_uuid', '=', user.uuid)
+        .where('id', '=', id)
+        .executeTakeFirst()
+}
+
+// step 1 - registration
+export async function setCurrentRegistrationOptions(
+    options: PublicKeyCredentialCreationOptionsJSON,
+    user: { uuid: string }
+) {
+    await db
+        .insertInto('current_challenge')
+        .values({
+            challenge: options.challenge,
+            registration_options_user_id: options.user.id,
+            user_uuid: user.uuid,
+        })
+        .execute()
+}
+
+// step 2, step 4 - verification steps (registration and login)
+export async function getCurrentChallenge(user: { uuid: string }) {
+    return await db
+        .selectFrom('current_challenge')
+        .select(['challenge', 'registration_options_user_id as registrationOptionsUserId'])
+        .where('user_uuid', '=', user.uuid)
+        .orderBy('created_at', 'desc')
+        .executeTakeFirst()
+}
+
+// step 3 - login
+export async function setCurrentAuthenticationOptions(
+    options: PublicKeyCredentialRequestOptionsJSON,
+    user: { uuid: string }
+) {
+    await db
+        .insertInto('current_challenge')
+        .values({
+            challenge: options.challenge,
+            user_uuid: user.uuid,
+        })
+        .execute()
+}
+
+export async function deleteCurrentChallenge(
+    options: { challenge: string },
+    user: { uuid: string }
+) {
+    await db
+        .deleteFrom('current_challenge')
+        .where('challenge', '=', options.challenge)
+        .where('user_uuid', '=', user.uuid)
+        .execute()
+}
+
+export async function saveUpdatedCounter(passkeyId: string, newCounter: number) {
+    await db
+        .updateTable('passkey')
+        .set({ counter: newCounter })
+        .where('id', '=', passkeyId)
+        .execute()
 }

@@ -1,6 +1,6 @@
 import { Kysely, PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
-import type { DB } from './types'
+import type { DB } from './db-types'
 
 const { DATABASE_URL } = process.env
 

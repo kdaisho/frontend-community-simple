@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { publicProcedure, router } from '../../trpc'
-import { handleDownload, handleUpload } from '../services/file'
+import { publicProcedure, router } from '../../../trpc'
+import { handleDownload, handleUpload } from './dao'
 
 const uploadPayload = z.object({
     file: z.any(),
@@ -20,6 +20,7 @@ export const fileRouter = router({
             mimeType: input.mimetype,
         })
     }),
+
     Download: publicProcedure.input(downloadPayload).query(async ({ input }) => {
         return await handleDownload({ fileName: input.filename })
     }),
