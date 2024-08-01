@@ -16,9 +16,9 @@ export async function up(db: Kysely<any>): Promise<void> {
         .ifNotExists()
         .addColumn('id', 'serial', col => col.primaryKey())
         .addColumn('challenge', 'text', col => col.notNull())
-        .addColumn('registration_options_user_id', 'text', col => col.notNull())
-        .addColumn('session_uuid', 'uuid', col =>
-            col.references('session.uuid').onDelete('cascade').onUpdate('cascade')
+        .addColumn('registration_options_user_id', 'text')
+        .addColumn('user_uuid', 'uuid', col =>
+            col.references('user.uuid').onDelete('cascade').onUpdate('cascade')
         )
         .addColumn('created_at', 'timestamptz', col => col.notNull().defaultTo(sql`now()`))
         .execute()
@@ -29,8 +29,12 @@ export async function up(db: Kysely<any>): Promise<void> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function down(db: Kysely<any>): Promise<void> {
     await db.schema.dropTable('current_challenge').execute()
+    await db.schema.alterTable('passkey').addColumn('current_challenge_id', 'text').execute()
+
+    await db.updateTable('passkey').set({ current_challenge_id: '' }).execute()
+
     await db.schema
         .alterTable('passkey')
-        .addColumn('current_challenge_id', 'text', col => col.notNull())
+        .alterColumn('current_challenge_id', col => col.setNotNull())
         .execute()
 }

@@ -175,8 +175,10 @@ type SaveSessionProps = {
 }
 
 export async function saveSession({ userUuid, durationHours }: SaveSessionProps) {
+    console.log('==>', { durationHours })
     const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + durationHours)
+    // expiresAt.setHours(expiresAt.getHours() + durationHours)
+    expiresAt.setMinutes(expiresAt.getMinutes() + 1)
 
     const sessionToken = await db
         .insertInto('session')
@@ -232,93 +234,6 @@ export async function consumeFootprint(id: string) {
         .executeTakeFirst()
 
     return fp?.uuid
-}
-
-export async function _setCurrentRegistrationOptions(
-    user: { uuid: string },
-    options: PublicKeyCredentialCreationOptionsJSON
-) {
-    console.log('==>', { user })
-
-    await db
-        .insertInto('passkey')
-        .values({
-            id: options.challenge,
-            user_uuid: user.uuid,
-            backed_up: false,
-            counter: 0,
-            device_type: '', // im gonna insert real value later
-            public_key: Buffer.from(''), // im gonna insert real value later
-            webauthn_user_id: options.user.id, //  im not sure if im saving the right value
-        })
-        .execute()
-}
-
-// probably i should overwrite the record if exists on the same session rather than creating a new one
-export async function setCurrentOptions(
-    userUuid: string,
-    options: PublicKeyCredentialCreationOptionsJSON
-) {
-    const session = await db
-        .selectFrom('session')
-        .select('uuid')
-        .where('user_uuid', '=', userUuid)
-        .where('expires_at', '>', new Date())
-        .executeTakeFirst()
-
-    if (!session) {
-        throw new Error('Session not found')
-    }
-
-    await db
-        .insertInto('current_challenge')
-        .values({
-            challenge: options.challenge,
-            registration_options_user_id: options.user.id,
-            session_uuid: session.uuid,
-        })
-        .execute()
-}
-
-// export async function getCurrentOptions(userUuid: string, registrationOptionUserId: string) {
-//     const session = await db
-//         .selectFrom('session')
-//         .select('uuid')
-//         .where('user_uuid', '=', userUuid)
-//         .where('expires_at', '>', new Date())
-//         .executeTakeFirst()
-
-//     if (!session) {
-//         throw new Error('Session not found')
-//     }
-
-//     return await db
-//         .selectFrom('current_challenge')
-//         .select(['challenge', 'registration_options_user_id as registrationOptionsUserId'])
-//         .where('session_uuid', '=', session.uuid)
-//         .where('registration_options_user_id', '=', registrationOptionUserId)
-//         .executeTakeFirst()
-// }
-
-// probably i can get only one per session by letting the
-export async function getCurrentOptions2(userUuid: string) {
-    const session = await db
-        .selectFrom('session')
-        .select('uuid')
-        .where('user_uuid', '=', userUuid)
-        .where('expires_at', '>', new Date())
-        .executeTakeFirst()
-
-    if (!session) {
-        throw new Error('Session not found')
-    }
-
-    return await db
-        .selectFrom('current_challenge')
-        .select(['challenge', 'registration_options_user_id as registrationOptionsUserId'])
-        .where('session_uuid', '=', session.uuid)
-        .orderBy('created_at', 'desc')
-        .executeTakeFirst()
 }
 
 export async function updateUserWithWebauthn(userUuid: string) {
@@ -402,37 +317,53 @@ export async function getUserPasskeyByCredentialId(user: { uuid: string }, id: s
         .executeTakeFirst()
 }
 
-// export async function getSpecificUserPasskeys(user: { uuid: string }, currentChallengeId: string) {
-//     return await db
-//         .selectFrom('passkey')
-//         .selectAll()
-//         .where('user_uuid', '=', user.uuid)
-//         .where('id', '=', currentChallengeId)
-//         .executeTakeFirst()
-// }
-
-export async function setCurrentAuthenticationOptions(
-    options: PublicKeyCredentialRequestOptionsJSON,
-    userUuid: string
+// step 1 - registration
+export async function setCurrentRegistrationOptions(
+    options: PublicKeyCredentialCreationOptionsJSON,
+    user: { uuid: string }
 ) {
-    const session = await db
-        .selectFrom('session')
-        .select('uuid')
-        .where('user_uuid', '=', userUuid)
-        .where('expires_at', '>', new Date())
-        .executeTakeFirst()
-
-    if (!session) {
-        throw new Error('Session not found')
-    }
-
     await db
         .insertInto('current_challenge')
         .values({
             challenge: options.challenge,
-            registration_options_user_id: '',
-            session_uuid: session.uuid,
+            registration_options_user_id: options.user.id,
+            user_uuid: user.uuid,
         })
+        .execute()
+}
+
+// step 2, step 4 - verification steps (registration and login)
+export async function getCurrentChallenge(user: { uuid: string }) {
+    return await db
+        .selectFrom('current_challenge')
+        .select(['challenge', 'registration_options_user_id as registrationOptionsUserId'])
+        .where('user_uuid', '=', user.uuid)
+        .orderBy('created_at', 'desc')
+        .executeTakeFirst()
+}
+
+// step 3 - login
+export async function setCurrentAuthenticationOptions(
+    options: PublicKeyCredentialRequestOptionsJSON,
+    user: { uuid: string }
+) {
+    await db
+        .insertInto('current_challenge')
+        .values({
+            challenge: options.challenge,
+            user_uuid: user.uuid,
+        })
+        .execute()
+}
+
+export async function deleteCurrentChallenge(
+    options: { challenge: string },
+    user: { uuid: string }
+) {
+    await db
+        .deleteFrom('current_challenge')
+        .where('challenge', '=', options.challenge)
+        .where('user_uuid', '=', user.uuid)
         .execute()
 }
 

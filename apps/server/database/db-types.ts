@@ -10,8 +10,8 @@ export interface CurrentChallenge {
   challenge: string;
   created_at: Generated<Timestamp>;
   id: Generated<number>;
-  registration_options_user_id: string;
-  session_uuid: string | null;
+  registration_options_user_id: string | null;
+  user_uuid: string | null;
 }
 
 export interface Footprint {

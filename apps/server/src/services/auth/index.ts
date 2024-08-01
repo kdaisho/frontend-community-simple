@@ -16,10 +16,11 @@ import { z } from 'zod'
 import { publicProcedure, router } from '../../../trpc'
 import {
     consumeFootprint,
+    deleteCurrentChallenge,
     findPristineFootprint,
     findUserByEmail,
     findUserBySessionToken,
-    getCurrentOptions2,
+    getCurrentChallenge,
     getFootprints,
     getSessions,
     getUserPasskeyByCredentialId,
@@ -34,7 +35,7 @@ import {
     saveUser,
     sendLoginEmail,
     setCurrentAuthenticationOptions,
-    setCurrentOptions,
+    setCurrentRegistrationOptions,
 } from './dao'
 
 const { BASE_URL, RP_ID } = process.env
@@ -169,7 +170,8 @@ export const authRouter = router({
         console.log('==> step1', { options })
 
         // remember these options for the user
-        await setCurrentOptions(user.uuid, options)
+        // await setCurrentOptions(options, user)
+        await setCurrentRegistrationOptions(options, user)
 
         return options
     }),
@@ -187,9 +189,11 @@ export const authRouter = router({
             }
 
             console.log('==> step2-0', { data })
+            console.log('==> step2-0.5', {
+                clientExtensionResults: data.clientExtensionResults.credProps,
+            })
 
-            // const options = await getCurrentOptions(user.uuid)
-            const options = await getCurrentOptions2(user.uuid)
+            const options = await getCurrentChallenge(user)
 
             const userPasskeys = await getUserPasskeys(user)
 
@@ -230,6 +234,12 @@ export const authRouter = router({
 
                 const existingDevice = userPasskeys.find(passkey => passkey.id === credentialID)
 
+                if (!options.registrationOptionsUserId) {
+                    throw new TRPCError({
+                        code: 'NOT_FOUND',
+                        message: 'Registration options user id not found',
+                    })
+                }
                 console.log('==> step2-3', { existingDevice })
 
                 if (!existingDevice) {
@@ -238,7 +248,7 @@ export const authRouter = router({
                         user,
                         // Created by `generateRegistrationOptions()` in Step 1
                         // webAuthnUserID: userPasskeys[0].current_challenge_id,
-                        webAuthnUserID: options.registrationOptionsUserId, // ywbj0zm...
+                        webAuthnUserID: options.registrationOptionsUserId,
                         // A unique identifier for the credential
                         id: credentialID,
                         // The public key bytes, used for subsequent authentication signature verification
@@ -259,6 +269,8 @@ export const authRouter = router({
                     // get it by user ID later
                     await saveNewPasskeyInDB(newPasskey)
                 }
+
+                await deleteCurrentChallenge(options, user)
 
                 return { ok: true }
             }
@@ -283,8 +295,6 @@ export const authRouter = router({
             const options: PublicKeyCredentialRequestOptionsJSON =
                 await generateAuthenticationOptions({
                     rpID: rpId,
-
-                    // Require users to use a previously-registered authenticator (what do you mean by "previously-registered"?)
                     allowCredentials: userPasskeys.map(passkey => {
                         return {
                             id: passkey.id,
@@ -295,13 +305,11 @@ export const authRouter = router({
                     }),
                 })
 
-            console.log('==> step3-2', { options }) // includes 'ZVCSPt24dDz4PFPIal8ZzfgNwls0iQabSuW86MbHzSg'
+            console.log('==> step3-2', { options })
             console.log('==> step3-2', { allowCredentials: options.allowCredentials })
 
             // remember this challenge for this user
-            await setCurrentAuthenticationOptions(options, user.uuid)
-
-            // challenge = (await response).challenge
+            await setCurrentAuthenticationOptions(options, user)
 
             return options
         }),
@@ -329,10 +337,9 @@ export const authRouter = router({
 
             console.log('==> step4-0', { registrationResponseJSON })
 
-            const options = await getCurrentOptions2(
-                user.uuid
-                // registrationResponseJSON.response.userHandle
-            )
+            const options = await getCurrentChallenge(user)
+
+            console.log('==>', '======================== options', options)
 
             if (!options) {
                 throw new TRPCError({ code: 'NOT_FOUND', message: 'Current challenge not found' })
@@ -355,7 +362,6 @@ export const authRouter = router({
 
             let verification
             try {
-                // TODO
                 verification = await verifyAuthenticationResponse({
                     response: registrationResponseJSON,
                     expectedChallenge: options.challenge,
@@ -377,7 +383,9 @@ export const authRouter = router({
 
             const { authenticationInfo, verified } = verification
 
-            saveUpdatedCounter(userPasskey.id, authenticationInfo.newCounter)
+            await saveUpdatedCounter(userPasskey.id, authenticationInfo.newCounter)
+
+            await deleteCurrentChallenge(options, user)
 
             return { verified, userUuid: user.uuid }
         }),
