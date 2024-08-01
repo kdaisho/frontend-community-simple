@@ -8,7 +8,6 @@ declare global {
                 uuid: string
                 email: string
                 name: string
-                webauthn: boolean
                 isAdmin: boolean
             }
         }

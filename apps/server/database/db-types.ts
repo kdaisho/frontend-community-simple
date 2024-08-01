@@ -61,7 +61,6 @@ export interface User {
   created_at: Generated<Timestamp>;
   email: string;
   is_admin: Generated<boolean>;
-  is_passkeys_enabled: Generated<boolean>;
   name: string;
   uuid: Generated<string>;
 }

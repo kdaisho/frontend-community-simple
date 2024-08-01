@@ -1,5 +1,4 @@
 import { ADMIN_EMAIL, JWT_SIGNATURE } from '$env/static/private'
-
 import { CreateSession, CreateUser, FindFootprintByTokenOrThrow, GetUser } from '$lib/trpc'
 import { redirect } from '@sveltejs/kit'
 import jwt from 'jsonwebtoken'
@@ -39,7 +38,7 @@ export const load = (async ({ url, cookies }) => {
             })
 
             if (!user) {
-                throw new Error('Something went wrong.')
+                throw new Error('User not found.')
             }
         }
 
@@ -56,5 +55,5 @@ export const load = (async ({ url, cookies }) => {
         console.error(err)
     }
 
-    redirect(307, '/dashboard?shouldOfferWebauthn=true')
+    redirect(307, '/setup')
 }) satisfies PageServerLoad

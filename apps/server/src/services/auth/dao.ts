@@ -161,7 +161,6 @@ export async function saveUser({ name, email, isAdmin }: HandleRegisterProps) {
         .values({
             name,
             email,
-            is_passkeys_enabled: false,
             is_admin: isAdmin,
         })
         .onConflict(oc => oc.column('email').doNothing())
@@ -193,13 +192,7 @@ export async function saveSession({ userUuid, durationHours }: SaveSessionProps)
 export async function findUserBySessionToken(token: string) {
     return await db
         .selectFrom('user')
-        .select([
-            'uuid',
-            'name',
-            'email',
-            'is_passkeys_enabled as isPasskeyEnabled',
-            'is_admin as isAdmin',
-        ])
+        .select(['uuid', 'name', 'email', 'is_admin as isAdmin'])
         .where(
             'uuid',
             '=',
@@ -234,14 +227,6 @@ export async function consumeFootprint(id: string) {
     return fp?.uuid
 }
 
-export async function updateUserWithWebauthn(userUuid: string) {
-    return await db
-        .updateTable('user')
-        .set({ is_passkeys_enabled: true })
-        .where('uuid', '=', userUuid)
-        .execute()
-}
-
 export async function saveNewPasskey(newPasskey: {
     user: { uuid: string }
     id: string
@@ -271,18 +256,18 @@ export async function saveBotAttempt(email: string) {
     await db.insertInto('recaptcha').values({ email }).execute()
 }
 
-export async function getUsersWithDevices() {
+export async function getUsersWithPasskeys() {
     return await db
         .selectFrom('user')
+        .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
         .select([
             'user.uuid',
             'user.name',
             'user.email',
-            'user.is_passkeys_enabled as isPasskeysEnabled',
             'user.created_at as createdAt',
             'user.is_admin as isAdmin',
+            'passkey.device_type as deviceType',
         ])
-        .leftJoin('passkey', 'user.uuid', 'passkey.user_uuid')
         .execute()
 }
 

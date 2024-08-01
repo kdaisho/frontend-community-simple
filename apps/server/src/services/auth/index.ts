@@ -25,7 +25,7 @@ import {
     getSessions,
     getUserPasskeyByCredentialId,
     getUserPasskeys,
-    getUsersWithDevices,
+    getUsersWithPasskeys,
     handleRegister,
     handleSignIn,
     saveBotAttempt,
@@ -368,8 +368,8 @@ export const authRouter = router({
         }),
 
     // admin routes
-    GetUsersWithDevices: publicProcedure.query(async () => {
-        return await getUsersWithDevices()
+    GetUsersWithPasskeys: publicProcedure.query(async () => {
+        return await getUsersWithPasskeys()
     }),
 
     GetFootprints: publicProcedure.query(async () => {

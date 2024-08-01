@@ -1,4 +1,4 @@
-import { GetFootprints, GetSessions, GetUsersWithDevices } from '$lib/trpc'
+import { GetFootprints, GetSessions, GetUsersWithPasskeys } from '$lib/trpc'
 import { redirect } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
@@ -7,7 +7,7 @@ export const load = (async ({ locals }) => {
         redirect(307, '/dashboard')
     }
 
-    const users = await GetUsersWithDevices.query()
+    const users = await GetUsersWithPasskeys.query()
     const footprints = await GetFootprints.query()
     const sessions = await GetSessions.query()
 
