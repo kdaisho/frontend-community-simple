@@ -175,10 +175,8 @@ type SaveSessionProps = {
 }
 
 export async function saveSession({ userUuid, durationHours }: SaveSessionProps) {
-    console.log('==>', { durationHours })
     const expiresAt = new Date()
-    // expiresAt.setHours(expiresAt.getHours() + durationHours)
-    expiresAt.setMinutes(expiresAt.getMinutes() + 1)
+    expiresAt.setHours(expiresAt.getHours() + durationHours)
 
     const sessionToken = await db
         .insertInto('session')
@@ -244,7 +242,7 @@ export async function updateUserWithWebauthn(userUuid: string) {
         .execute()
 }
 
-export async function saveNewPasskeyInDB(newPasskey: {
+export async function saveNewPasskey(newPasskey: {
     user: { uuid: string }
     id: string
     webAuthnUserID: string

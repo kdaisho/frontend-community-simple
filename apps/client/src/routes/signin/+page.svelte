@@ -38,24 +38,7 @@
             id: 'signin-with-passkey-form',
             async onResult({ result }) {
                 if (result.type === 'success' && result.data?.loginOptions) {
-                    // const myLoginOptions = result.data.loginOptions.allowCredentials.map(
-                    //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    //     (cred: any) => {
-                    //         console.log('==>', { cred })
-                    //         return {
-                    //             ...cred,
-                    //             transports: ['internal'],
-                    //             // transports: '{"internal"}',
-                    //         }
-                    //     }
-                    // )
-
-                    console.log('==> step3-1 ui', result.data)
-
-                    // result.data.loginOptions.allowCredentials = myLoginOptions
                     const response = await startAuthentication(result.data.loginOptions)
-
-                    console.log('==> step3-2 ui', response)
 
                     if (response) {
                         $verifyLoginForm.email = result.data.email

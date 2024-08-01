@@ -21,8 +21,6 @@
                 if (result.type === 'success' && result.data?.email) {
                     $verifyRegistrationForm.email = result.data.email
 
-                    console.log('==> step1 result', result.data)
-
                     try {
                         const registrationResponse = await startRegistration(
                             result.data.registrationOptions
