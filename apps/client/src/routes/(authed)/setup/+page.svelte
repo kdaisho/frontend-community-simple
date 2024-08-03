@@ -86,7 +86,9 @@
 
 <style>
     .setup-page {
-        display: grid;
+        align-items: flex-start;
+        display: flex;
+        flex-direction: column;
         gap: 1rem;
     }
 </style>

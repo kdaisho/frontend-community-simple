@@ -3,7 +3,8 @@
 
     export let data: PageData
 
-    function formatDateToLocal(utcDateString: string) {
+    function formatDateToLocal(utcDateString: unknown): string {
+        if (typeof utcDateString !== 'string') return ''
         const date = new Date(utcDateString)
         return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
     }
@@ -14,19 +15,19 @@
 
     <div class="table-container">
         <table>
-            <caption>Users</caption>
+            <caption>Passkeys</caption>
             <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Authn enabled</th>
+                <th>User name</th>
+                <th>User email</th>
+                <th>Device type</th>
                 <th>Admin user</th>
-                <th>Created at</th>
+                <th>Passkey created at</th>
             </tr>
             {#each data.users as user}
                 <tr>
                     <td>{user.name}</td>
                     <td>{user.email}</td>
-                    <td>{user.deviceType ?? 'no'}</td>
+                    <td>{user.deviceType ?? 'N/A'}</td>
                     <td>{user.isAdmin}</td>
                     <td>{formatDateToLocal(user.createdAt)}</td>
                 </tr>

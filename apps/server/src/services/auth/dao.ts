@@ -264,8 +264,8 @@ export async function getUsersWithPasskeys() {
             'user.uuid',
             'user.name',
             'user.email',
-            'user.created_at as createdAt',
             'user.is_admin as isAdmin',
+            'passkey.created_at as createdAt',
             'passkey.device_type as deviceType',
         ])
         .execute()
