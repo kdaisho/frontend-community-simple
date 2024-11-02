@@ -8,9 +8,15 @@
   export let trigger: Readable<any> | null = null
 </script>
 
-<button {type} on:click class={bg} use:melt={$trigger}>
-  <slot>slot is required</slot>
-</button>
+{#if trigger}
+  <button {type} on:click class={bg} use:melt={$trigger}>
+    <slot>slot is required</slot>
+  </button>
+{:else}
+  <button {type} on:click class={bg}>
+    <slot>slot is required</slot>
+  </button>
+{/if}
 
 <style>
   button {
