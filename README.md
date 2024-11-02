@@ -138,3 +138,7 @@ But, ideally, I should check if the current device is in the 'devices' db list, 
 ## Email handling in local development
 
 During local development, our application is configured to use Postmark's sandbox email server. This means that all emails triggered from the localhost environment are routed to this sandbox server instead of being sent to actual email addresses. This setup helps in testing email functionalities without spamming real users. ~~Importantly, using the sandbox server for email testing does not subject us to the usual limit of 100 emails per month, and there are no associated fees for using the sandbox environment. This allows for extensive testing of email-related features without incurring additional costs.~~ Sandbox also costs us, so we'll use production server for the local development.
+
+## OAuth 2.0 with Google
+The button design guideline
+https://developers.google.com/identity/branding-guidelines

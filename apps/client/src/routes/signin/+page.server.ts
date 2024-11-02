@@ -1,3 +1,4 @@
+import { BASE_URL, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET } from '$env/static/private'
 import {
     AuthGetLoginOptions,
     AuthVerifyLogin,
@@ -7,6 +8,7 @@ import {
     SignIn,
 } from '$lib/trpc'
 import { fail, redirect } from '@sveltejs/kit'
+import { OAuth2Client } from 'google-auth-library'
 import { superValidate } from 'sveltekit-superforms'
 import { zod } from 'sveltekit-superforms/adapters'
 import { z } from 'zod'
@@ -140,4 +142,22 @@ export const actions = {
             throw new Error('Webauthn verification failed.')
         }
     },
+
+    oauth: async () => {
+        const redirectUrl = BASE_URL + '/oauth'
+
+        const oauth2Client = new OAuth2Client(
+            OAUTH_CLIENT_ID,
+            OAUTH_CLIENT_SECRET,
+            redirectUrl,
+        )
+
+        const authorizeUrl = oauth2Client.generateAuthUrl({
+            access_type: 'offline', // 'online' can be better? can't find source
+            scope: 'https://www.googleapis.com/auth/userinfo.email', // may require to setup (https://console.cloud.google.com/apis/credentials/consent?project=brailler-440514), and another verification by google
+            prompt: 'consent'
+        })
+
+        redirect(307, authorizeUrl)
+    }
 } satisfies Actions

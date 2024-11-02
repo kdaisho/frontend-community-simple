@@ -124,25 +124,14 @@
         <Button type="submit">Submit</Button>
     </form>
 
-    <br />
+    <p>------------------- or -------------------</p>
 
-    <div
-        id="g_id_onload"
-        data-client_id="136252634632-at5qh5h5n5hsf29hmmi1k3ied5dc9god.apps.googleusercontent.com"
-        data-context="signin"
-        data-ux_mode="popup"
-        data-callback="signinWithGoogle"
-        data-auto_prompt="false"
-    ></div>
-    <div
-        class="g_id_signin"
-        data-type="standard"
-        data-shape="rectangular"
-        data-theme="outline"
-        data-text="signin_with"
-        data-size="large"
-        data-logo_alignment="left"
-    ></div>
+    <form method="POST" action="?/oauth">
+        <button class="sign-in-with-google" type="submit">
+            <img src="/img/google-logo-official.png" alt="google" />
+            <span>Sign in with Google</span>
+        </button>
+    </form>
 
     <br />
 
@@ -164,6 +153,27 @@
 </div>
 
 <style>
+    .sign-in-with-google {
+        align-items: center;
+        background: var(--app-white);
+        border: 1px solid var(--grey);
+        border-radius: 4px;
+        display: flex;
+        font-size: var(--font-small);
+        gap: 12px;
+        height: 40px;
+        padding: 0 15px;
+        max-width: var(--form-max-width);
+    }
+
+    .sign-in-with-google:hover {
+        background: var(--light-grey);
+    }
+
+    .sign-in-with-google img {
+        width: 18px;
+    }
+
     .sign-in {
         display: flex;
         flex-flow: column nowrap;
@@ -174,7 +184,7 @@
         display: flex;
         flex-flow: column nowrap;
         gap: 2.5rem;
-        max-width: 400px;
+        max-width: var(--form-max-width);
     }
 
     .or {

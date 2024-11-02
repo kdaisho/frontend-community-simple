@@ -1,6 +1,6 @@
 :root {
     --app-width: 1200px;
-    --form-max-width: 400px;
+    --form-max-width: 300px;
 
     /* colors */
     --app-white: hsl(0, 0%, 98%);
@@ -14,7 +14,7 @@
     --blue-darker: hsl(216, 90%, 60%);
 
     /* fonts */
-    --font-small: 13px;
+    --font-small: 14px;
     --font-medium: 16px;
     --font-large: 20px;
 

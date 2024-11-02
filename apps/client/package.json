@@ -43,6 +43,7 @@
     "dependencies": {
         "@simplewebauthn/browser": "^10.0.0",
         "@trpc/client": "^10.27.1",
+        "google-auth-library": "^9.14.2",
         "jsonwebtoken": "^9.0.0"
     }
 }
