@@ -11,16 +11,12 @@
     --danger: hsl(0, 77%, 52%);
     --yellow: hsl(56, 90%, 70%);
     --blue: hsl(216, 90%, 70%);
-    --blue-darker: hsl(216, 90%, 65%);
+    --blue-darker: hsl(216, 90%, 60%);
 
     /* fonts */
     --font-small: 13px;
     --font-medium: 16px;
     --font-large: 20px;
-
-    /* colors */
-    --color-link: #1d7de8;
-    --bg-info: #c3dce5;
 
     /* border radius */
     --border-radius: 3px;
@@ -51,7 +47,7 @@ h2 {
 }
 
 a {
-    color: var(--color-link);
+    color: var(--blue-darker);
 }
 
 .grecaptcha-badge {

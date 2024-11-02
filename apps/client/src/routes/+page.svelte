@@ -1,28 +1,16 @@
-<script lang="ts">
-    import type { LayoutServerData } from './$types'
+<h2>Mission</h2>
 
-    export let data: LayoutServerData
-</script>
-
-<h2>Updates - {data.userName} {new Date().getTimezoneOffset()}</h2>
-
-<!-- svelte-ignore a11y-distracting-elements -->
-<marquee class="msg" scrollamount="40">
-    There's something about the quiet before the world awakens that clarifies one's purpose. The
-    song of the first bird, not yet drowned out by the day's chaos, reminds us of the clarity that
-    comes with being the first to act. Sometimes we wonder, are we all just waiting for a new
-    sunrise, or are we the ones who bring it forth?<span
-        >&block;&block;&block;&block; &block;&block;&block; &block;&block; &block;&block;&block;.</span
-    >
-</marquee>
+<p class="msg">
+  The Brailler Community is a dedicated space for Braille users and their partners, built to foster
+  connection, support, and learning. Our mission is to bridge the gap between Braille literacy and
+  everyday life, empowering users and their families, friends, and allies with resources, tools, and
+  shared experiences. Whether you're a seasoned Braille reader, just starting out, or a loved one
+  seeking to understand more, we're here for you.
+</p>
 
 <style>
-    .msg {
-        color: var(--app-black);
-        margin-top: 1rem;
-    }
-
-    .msg span {
-        padding-left: 12rem;
-    }
+  .msg {
+    color: var(--app-black);
+    margin-top: 1rem;
+  }
 </style>
