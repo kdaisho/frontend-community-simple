@@ -5,7 +5,7 @@
     import TextInput from '$lib/components/TextInput.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import { startAuthentication } from '@simplewebauthn/browser'
-    import { tick } from 'svelte'
+    import { onMount, tick } from 'svelte'
     import { zod } from 'sveltekit-superforms/adapters'
     import { defaults, superForm } from 'sveltekit-superforms/client'
     import { z } from 'zod'
@@ -68,7 +68,23 @@
     const { enhance: signinWithEmailFormEnhance } = superForm(
         defaults(zod(z.object({ email: z.string().trim().email() })))
     )
+
+    let mounted = false
+    onMount(() => {
+        mounted = true
+    })
 </script>
+
+<svelte:head>
+    {#if mounted}
+        <script src="https://accounts.google.com/gsi/client" async></script>
+        <script>
+            function signinWithGoogle(data) {
+                console.log('==>', data)
+            }
+        </script>
+    {/if}
+</svelte:head>
 
 {#if $verifyLoginForm.email}
     <form
@@ -107,6 +123,26 @@
 
         <Button type="submit">Submit</Button>
     </form>
+
+    <br />
+
+    <div
+        id="g_id_onload"
+        data-client_id="136252634632-at5qh5h5n5hsf29hmmi1k3ied5dc9god.apps.googleusercontent.com"
+        data-context="signin"
+        data-ux_mode="popup"
+        data-callback="signinWithGoogle"
+        data-auto_prompt="false"
+    ></div>
+    <div
+        class="g_id_signin"
+        data-type="standard"
+        data-shape="rectangular"
+        data-theme="outline"
+        data-text="signin_with"
+        data-size="large"
+        data-logo_alignment="left"
+    ></div>
 
     <br />
 
