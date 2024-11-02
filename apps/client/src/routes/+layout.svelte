@@ -69,6 +69,10 @@
     <main class="app-layout app-content">
         <slot />
     </main>
+
+    <footer class="app-layout">
+        <a href="privacy" title="Privacy policy">Privacy policy</a>
+    </footer>
 </div>
 
 <style>
@@ -121,6 +125,14 @@
         gap: 1rem;
         grid-area: user;
         justify-content: flex-end;
+    }
+
+    footer {
+        margin: 0 auto;
+    }
+
+    footer a {
+        color: var(--blue-darker);
     }
 
     @media (max-width: 480px) {
