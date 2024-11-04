@@ -379,4 +379,20 @@ export const authRouter = router({
     GetSessions: publicProcedure.query(async () => {
         return await getSessions()
     }),
+
+    SignInWithOAuth: publicProcedure.input(z.object({ email: z.string().email() })).query(async ({ input }) => {
+        const user = await findUserByEmail(input.email)
+
+        if (!user) {
+            throw new TRPCError({
+                code: 'NOT_FOUND',
+                message: 'No user matches the email',
+            })
+        }
+
+        return await saveSession({
+            userUuid: user.uuid,
+            durationHours: 24,
+        })
+    })
 })

@@ -23,6 +23,7 @@ export const {
     Register,
     SendLoginEmail,
     SignIn,
+    SignInWithOAuth,
     UpdateTodo,
     Upload,
 } = createTRPCProxyClient<AppRouter>({

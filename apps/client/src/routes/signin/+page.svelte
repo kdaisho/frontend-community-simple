@@ -5,7 +5,7 @@
     import TextInput from '$lib/components/TextInput.svelte'
     import { grecaptchaStore } from '$lib/stores'
     import { startAuthentication } from '@simplewebauthn/browser'
-    import { onMount, tick } from 'svelte'
+    import { tick } from 'svelte'
     import { zod } from 'sveltekit-superforms/adapters'
     import { defaults, superForm } from 'sveltekit-superforms/client'
     import { z } from 'zod'
@@ -68,23 +68,7 @@
     const { enhance: signinWithEmailFormEnhance } = superForm(
         defaults(zod(z.object({ email: z.string().trim().email() })))
     )
-
-    let mounted = false
-    onMount(() => {
-        mounted = true
-    })
 </script>
-
-<svelte:head>
-    {#if mounted}
-        <script src="https://accounts.google.com/gsi/client" async></script>
-        <script>
-            function signinWithGoogle(data) {
-                console.log('==>', data)
-            }
-        </script>
-    {/if}
-</svelte:head>
 
 {#if $verifyLoginForm.email}
     <form

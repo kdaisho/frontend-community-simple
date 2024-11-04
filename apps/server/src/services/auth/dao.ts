@@ -77,46 +77,34 @@ export async function handleSignIn({ email }: { email: string }) {
         }
     }
 
-    // may not need this check for user as user is guaranteed to be here. there's a check `if (!user)` above
-    if (user) {
-        const authToken = jwt.sign(
-            {
-                email,
-            },
-            JWT_SIGNATURE || '',
-            { expiresIn: 60 * 10 }
-        )
-
-        await db
-            .insertInto('footprint')
-            .values({
-                email,
-                token: authToken,
-                is_pristine: true,
-            })
-            .execute()
-
-        await sendEmail({
+    const authToken = jwt.sign(
+        {
             email,
-            subject: 'Login to your account',
-            body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
+        },
+        JWT_SIGNATURE || '',
+        { expiresIn: 60 * 10 }
+    )
+
+    await db
+        .insertInto('footprint')
+        .values({
+            email,
+            token: authToken,
+            is_pristine: true,
         })
+        .execute()
 
-        // show a message to user that an email has been sent
-        return {
-            success: true,
-            userUuid: user.uuid,
-            email: user.email,
-            webauthn: false,
-        }
-    }
+    await sendEmail({
+        email,
+        subject: 'Login to your account',
+        body: `<h1>Sign in</h1><a href="${BASE_URL}/login?token=${authToken}">Click here to login</a>`,
+    })
 
-    // we can always show a message to user that an email has been sent, even when it's not true;
-    // as we should not to give user a hint that the email is not registered
+    // show a message to user that an email has been sent
     return {
-        success: false,
-        userUuid: null,
-        email: '',
+        success: true,
+        userUuid: user.uuid,
+        email: user.email,
         webauthn: false,
     }
 }
