@@ -15,6 +15,14 @@ import { z } from 'zod'
 import { validateHumanInteraction } from '../modules'
 import type { Actions, PageServerLoad } from './$types'
 
+import { REDIRECT_URI } from "$env/static/private"
+import { msalConfig } from '$lib/ms-config'
+import {
+    ConfidentialClientApplication,
+    CryptoProvider,
+    ResponseMode,
+} from "@azure/msal-node"
+
 export const load = (({ locals }) => {
     if (locals?.user) {
         redirect(307, '/dashboard')
@@ -159,5 +167,43 @@ export const actions = {
         })
 
         redirect(307, authorizeUrl)
+    },
+
+    oauthMs: async () => {
+        // const redirectUrl = BASE_URL + '/oauth/ms'
+
+        const msalInstance = new ConfidentialClientApplication(msalConfig);
+        const cryptoProvider = new CryptoProvider();
+
+        const { verifier, challenge } = await cryptoProvider.generatePkceCodes();
+        const pkceCodes = {
+            challengeMethod: "S256",
+            verifier,
+            challenge,
+        };
+
+        const authCodeUrlRequest = {
+            redirectUri: REDIRECT_URI,
+            responseMode: ResponseMode.QUERY,
+            codeChallenge: pkceCodes.challenge,
+            codeChallengeMethod: pkceCodes.challengeMethod,
+            scopes: ["User.Read"],
+        };
+
+        let authCodeUrl: string
+
+        console.log('==>', 'TRY', { authCodeUrlRequest })
+
+        try {
+            authCodeUrl = await msalInstance.getAuthCodeUrl(authCodeUrlRequest);
+
+
+        } catch (err) {
+            console.log('boom', err);
+        }
+
+        console.log('==> DONE', { authCodeUrl })
+
+        // redirect(307, authorizeUrl)
     }
 } satisfies Actions

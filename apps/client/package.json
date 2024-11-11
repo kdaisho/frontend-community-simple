@@ -41,6 +41,7 @@
     },
     "type": "module",
     "dependencies": {
+        "@azure/msal-node": "^2.16.0",
         "@simplewebauthn/browser": "^10.0.0",
         "@trpc/client": "^10.27.1",
         "google-auth-library": "^9.14.2",

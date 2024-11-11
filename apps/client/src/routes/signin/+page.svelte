@@ -119,6 +119,15 @@
 
     <br />
 
+    <form method="POST" action="?/oauthMs">
+        <button class="sign-in-with-google" type="submit">
+            <!-- <img src="/img/google-logo-official.png" alt="google" /> -->
+            <span>Sign in with Microsoft</span>
+        </button>
+    </form>
+
+    <br />
+
     {#if form?.webauthn}
         <form method="POST" action="?/signinWithPasskey" use:signinWithPasskeyFormEnhance>
             <input name="email" bind:value={$signinWithPasskeyForm.email} hidden />
