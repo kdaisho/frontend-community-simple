@@ -30,50 +30,52 @@
     }
 </script>
 
-<div class="acme-community">
-    <nav class="app-layout">
-        <h2>
-            <a href="/">The Brailler Community</a>
-        </h2>
+<section class="container-test">
+    <div class="acme-community">
+        <nav class="app-layout">
+            <h2>
+                <a href="/">The Brailler Community</a>
+            </h2>
 
-        <ul class="menu">
-            {#if !data.userName}
+            <ul class="menu">
+                {#if !data.userName}
+                    <li>
+                        <a href="/register">Register</a>
+                    </li>
+                    <li>
+                        <a href="/signin">Sign in</a>
+                    </li>
+                {/if}
+
                 <li>
-                    <a href="/register">Register</a>
+                    <a href="/file-storage">File storage</a>
                 </li>
                 <li>
-                    <a href="/signin">Sign in</a>
+                    <a href="/todo">TODO</a>
                 </li>
-            {/if}
+            </ul>
 
-            <li>
-                <a href="/file-storage">File storage</a>
-            </li>
-            <li>
-                <a href="/todo">TODO</a>
-            </li>
-        </ul>
+            <div class="user">
+                {#if data.isAdmin}
+                    <a href="/admin">Admin</a>
+                {/if}
 
-        <div class="user">
-            {#if data.isAdmin}
-                <a href="/admin">Admin</a>
-            {/if}
+                {#if data.userName}
+                    <a href="/dashboard">You</a>
+                    <button on:click={handleLogout}>Log out</button>
+                {/if}
+            </div>
+        </nav>
 
-            {#if data.userName}
-                <a href="/dashboard">You</a>
-                <button on:click={handleLogout}>Log out</button>
-            {/if}
-        </div>
-    </nav>
+        <main class="app-layout app-content">
+            <slot />
+        </main>
 
-    <main class="app-layout app-content">
-        <slot />
-    </main>
-
-    <footer class="app-layout">
-        <a href="privacy" title="Privacy policy">Privacy policy</a>
-    </footer>
-</div>
+        <footer class="app-layout">
+            <a href="privacy" title="Privacy policy">Privacy policy</a>
+        </footer>
+    </div>
+</section>
 
 <style>
     .acme-community {
@@ -145,6 +147,17 @@
 
         .user {
             align-items: flex-end;
+        }
+    }
+
+    .container-test {
+        container-name: my-container;
+        container-type: inline-size;
+    }
+
+    @container my-container (max-width: 490px) {
+        .acme-community {
+            background: hotpink;
         }
     }
 </style>
