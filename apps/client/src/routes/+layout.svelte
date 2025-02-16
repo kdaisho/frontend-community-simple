@@ -52,6 +52,9 @@
             <li>
                 <a href="/todo">TODO</a>
             </li>
+            <li>
+                <a href="/sheet">Sheet</a>
+            </li>
         </ul>
 
         <div class="user">
