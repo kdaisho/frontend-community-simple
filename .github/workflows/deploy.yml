@@ -17,8 +17,7 @@ jobs:
           node-version: '20.x'
           cache: "pnpm"
 
-      # - run: pnpm ci (this throws:  ERR_PNPM_CI_NOT_IMPLEMENTED  error in the app server. run the below instead)
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile # equivalent to pnpm ci
 
       - name: Create env files
         run: |
@@ -57,9 +56,8 @@ jobs:
             pm2 stop fc || true
 
             cd /var/www/fem.daishodesign.com/server
-            pnpm ci --omit=dev
+            pnpm install --frozen-lockfile
             pm2 start ts-node --name "fc_server" -- /var/www/fem.daishodesign.com/server/index.ts
 
             cd /var/www/fem.daishodesign.com/client
-            pnpm ci --omit=dev
             pm2 start "node build" --name "client" --env ORIGIN=https://brailler.daishodesign.com PORT=8895
