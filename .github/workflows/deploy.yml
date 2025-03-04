@@ -56,7 +56,6 @@ jobs:
             pm2 stop fc || true
 
             cd /var/www/fem.daishodesign.com/server
-            pnpm install --frozen-lockfile
             pm2 start ts-node --name "fc_server" -- /var/www/fem.daishodesign.com/server/index.ts
 
             cd /var/www/fem.daishodesign.com/client
