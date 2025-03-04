@@ -54,10 +54,12 @@ jobs:
             cp -r apps/client/build/ /var/www/fem.daishodesign.com/client/
 
             pm2 stop fc || true
+            pm2 stop fc_server || true
+            pm2 stop fc_client || true
 
-            cd /var/www/fem.daishodesign.com/server
-            pm2 start pnpm --name "fc_server" -- exec ts-node /var/www/fem.daishodesign.com/server/index.ts
+            cd /var/www/fem.daishodesign.com/server            
+            pm2 start "pnpm exec ts-node index.ts" --name "fc_server"
 
             cd /var/www/fem.daishodesign.com/client
-            pm2 start "node build" --name "fc_client" --env ORIGIN=${{secrets.ORIGIN}} PORT=${{secrets.PORT}}
+            pm2 start "ORIGIN=https://fem.daishodesign.com PORT=8895 node build" --name "fc_client"
 
