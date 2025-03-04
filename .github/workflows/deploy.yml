@@ -56,7 +56,7 @@ jobs:
             pm2 stop fc || true
 
             cd /var/www/fem.daishodesign.com/server
-            pm2 start ts-node --name "fc_server" -- /var/www/fem.daishodesign.com/server/index.ts
+            pm2 start pnpm --name "fc_server" -- exec ts-node /var/www/fem.daishodesign.com/server/index.ts
 
             cd /var/www/fem.daishodesign.com/client
             pm2 start "node build" --name "client" --env ORIGIN=https://brailler.daishodesign.com PORT=8895
