@@ -145,3 +145,11 @@ During local development, our application is configured to use Postmark's sandbo
 
 - (server) from within /var/www/fem.daishodesign.com/server/: `pnpm exec ts-node index.ts` (no PM2)
 - (client) from within /var/www/fem.daishodesign.com/client/: `pm2 start "ORIGIN=https://fem.daishodesign.com PORT=8895 node build" --name "fc_client"` -->
+
+## If you have issues with PM2 and pnpm combination
+
+Read pm2 log
+
+```sh
+pm2 logs fc_server
+```
