@@ -22,25 +22,23 @@ jobs:
       - name: Create env files
         run: |
           echo "Creating .env file for client"
-          cd apps/client
-          echo JWT_SIGNATURE=${{secrets.JWT_SIGNATURE}} > .env
-          echo RECAPTCHA_SECRET_KEY=${{ secrets.RECAPTCHA_SECRET_KEY }} >> .env
-          echo ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }} >> .env
-          echo BASE_URL=${{ secrets.BASE_URL }} >> .env
+          echo JWT_SIGNATURE=${{secrets.JWT_SIGNATURE}} > apps/client/.env
+          echo RECAPTCHA_SECRET_KEY=${{ secrets.RECAPTCHA_SECRET_KEY }} >> apps/client/.env
+          echo ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }} >> apps/client/.env
+          echo BASE_URL=${{ secrets.BASE_URL }} >> apps/client/.env
 
-          cd ../server
-          echo ENV=${{secrets.ENV}} > .env
-          echo BASE_URL=${{ secrets.BASE_URL }} >> .env
-          echo DB_CONNECTION=${{ secrets.DB_CONNECTION }} >> .env
-          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
-          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-          echo JWT_SIGNATURE=${{secrets.JWT_SIGNATURE}} >> .env
-          echo POSTMARK_API_TOKEN=${{secrets.POSTMARK_API_TOKEN}} >> .env
-          echo AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}} >> .env
-          echo AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}} >> .env
-          echo AWS_BUCKET_REGION=${{secrets.AWS_BUCKET_REGION}} >> .env
-          echo AWS_BUCKET_NAME=${{secrets.AWS_BUCKET_NAME}} >> .env
-          echo RP_ID=${{secrets.RP_ID}} >> .env
+          echo ENV=${{secrets.ENV}} > apps/server/.env
+          echo BASE_URL=${{ secrets.BASE_URL }} >> apps/server/.env
+          echo DB_CONNECTION=${{ secrets.DB_CONNECTION }} >> apps/server/.env
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> apps/server/.env
+          echo DB_NAME=${{ secrets.DB_NAME }} >> apps/server/.env
+          echo JWT_SIGNATURE=${{secrets.JWT_SIGNATURE}} >> apps/server/.env
+          echo POSTMARK_API_TOKEN=${{secrets.POSTMARK_API_TOKEN}} >> apps/server/.env
+          echo AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}} >> apps/server/.env
+          echo AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}} >> apps/server/.env
+          echo AWS_BUCKET_REGION=${{secrets.AWS_BUCKET_REGION}} >> apps/server/.env
+          echo AWS_BUCKET_NAME=${{secrets.AWS_BUCKET_NAME}} >> apps/server/.env
+          echo RP_ID=${{secrets.RP_ID}} >> apps/server/.env
 
       - name: Build
         run: pnpm run build
@@ -57,8 +55,8 @@ jobs:
             pm2 delete fc_server || true
             pm2 delete fc_client || true
 
-            cd /var/www/fem.daishodesign.com/server
-            pm2 start "pnpm exec ts-node index.ts" --name "fc_server"
+            cd apps/server/
+            pm2 start "pnpm exec ts-node /var/www/fem.daishodesign.com/server/index.ts" --name "fc_server"
 
-            cd /var/www/fem.daishodesign.com/client
-            pm2 start "ORIGIN=https://fem.daishodesign.com PORT=8895 node build" --name "fc_client"
+            cd ../client/
+            pm2 start "ORIGIN=https://fem.daishodesign.com PORT=8895 node /var/www/fem.daishodesign.com/client/build" --name "fc_client"
