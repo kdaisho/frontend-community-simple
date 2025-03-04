@@ -4,6 +4,8 @@ on:
   push:
     branches: main
 
+# After struggling to make PM2 work with pnpm, I decided to use npm instead, f*ck PM2 and pnpm combi!
+
 jobs:
   deploy:
     runs-on: self-hosted
@@ -15,9 +17,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          cache: "pnpm"
 
-      - run: pnpm install --frozen-lockfile # equivalent to pnpm ci
+      - run: npm ci
 
       - name: Create env files
         run: |
@@ -43,7 +44,7 @@ jobs:
           echo RP_ID=${{secrets.RP_ID}} >> .env
 
       - name: Build
-        run: pnpm run build
+        run: npm run build
 
       - name: Deploy app
         run: |
@@ -58,7 +59,7 @@ jobs:
             pm2 delete fc_client || true
 
             cd /var/www/fem.daishodesign.com/server            
-            pm2 start "pnpm exec ts-node index.ts" --name "fc_server"
+            pm2 start "npm run ts-node index.ts" --name "fc_server"
 
             cd /var/www/fem.daishodesign.com/client
-            pm2 start "ORIGIN=https://fem.daishodesign.com PORT=8895 node build" --name "fc_client"
+            pm2 start "ORIGIN=https://fem.daishodesign.com PORT=8895 npm run build/index.js" --name "fc_client"

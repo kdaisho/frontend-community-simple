@@ -8,6 +8,8 @@ import cors from 'cors'
 import express from 'express'
 import { appRouter } from './src/services'
 
+const port = process.env.PORT || 3001;
+
 async function server() {
     const app = express()
     app.use(cors())
@@ -37,8 +39,8 @@ async function server() {
         })
     )
 
-    app.listen(3001, () => {
-        console.info('Server: listening on port 3001')
+    app.listen(port, () => {
+        console.info(`Server: listening on port ${port}`)
     })
 }
 
