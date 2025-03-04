@@ -1,0 +1,38 @@
+name: Deploy
+
+on:
+  push:
+    branches: main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: "pnpm"
+
+      - run: pnpm ci
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Deploy app
+        run: |
+            cp -r apps/server/ /var/www/fem.daishodesign.com/
+            cp -r apps/client/build/ /var/www/fem.daishodesign.com/client/
+
+            pm2 stop fc || true
+
+            cd /var/www/fem.daishodesign.com/server
+            pnpm ci --omit=dev
+            pm2 start ts-node --name "fc_server" -- /var/www/fem.daishodesign.com/server/index.ts
+
+            cd /var/www/fem.daishodesign.com/client
+            pnpm ci --omit=dev
+            pm2 start "node build" --name "client" --env ORIGIN=https://brailler.daishodesign.com PORT=8895

@@ -110,7 +110,7 @@ We didn't set up a CI/CD pipeline yet, so you'll have to manually build the clie
 3. Run `pnpm build` to build the client and server apps
 4. Run `docker compose up -d` to run the database container if it's not already running
 
-    _Run this command to see if the database is up and running. If it is you'll get in to the database shell._
+_Run this command to see if the database is up and running. If it is you'll get in to the database shell._
 
 ```sh
 docker exec -u postgres -it fc_db psql -d frontend_community
@@ -119,7 +119,7 @@ docker exec -u postgres -it fc_db psql -d frontend_community
 5. Run PM2 with the following command. This should take two ports: (8895: client, 3001: server)
 
 ```sh
-pm2 start npm --name fc -- run prod --watch
+pm2 start npm --name fc -- run prod
 ```
 
 ## Need the feature back (June 15, 2024)
