@@ -40,23 +40,17 @@ jobs:
           echo AWS_BUCKET_NAME=${{secrets.AWS_BUCKET_NAME}} >> apps/server/.env
           echo RP_ID=${{secrets.RP_ID}} >> apps/server/.env
 
-      - name: Build
-        run: pnpm run build
+      - name: Copy app
+        run: |
+            cp -r apps/ package.json packages/ pnpm-lock.yaml pnpm-workspace.yaml /var/www/brailler.daishodesign.com/
+
+      - name: Build app
+        run: |
+            cd /var/www/brailler.daishodesign.com/
+            pnpm install --fronzen-lockfile
+            pnpm run build
 
       - name: Deploy app
         run: |
-            cp -r apps/server/ /var/www/fem.daishodesign.com/
-            
-            mkdir -p /var/www/fem.daishodesign.com/client/
-            cp apps/client/.env /var/www/fem.daishodesign.com/client/
-            cp -r apps/client/build/ /var/www/fem.daishodesign.com/client/
-
             pm2 delete fc || true
-            pm2 delete fc_server || true
-            pm2 delete fc_client || true
-
-            cd apps/server/
-            pm2 start "pnpm exec ts-node /var/www/fem.daishodesign.com/server/index.ts" --name "fc_server"
-
-            cd ../client/
-            pm2 start "ORIGIN=https://fem.daishodesign.com PORT=8895 node /var/www/fem.daishodesign.com/client/build" --name "fc_client"
+            pm2 start npm --name fc -- run prod
