@@ -47,7 +47,7 @@ jobs:
       - name: Build app
         run: |
             cd /var/www/brailler.daishodesign.com/
-            pnpm install --frozen-lockfile --prod
+            HUSKY=0 pnpm install --frozen-lockfile --ignore-scripts
             pnpm run build
 
       - name: Deploy app
