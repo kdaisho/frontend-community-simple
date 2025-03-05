@@ -53,4 +53,5 @@ jobs:
       - name: Deploy app
         run: |
             pm2 delete fc || true
+            cd /var/www/brailler.daishodesign.com/
             pm2 start npm --name fc -- run prod
