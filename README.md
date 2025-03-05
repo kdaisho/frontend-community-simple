@@ -140,13 +140,7 @@ But, ideally, I should check if the current device is in the 'devices' db list, 
 During local development, our application is configured to use Postmark's sandbox email server. This means that all emails triggered from the localhost environment are routed to this sandbox server instead of being sent to actual email addresses. This setup helps in testing email functionalities without spamming real users. ~~Importantly, using the sandbox server for email testing does not subject us to the usual limit of 100 emails per month, and there are no associated fees for using the sandbox environment. This allows for extensive testing of email-related features without incurring additional costs.~~ Sandbox also costs us, so we'll use production server for the local development.
 
 
----
-<!-- Production runs on the following combination:
-
-- (server) from within /var/www/fem.daishodesign.com/server/: `pnpm exec ts-node index.ts` (no PM2)
-- (client) from within /var/www/fem.daishodesign.com/client/: `pm2 start "ORIGIN=https://fem.daishodesign.com PORT=8895 node build" --name "fc_client"` -->
-
-## If you have issues with PM2 and pnpm combination
+## If you have issues with PM2
 
 Read pm2 log
 
