@@ -1,10 +1,20 @@
 <script lang="ts">
-    export let type: 'button' | 'submit' | 'reset' = 'button'
-    export let bg: null | 'yellow' | 'red' = null
+    interface Props {
+        type?: 'button' | 'submit' | 'reset'
+        bg?: null | 'yellow' | 'red'
+        children?: import('svelte').Snippet
+        onclick?: () => void
+    }
+
+    let { type = 'button', bg = null, children, onclick = () => undefined }: Props = $props()
 </script>
 
-<button {type} on:click class={bg}>
-    <slot>slot is required</slot>
+<button {type} {onclick} class={bg}>
+    {#if children}
+        {@render children()}
+    {:else}
+        slot is required
+    {/if}
 </button>
 
 <style>

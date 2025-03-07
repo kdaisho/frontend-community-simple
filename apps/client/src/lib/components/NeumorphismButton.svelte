@@ -1,11 +1,17 @@
 <script lang="ts">
-    export let type: 'button' | 'submit' | 'reset' = 'button'
-    export let width = 40
-    export let color = '#000'
+    interface Props {
+        type?: 'button' | 'submit' | 'reset'
+        width?: number
+        color?: string
+        children?: import('svelte').Snippet
+        onclick?: () => void
+    }
+
+    let { type = 'button', width = 40, color = '#000', children, onclick }: Props = $props()
 </script>
 
-<button {type} style="--neumorphism-button-width: {width}px" style:color on:click>
-    <slot>Empty</slot>
+<button {type} style="--neumorphism-button-width: {width}px" style:color {onclick}>
+    {#if children}{@render children()}{:else}Empty{/if}
 </button>
 
 <style>
@@ -18,7 +24,9 @@
         aspect-ratio: 1;
         background: var(--app-white);
         border-radius: 50%;
-        box-shadow: -4px -4px 8px #fff, 4px 4px 8px rgb(0 0 0 / 24%);
+        box-shadow:
+            -4px -4px 8px #fff,
+            4px 4px 8px rgb(0 0 0 / 24%);
         display: flex;
         font-size: 1.25rem;
         justify-content: center;
@@ -32,7 +40,9 @@
         }
 
         button:hover {
-            box-shadow: -2px -2px 4px #fff, 2px 2px 4px rgb(0 0 0 / 24%);
+            box-shadow:
+                -2px -2px 4px #fff,
+                2px 2px 4px rgb(0 0 0 / 24%);
         }
 
         button:active {

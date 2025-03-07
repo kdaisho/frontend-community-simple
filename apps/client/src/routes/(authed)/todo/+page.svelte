@@ -3,24 +3,33 @@
     import { invalidateAll } from '$app/navigation'
     import NeumorphismButton from '$lib/components/NeumorphismButton.svelte'
     import { debounce } from '$lib/utils'
+    import { run } from 'svelte/legacy'
     import type { ActionData, PageData } from './$types'
 
-    export let data: PageData
-    export let form: ActionData
-
-    $: if (form?.success) {
-        invalidateAll()
+    interface Props {
+        data: PageData
+        form: ActionData
     }
 
-    let dialog: HTMLDialogElement
-    let input: HTMLInputElement
+    let { data, form }: Props = $props()
+
+    run(() => {
+        if (form?.success) {
+            invalidateAll()
+        }
+    })
+
+    let dialog: HTMLDialogElement | undefined = $state()
+    let input: HTMLInputElement | undefined = $state()
 
     function showDialog() {
-        dialog.showModal()
+        dialog?.showModal()
     }
 
     function clickOutside(event: MouseEvent) {
+        if (!dialog) return
         const rect = dialog.getBoundingClientRect()
+        if (!rect) return
         if (
             event.clientX < rect.left ||
             event.clientX > rect.right ||
@@ -47,7 +56,7 @@
         }
     }
 
-    let taskUpdateInputs: HTMLInputElement[] = []
+    let taskUpdateInputs: HTMLInputElement[] = $state([])
     const makeRequestDebounce = debounce(makeRequest, 350)
 
     async function handleOnChange(event: Event) {
@@ -70,19 +79,17 @@
 <div class="todo-page">
     <header>
         <h1>TODO</h1>
-        <NeumorphismButton on:click={showDialog}>+</NeumorphismButton>
+        <NeumorphismButton onclick={showDialog}>+</NeumorphismButton>
     </header>
 
-    <!-- eslint-disable-next-line svelte/valid-compile -->
-    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <dialog bind:this={dialog} on:click={clickOutside} on:keydown>
+    <dialog bind:this={dialog} onclick={clickOutside}>
         <form
             method="POST"
             action="todo?/createTodo"
             use:enhance={() => {
                 return async ({ update }) => {
                     update()
-                    setTimeout(() => input.focus(), 100)
+                    setTimeout(() => input?.focus(), 100)
                 }
             }}
         >
@@ -101,7 +108,7 @@
                 <NeumorphismButton
                     type="button"
                     color="var(--danger)"
-                    on:click={() => dialog.close()}>-</NeumorphismButton
+                    onclick={() => dialog?.close()}>-</NeumorphismButton
                 >
                 <NeumorphismButton type="submit">+</NeumorphismButton>
             </div>
@@ -118,7 +125,7 @@
                         data-id={uuid}
                         name="completed"
                         checked={isCompleted}
-                        on:change={handleOnChange}
+                        onchange={handleOnChange}
                     />
                     <input
                         class="task"
@@ -127,8 +134,8 @@
                         data-index={i}
                         name="task"
                         value={task}
-                        on:input={handleOnChange}
-                        on:keydown={unfocus}
+                        oninput={handleOnChange}
+                        onkeydown={unfocus}
                         bind:this={taskUpdateInputs[i]}
                     />
                 </fieldset>

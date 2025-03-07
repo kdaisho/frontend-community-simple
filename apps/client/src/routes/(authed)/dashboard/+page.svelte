@@ -10,17 +10,19 @@
     <div class="table-container">
         <table>
             <caption>It's you.</caption>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Admin</th>
-            </tr>
+            <tbody>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                </tr>
 
-            <tr>
-                <td>{data.userName}</td>
-                <td>{data.email}</td>
-                <td>{data.isAdmin}</td>
-            </tr>
+                <tr>
+                    <td>{data.userName}</td>
+                    <td>{data.email}</td>
+                    <td>{data.isAdmin}</td>
+                </tr>
+            </tbody>
         </table>
     </div>
 </div>

@@ -1,10 +1,24 @@
 <script lang="ts">
-    export let id = ''
-    export let type = 'text'
-    export let name: string
-    export let value: string | undefined = undefined
-    export let placeholder = ''
-    export let autocomplete = ''
+    import type { FullAutoFill } from 'svelte/elements'
+    interface Props {
+        id?: string
+        type?: string
+        name: string
+        value?: string | undefined
+        placeholder?: string
+        autocomplete?: FullAutoFill | null | undefined
+        children?: import('svelte').Snippet
+    }
+
+    let {
+        id = '',
+        type = 'text',
+        name,
+        value = $bindable(undefined),
+        placeholder = '',
+        autocomplete = null,
+        children,
+    }: Props = $props()
 </script>
 
 {#if type === 'text'}
@@ -13,7 +27,7 @@
     <input {id} type="email" {name} {placeholder} bind:value {autocomplete} />
 {/if}
 
-<slot />
+{@render children?.()}
 
 <style>
     input {

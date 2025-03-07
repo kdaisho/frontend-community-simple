@@ -5,7 +5,12 @@
     import '../styles/app.css'
     import '../styles/reset.css'
     import type { LayoutServerData } from './$types'
-    export let data: LayoutServerData
+    interface Props {
+        data: LayoutServerData;
+        children?: import('svelte').Snippet;
+    }
+
+    let { data, children }: Props = $props();
 
     onMount(() => {
         // eslint-disable-next-line no-undef
@@ -61,13 +66,13 @@
 
             {#if data.userName}
                 <a href="/dashboard">You</a>
-                <button on:click={handleLogout}>Log out</button>
+                <button onclick={handleLogout}>Log out</button>
             {/if}
         </div>
     </nav>
 
     <main class="app-layout app-content">
-        <slot />
+        {@render children?.()}
     </main>
 
     <footer class="app-layout">

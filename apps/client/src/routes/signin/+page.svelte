@@ -11,10 +11,14 @@
     import { z } from 'zod'
     import type { ActionData } from './$types'
 
-    export let form: ActionData
+    interface Props {
+        form: ActionData
+    }
 
-    let grecaptchaToken: string
-    let verifyLoginFormElem: HTMLFormElement
+    let { form = $bindable() }: Props = $props()
+
+    let grecaptchaToken: string = $state('')
+    let verifyLoginFormElem: HTMLFormElement | undefined = $state()
 
     grecaptchaStore.subscribe(value => {
         grecaptchaToken = value ?? ''
@@ -40,7 +44,7 @@
                 if (result.type === 'success' && result.data?.loginOptions) {
                     const response = await startAuthentication(result.data.loginOptions)
 
-                    if (response) {
+                    if (response && verifyLoginFormElem) {
                         $verifyLoginForm.email = result.data.email
                         $verifyLoginForm.authenticationResponse = JSON.stringify(response)
                         await tick()

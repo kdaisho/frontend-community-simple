@@ -16,42 +16,46 @@
     <div class="table-container">
         <table>
             <caption>Passkeys</caption>
-            <tr>
-                <th>User name</th>
-                <th>User email</th>
-                <th>Device type</th>
-                <th>Admin user</th>
-                <th>Passkey created at</th>
-            </tr>
-            {#each data.users as user}
+            <tbody>
                 <tr>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
-                    <td>{user.deviceType ?? 'N/A'}</td>
-                    <td>{user.isAdmin}</td>
-                    <td>{formatDateToLocal(user.createdAt)}</td>
+                    <th>User name</th>
+                    <th>User email</th>
+                    <th>Device type</th>
+                    <th>Admin user</th>
+                    <th>Passkey created at</th>
                 </tr>
-            {/each}
+                {#each data.users as user}
+                    <tr>
+                        <td>{user.name}</td>
+                        <td>{user.email}</td>
+                        <td>{user.deviceType ?? 'N/A'}</td>
+                        <td>{user.isAdmin}</td>
+                        <td>{formatDateToLocal(user.createdAt)}</td>
+                    </tr>
+                {/each}
+            </tbody>
         </table>
     </div>
 
     <div class="table-container">
         <table>
             <caption>Footprints</caption>
-            <tr>
-                <th>ID</th>
-                <th>Email</th>
-                <th>Pristine</th>
-                <th>Created at</th>
-            </tr>
-            {#each data.footprints as fp}
+            <tbody>
                 <tr>
-                    <td>{fp.uuid}</td>
-                    <td>{fp.email}</td>
-                    <td>{fp.isPristine}</td>
-                    <td>{formatDateToLocal(fp.createdAt)}</td>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Pristine</th>
+                    <th>Created at</th>
                 </tr>
-            {/each}
+                {#each data.footprints as fp}
+                    <tr>
+                        <td>{fp.uuid}</td>
+                        <td>{fp.email}</td>
+                        <td>{fp.isPristine}</td>
+                        <td>{formatDateToLocal(fp.createdAt)}</td>
+                    </tr>
+                {/each}
+            </tbody>
         </table>
     </div>
 </div>
