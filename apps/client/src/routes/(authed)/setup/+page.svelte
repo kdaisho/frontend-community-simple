@@ -9,12 +9,12 @@
     import type { PageServerData } from './$types'
 
     interface Props {
-        data: PageServerData;
+        data: PageServerData
     }
 
-    let { data }: Props = $props();
+    let { data }: Props = $props()
 
-    let verifyRegistrationFormElem: HTMLFormElement = $state()
+    let verifyRegistrationFormElem: HTMLFormElement | undefined = $state()
 
     const { enhance: registerPasskeyFormEnhance } = superForm(
         defaults(zod(z.object({ email: z.string().trim().email() }))),
@@ -32,7 +32,7 @@
                         $verifyRegistrationForm.registrationResponse =
                             JSON.stringify(registrationResponse)
                         await tick()
-                        verifyRegistrationFormElem.requestSubmit()
+                        verifyRegistrationFormElem?.requestSubmit()
                     } catch (err) {
                         if (!(err instanceof Error)) return
                         // Some basic error handling

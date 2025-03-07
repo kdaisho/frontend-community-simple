@@ -1,12 +1,13 @@
 <script lang="ts">
+    import type { FullAutoFill } from 'svelte/elements'
     interface Props {
-        id?: string;
-        type?: string;
-        name: string;
-        value?: string | undefined;
-        placeholder?: string;
-        autocomplete?: string;
-        children?: import('svelte').Snippet;
+        id?: string
+        type?: string
+        name: string
+        value?: string | undefined
+        placeholder?: string
+        autocomplete?: FullAutoFill | null | undefined
+        children?: import('svelte').Snippet
     }
 
     let {
@@ -15,9 +16,9 @@
         name,
         value = $bindable(undefined),
         placeholder = '',
-        autocomplete = '',
-        children
-    }: Props = $props();
+        autocomplete = null,
+        children,
+    }: Props = $props()
 </script>
 
 {#if type === 'text'}

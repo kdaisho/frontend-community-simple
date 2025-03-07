@@ -1,20 +1,17 @@
 <script lang="ts">
-    import { createBubbler } from 'svelte/legacy'
-
-    const bubble = createBubbler()
     interface Props {
         type?: 'button' | 'submit' | 'reset'
         bg?: null | 'yellow' | 'red'
         children?: import('svelte').Snippet
+        onclick?: () => void
     }
 
-    let { type = 'button', bg = null, children }: Props = $props()
+    let { type = 'button', bg = null, children, onclick = () => undefined }: Props = $props()
 </script>
 
-<button {type} onclick={bubble('click')} class={bg}>
+<button {type} {onclick} class={bg}>
     {#if children}
-        me
-        <!-- {@render children()} -->
+        {@render children()}
     {:else}
         slot is required
     {/if}

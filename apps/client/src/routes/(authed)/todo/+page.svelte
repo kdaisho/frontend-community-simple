@@ -19,15 +19,17 @@
         }
     })
 
-    let dialog: HTMLDialogElement = $state()
-    let input: HTMLInputElement = $state()
+    let dialog: HTMLDialogElement | undefined = $state()
+    let input: HTMLInputElement | undefined = $state()
 
     function showDialog() {
-        dialog.showModal()
+        dialog?.showModal()
     }
 
     function clickOutside(event: MouseEvent) {
+        if (!dialog) return
         const rect = dialog.getBoundingClientRect()
+        if (!rect) return
         if (
             event.clientX < rect.left ||
             event.clientX > rect.right ||
@@ -77,10 +79,9 @@
 <div class="todo-page">
     <header>
         <h1>TODO</h1>
-        <NeumorphismButton on:click={showDialog}>+</NeumorphismButton>
+        <NeumorphismButton onclick={showDialog}>+</NeumorphismButton>
     </header>
 
-    <!-- <dialog bind:this={dialog} onclick={clickOutside} onkeydown={bubble('keydown')}> -->
     <dialog bind:this={dialog} onclick={clickOutside}>
         <form
             method="POST"
@@ -88,7 +89,7 @@
             use:enhance={() => {
                 return async ({ update }) => {
                     update()
-                    setTimeout(() => input.focus(), 100)
+                    setTimeout(() => input?.focus(), 100)
                 }
             }}
         >
@@ -107,7 +108,7 @@
                 <NeumorphismButton
                     type="button"
                     color="var(--danger)"
-                    on:click={() => dialog.close()}>-</NeumorphismButton
+                    onclick={() => dialog?.close()}>-</NeumorphismButton
                 >
                 <NeumorphismButton type="submit">+</NeumorphismButton>
             </div>

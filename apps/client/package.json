@@ -19,7 +19,7 @@
         "@simplewebauthn/types": "^10.0.0",
         "@sveltejs/adapter-node": "^5.1.1",
         "@sveltejs/kit": "^2.5.27",
-        "@sveltejs/vite-plugin-svelte": "^4.0.0",
+        "@sveltejs/vite-plugin-svelte": "^5.0.3",
         "@testing-library/jest-dom": "^6.4.6",
         "@testing-library/svelte": "^5.1.0",
         "@types/grecaptcha": "^3.0.4",
@@ -36,7 +36,7 @@
         "tsconfig": "workspace:*",
         "tslib": "^2.4.1",
         "typescript": "^5.5.0",
-        "vite": "^5.4.4",
+        "vite": "^6.2.1",
         "vitest": "^1.6.0"
     },
     "type": "module",

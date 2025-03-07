@@ -12,13 +12,13 @@
     import type { ActionData } from './$types'
 
     interface Props {
-        form: ActionData;
+        form: ActionData
     }
 
-    let { form = $bindable() }: Props = $props();
+    let { form = $bindable() }: Props = $props()
 
-    let grecaptchaToken: string = $state()
-    let verifyLoginFormElem: HTMLFormElement = $state()
+    let grecaptchaToken: string = $state('')
+    let verifyLoginFormElem: HTMLFormElement | undefined = $state()
 
     grecaptchaStore.subscribe(value => {
         grecaptchaToken = value ?? ''
@@ -44,7 +44,7 @@
                 if (result.type === 'success' && result.data?.loginOptions) {
                     const response = await startAuthentication(result.data.loginOptions)
 
-                    if (response) {
+                    if (response && verifyLoginFormElem) {
                         $verifyLoginForm.email = result.data.email
                         $verifyLoginForm.authenticationResponse = JSON.stringify(response)
                         await tick()

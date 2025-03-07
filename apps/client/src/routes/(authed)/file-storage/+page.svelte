@@ -4,11 +4,11 @@
     import type { ActionData, PageData } from '../file-storage/$types'
 
     interface Props {
-        data: PageData;
-        form: ActionData;
+        data: PageData
+        form: ActionData
     }
 
-    let { data, form }: Props = $props();
+    let { data, form }: Props = $props()
 </script>
 
 <h1>{data.title}</h1>
@@ -26,7 +26,7 @@
     {/if}
 </form>
 
-<form method="POSt" action="file-storage?/downloadFile" use:enhance>
+<form method="POST" action="file-storage?/downloadFile" use:enhance>
     <fieldset>
         <label for="filename">File name</label>
         <input type="text" id="filename" name="filename" />

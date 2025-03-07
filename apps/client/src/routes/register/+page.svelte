@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { run } from 'svelte/legacy';
+    import { run } from 'svelte/legacy'
 
     import { enhance } from '$app/forms'
     import RecaptchaPrivacyPolicy from '$lib/RecaptchaPrivacyPolicy.svelte'
@@ -9,12 +9,12 @@
     import type { ActionData } from './$types'
 
     interface Props {
-        form: ActionData;
+        form: ActionData
     }
 
-    let { form }: Props = $props();
+    let { form }: Props = $props()
 
-    let grecaptchaToken: string = $state()
+    let grecaptchaToken = $state('')
 
     grecaptchaStore.subscribe(value => {
         grecaptchaToken = value ?? ''
@@ -24,7 +24,7 @@
         if (form && form.status === 409) {
             alert(form.message)
         }
-    });
+    })
 </script>
 
 <div class="register">
