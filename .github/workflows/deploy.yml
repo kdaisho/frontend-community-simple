@@ -51,7 +51,9 @@ jobs:
             pnpm run build
 
       - name: Deploy app
+        # This expects that a PM2 process named 'fc' is already running
+        # If it's not:
+        # 1. go to the app directory `/var/www/brailler.daishodesign.com/
+        # 2. start a PM2 process: `pm2 start npm --name fc -- run prod`
         run: |
-            pm2 delete fc || true
-            cd /var/www/brailler.daishodesign.com/
-            pm2 start npm --name fc -- run prod
+            pm2 reload fc

@@ -44,11 +44,11 @@
                 if (result.type === 'success' && result.data?.loginOptions) {
                     const response = await startAuthentication(result.data.loginOptions)
 
-                    if (response && verifyLoginFormElem) {
+                    if (response) {
                         $verifyLoginForm.email = result.data.email
                         $verifyLoginForm.authenticationResponse = JSON.stringify(response)
                         await tick()
-                        verifyLoginFormElem.requestSubmit()
+                        verifyLoginFormElem?.requestSubmit()
                     }
                 }
             },
