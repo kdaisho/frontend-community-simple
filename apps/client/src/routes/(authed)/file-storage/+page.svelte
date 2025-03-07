@@ -3,8 +3,12 @@
     import Button from '$lib/components/Button.svelte'
     import type { ActionData, PageData } from '../file-storage/$types'
 
-    export let data: PageData
-    export let form: ActionData
+    interface Props {
+        data: PageData;
+        form: ActionData;
+    }
+
+    let { data, form }: Props = $props();
 </script>
 
 <h1>{data.title}</h1>

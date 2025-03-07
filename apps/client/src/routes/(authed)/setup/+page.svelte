@@ -8,9 +8,13 @@
     import { z } from 'zod'
     import type { PageServerData } from './$types'
 
-    export let data: PageServerData
+    interface Props {
+        data: PageServerData;
+    }
 
-    let verifyRegistrationFormElem: HTMLFormElement
+    let { data }: Props = $props();
+
+    let verifyRegistrationFormElem: HTMLFormElement = $state()
 
     const { enhance: registerPasskeyFormEnhance } = superForm(
         defaults(zod(z.object({ email: z.string().trim().email() }))),

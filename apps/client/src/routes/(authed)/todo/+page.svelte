@@ -3,17 +3,24 @@
     import { invalidateAll } from '$app/navigation'
     import NeumorphismButton from '$lib/components/NeumorphismButton.svelte'
     import { debounce } from '$lib/utils'
+    import { run } from 'svelte/legacy'
     import type { ActionData, PageData } from './$types'
 
-    export let data: PageData
-    export let form: ActionData
-
-    $: if (form?.success) {
-        invalidateAll()
+    interface Props {
+        data: PageData
+        form: ActionData
     }
 
-    let dialog: HTMLDialogElement
-    let input: HTMLInputElement
+    let { data, form }: Props = $props()
+
+    run(() => {
+        if (form?.success) {
+            invalidateAll()
+        }
+    })
+
+    let dialog: HTMLDialogElement = $state()
+    let input: HTMLInputElement = $state()
 
     function showDialog() {
         dialog.showModal()
@@ -47,7 +54,7 @@
         }
     }
 
-    let taskUpdateInputs: HTMLInputElement[] = []
+    let taskUpdateInputs: HTMLInputElement[] = $state([])
     const makeRequestDebounce = debounce(makeRequest, 350)
 
     async function handleOnChange(event: Event) {
@@ -73,9 +80,8 @@
         <NeumorphismButton on:click={showDialog}>+</NeumorphismButton>
     </header>
 
-    <!-- eslint-disable-next-line svelte/valid-compile -->
-    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <dialog bind:this={dialog} on:click={clickOutside} on:keydown>
+    <!-- <dialog bind:this={dialog} onclick={clickOutside} onkeydown={bubble('keydown')}> -->
+    <dialog bind:this={dialog} onclick={clickOutside}>
         <form
             method="POST"
             action="todo?/createTodo"
@@ -118,7 +124,7 @@
                         data-id={uuid}
                         name="completed"
                         checked={isCompleted}
-                        on:change={handleOnChange}
+                        onchange={handleOnChange}
                     />
                     <input
                         class="task"
@@ -127,8 +133,8 @@
                         data-index={i}
                         name="task"
                         value={task}
-                        on:input={handleOnChange}
-                        on:keydown={unfocus}
+                        oninput={handleOnChange}
+                        onkeydown={unfocus}
                         bind:this={taskUpdateInputs[i]}
                     />
                 </fieldset>

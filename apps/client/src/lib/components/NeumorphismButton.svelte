@@ -1,11 +1,24 @@
 <script lang="ts">
-    export let type: 'button' | 'submit' | 'reset' = 'button'
-    export let width = 40
-    export let color = '#000'
+    import { createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
+    interface Props {
+        type?: 'button' | 'submit' | 'reset';
+        width?: number;
+        color?: string;
+        children?: import('svelte').Snippet;
+    }
+
+    let {
+        type = 'button',
+        width = 40,
+        color = '#000',
+        children
+    }: Props = $props();
 </script>
 
-<button {type} style="--neumorphism-button-width: {width}px" style:color on:click>
-    <slot>Empty</slot>
+<button {type} style="--neumorphism-button-width: {width}px" style:color onclick={bubble('click')}>
+    {#if children}{@render children()}{:else}Empty{/if}
 </button>
 
 <style>
